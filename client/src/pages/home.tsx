@@ -23,19 +23,25 @@ export default function Home() {
   
   // Clear any stale bake cache data on component mount
   useEffect(() => {
-    // Only run once on mount
+    // Clear all bake-related cache on mount to ensure fresh data
     queryClient.removeQueries({ 
       predicate: (query) => {
         const key = query.queryKey[0] as string;
-        return key?.includes('/api/bakes/') && key?.includes('/timeline');
+        return key?.includes('/api/bakes/') && (key?.includes('/timeline') || key?.includes('/notes') || key?.includes('/photos'));
       }
     });
+    
+    // Force refetch fresh bakes data
+    queryClient.refetchQueries({ queryKey: ['/api/bakes'] });
   }, []);
 
   // Get all bakes and filter for active ones
   const { data: allBakes } = useQuery<Bake[]>({
     queryKey: ["/api/bakes"],
     staleTime: 0, // Always refetch to ensure fresh data
+    cacheTime: 0, // Don't cache the data
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
   
   const activeBakes = allBakes?.filter(bake => bake && bake.id && bake.status === 'active') || [];

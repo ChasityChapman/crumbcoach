@@ -130,6 +130,17 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
         return oldData.filter((b: any) => b.id !== bake.id);
       });
       
+      // Remove all cache entries for this specific bake
+      queryClient.removeQueries({ 
+        predicate: (query) => {
+          const key = query.queryKey[0] as string;
+          return key?.includes(`/api/bakes/${bake.id}`);
+        }
+      });
+      
+      // Force invalidation of bakes list to trigger re-render
+      queryClient.invalidateQueries({ queryKey: ['/api/bakes'] });
+      
       toast({
         title: "Bake Stopped",
         description: "Your baking session has been ended",
