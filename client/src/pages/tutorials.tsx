@@ -172,7 +172,7 @@ export default function Tutorials() {
                 <div className="space-y-3">
                   <h3 className="font-semibold text-lg">Tutorial Steps:</h3>
                   <div className="space-y-2">
-                    {(selectedTutorial.steps as any[]).map((step, index) => (
+                    {(selectedTutorial.steps as any[]).map((step: any, index: number) => (
                       <div key={index} className="flex space-x-3 p-3 bg-sourdough-50 rounded-lg">
                         <div className="w-6 h-6 bg-sourdough-500 text-white rounded-full flex items-center justify-center text-sm font-medium">
                           {index + 1}
@@ -180,7 +180,7 @@ export default function Tutorials() {
                         <div className="flex-1">
                           <h4 className="font-medium text-sourdough-800">{step.title || `Step ${index + 1}`}</h4>
                           {step.description && (
-                            <p className="text-sm text-sourdough-600 mt-1">{step.description}</p>
+                            <p className="text-sm text-sourdough-600 mt-1">{String(step.description)}</p>
                           )}
                           {step.duration && (
                             <div className="flex items-center space-x-1 mt-2 text-xs text-sourdough-500">
