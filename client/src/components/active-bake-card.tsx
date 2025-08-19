@@ -19,6 +19,11 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
   const [cameraOpen, setCameraOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
   
+  // Don't render if bake is invalid or doesn't have an ID
+  if (!bake || !bake.id) {
+    return null;
+  }
+  
   const startTime = new Date(bake.startTime || Date.now());
   const estimatedEnd = new Date(bake.estimatedEndTime || Date.now());
   const now = new Date();
@@ -119,17 +124,20 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
   const stopBakeMutation = useMutation({
     mutationFn: () => apiRequest("DELETE", `/api/bakes/${bake.id}`),
     onSuccess: () => {
-      // Update cache data directly by filtering out the deleted bake
+      // Aggressively clear all cache data
       queryClient.setQueryData(['/api/bakes'], (oldData: any) => {
-        if (!oldData) return oldData;
+        if (!oldData) return [];
         return oldData.filter((b: any) => b.id !== bake.id);
       });
       
-      // Clean up related cache entries
-      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}`] });
-      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}/timeline`] });
-      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}/notes`] });
-      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}/photos`] });
+      // Remove all queries related to this bake
+      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}`], exact: false });
+      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}/timeline`], exact: false });
+      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}/notes`], exact: false });
+      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}/photos`], exact: false });
+      
+      // Force invalidate to trigger re-renders
+      queryClient.invalidateQueries({ queryKey: ["/api/bakes"] });
       
       toast({
         title: "Bake Stopped",

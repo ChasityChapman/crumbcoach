@@ -20,13 +20,25 @@ export default function Home() {
   const [cameraOpen, setCameraOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
   const [startBakeOpen, setStartBakeOpen] = useState(false);
+  
+  // Clear any stale bake cache data on component mount
+  useEffect(() => {
+    // Only run once on mount
+    queryClient.removeQueries({ 
+      predicate: (query) => {
+        const key = query.queryKey[0] as string;
+        return key?.includes('/api/bakes/') && key?.includes('/timeline');
+      }
+    });
+  }, []);
 
   // Get all bakes and filter for active ones
   const { data: allBakes } = useQuery<Bake[]>({
     queryKey: ["/api/bakes"],
+    staleTime: 0, // Always refetch to ensure fresh data
   });
   
-  const activeBakes = allBakes?.filter(bake => bake.status === 'active') || [];
+  const activeBakes = allBakes?.filter(bake => bake && bake.id && bake.status === 'active') || [];
 
   const { data: latestSensor } = useQuery<SensorReading | null>({
     queryKey: ["/api/sensors/latest"],
