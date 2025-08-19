@@ -34,8 +34,13 @@ export default function StartBakeModal({ isOpen, onClose }: StartBakeModalProps)
       console.log('New bake created:', newBake);
       // Create timeline steps for the new bake
       const recipe = recipes?.find(r => r.id === selectedRecipeId);
+      console.log('Recipe found:', recipe);
+      console.log('Recipe steps:', recipe?.steps);
+      
       if (recipe && recipe.steps && newBake && newBake.id) {
         const steps = recipe.steps as any[];
+        console.log('Creating', steps.length, 'timeline steps');
+        
         for (let i = 0; i < steps.length; i++) {
           const step = steps[i];
           console.log('Creating timeline step:', {
@@ -45,19 +50,32 @@ export default function StartBakeModal({ isOpen, onClose }: StartBakeModalProps)
             estimatedDuration: step.duration,
             status: i === 0 ? 'active' : 'pending'
           });
-          await apiRequest("POST", "/api/timeline-steps", {
-            bakeId: newBake.id,
-            stepIndex: i,
-            name: step.name,
-            description: step.description || null,
-            estimatedDuration: step.duration,
-            status: i === 0 ? 'active' : 'pending',
-            startTime: i === 0 ? new Date().toISOString() : null,
-            endTime: null,
-            actualDuration: null,
-            autoAdjustments: null
-          });
+          
+          try {
+            const timelineStep = await apiRequest("POST", "/api/timeline-steps", {
+              bakeId: newBake.id,
+              stepIndex: i,
+              name: step.name,
+              description: step.description || null,
+              estimatedDuration: step.duration,
+              status: i === 0 ? 'active' : 'pending',
+              startTime: i === 0 ? new Date().toISOString() : null,
+              endTime: null,
+              actualDuration: null,
+              autoAdjustments: null
+            });
+            console.log('Timeline step created:', timelineStep);
+          } catch (error) {
+            console.error('Failed to create timeline step:', error);
+          }
         }
+      } else {
+        console.log('Missing data for timeline creation:', {
+          hasRecipe: !!recipe,
+          hasSteps: !!(recipe?.steps),
+          hasBake: !!newBake,
+          hasBakeId: !!(newBake?.id)
+        });
       }
 
       queryClient.invalidateQueries({ queryKey: ["/api/bakes"] });

@@ -5,11 +5,36 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { User, Bell, Thermometer, Camera, Share2, Settings, Wheat } from "lucide-react";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Profile() {
+  const { toast } = useToast();
   const [notifications, setNotifications] = useState(true);
   const [autoSensors, setAutoSensors] = useState(true);
   const [photoBackup, setPhotoBackup] = useState(false);
+
+  const handleShareApp = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: 'SourDough Pro',
+        text: 'Check out this amazing sourdough baking assistant!',
+        url: window.location.href,
+      });
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "Link copied!",
+        description: "Share link copied to clipboard",
+      });
+    }
+  };
+
+  const handleAdvancedSettings = () => {
+    toast({
+      title: "Advanced Settings",
+      description: "Advanced configuration panel coming soon!",
+    });
+  };
 
   return (
     <div className="min-h-screen bg-sourdough-50">
@@ -123,6 +148,7 @@ export default function Profile() {
         {/* Actions */}
         <div className="space-y-3">
           <Button 
+            onClick={handleShareApp}
             variant="outline" 
             className="w-full justify-start border-sourdough-200 text-sourdough-800"
           >
@@ -131,6 +157,7 @@ export default function Profile() {
           </Button>
           
           <Button 
+            onClick={handleAdvancedSettings}
             variant="outline" 
             className="w-full justify-start border-sourdough-200 text-sourdough-800"
           >

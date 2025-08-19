@@ -3,11 +3,20 @@ import type { Tutorial } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Play } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function TutorialPreview() {
+  const { toast } = useToast();
   const { data: tutorials } = useQuery<Tutorial[]>({
     queryKey: ["/api/tutorials"],
   });
+
+  const handleStartTutorial = () => {
+    toast({
+      title: "Tutorial Starting",
+      description: "Interactive tutorial mode coming soon!",
+    });
+  };
 
   if (!tutorials || tutorials.length === 0) {
     return null;
@@ -44,7 +53,10 @@ export default function TutorialPreview() {
           <span className="text-sm text-sourdough-600">
             {featuredTutorial.description || "Learn proper shaping for better rise"}
           </span>
-          <Button className="bg-accent-orange-500 hover:bg-accent-orange-600 text-white">
+          <Button 
+            onClick={handleStartTutorial}
+            className="bg-accent-orange-500 hover:bg-accent-orange-600 text-white"
+          >
             Start
           </Button>
         </div>
