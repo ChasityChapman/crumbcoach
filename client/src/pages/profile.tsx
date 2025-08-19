@@ -6,12 +6,14 @@ import { Separator } from "@/components/ui/separator";
 import { User, Bell, Thermometer, Camera, Share2, Settings, Wheat } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import AdvancedSettingsModal from "@/components/advanced-settings-modal";
 
 export default function Profile() {
   const { toast } = useToast();
   const [notifications, setNotifications] = useState(true);
   const [autoSensors, setAutoSensors] = useState(true);
   const [photoBackup, setPhotoBackup] = useState(false);
+  const [advancedSettingsOpen, setAdvancedSettingsOpen] = useState(false);
 
   const handleShareApp = () => {
     if (navigator.share) {
@@ -30,10 +32,7 @@ export default function Profile() {
   };
 
   const handleAdvancedSettings = () => {
-    toast({
-      title: "Advanced Settings",
-      description: "Advanced configuration panel coming soon!",
-    });
+    setAdvancedSettingsOpen(true);
   };
 
   return (
@@ -180,6 +179,11 @@ export default function Profile() {
       </div>
 
       <BottomNavigation currentPath="/profile" />
+      
+      <AdvancedSettingsModal 
+        isOpen={advancedSettingsOpen}
+        onClose={() => setAdvancedSettingsOpen(false)}
+      />
     </div>
   );
 }
