@@ -1,4 +1,4 @@
-import type { Bake, TimelineStep } from "@shared/schema";
+import type { Bake, TimelineStep, Recipe } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -19,6 +19,45 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
   const [cameraOpen, setCameraOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
   
+  // Helper function to create timeline steps for this bake
+  const createTimelineSteps = async (bake: Bake) => {
+    console.log('Creating timeline steps for bake:', bake.id);
+    const recipe = recipes?.find((r: Recipe) => r.id === bake.recipeId);
+    
+    if (recipe && recipe.steps) {
+      const steps = recipe.steps as any[];
+      console.log('Found recipe with', steps.length, 'steps');
+      
+      for (let i = 0; i < steps.length; i++) {
+        const step = steps[i];
+        try {
+          await apiRequest("POST", "/api/timeline-steps", {
+            bakeId: bake.id,
+            stepIndex: i,
+            name: step.name,
+            description: step.description || null,
+            estimatedDuration: step.duration,
+            status: i === 0 ? 'active' : 'pending',
+            startTime: i === 0 ? new Date().toISOString() : null,
+            endTime: null,
+            actualDuration: null,
+            autoAdjustments: null
+          });
+        } catch (error) {
+          console.error('Failed to create timeline step:', error);
+        }
+      }
+      
+      // Refresh timeline after creation
+      queryClient.invalidateQueries({ queryKey: [`/api/bakes/${bake.id}/timeline`] });
+      
+      toast({
+        title: "Timeline Created!",
+        description: "Your baking timeline is now ready",
+      });
+    }
+  };
+  
   // Don't render if bake is invalid or doesn't have an ID
   if (!bake || !bake.id) {
     return null;
@@ -30,6 +69,10 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
   
   const { data: timelineSteps } = useQuery<TimelineStep[]>({
     queryKey: [`/api/bakes/${bake.id}/timeline`],
+  });
+  
+  const { data: recipes } = useQuery<Recipe[]>({
+    queryKey: ["/api/recipes"],
   });
   
   // Calculate progress based on completed steps
@@ -358,6 +401,12 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
                   <Clock className="w-5 h-5 mx-auto mb-2 text-white/40" />
                   <p>No timeline steps created yet</p>
                   <p className="text-xs mt-1 text-white/40">Steps will appear here once your bake begins</p>
+                  <button
+                    onClick={() => createTimelineSteps(bake)}
+                    className="mt-3 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Create Timeline
+                  </button>
                 </div>
               )}
             </div>
