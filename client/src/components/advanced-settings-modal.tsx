@@ -155,6 +155,7 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                   
                   <div className="space-y-2">
                     <Label>Polling Frequency</Label>
+                    <p className="text-xs text-muted-foreground mb-2">How often to check sensors for new readings</p>
                     <div className="space-y-2">
                       <Slider
                         value={[sensorPolling]}
@@ -172,19 +173,31 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-base">Auto-Calibration</Label>
+                    <div className="flex-1">
+                      <Label className="text-base font-medium">Auto-Calibration</Label>
                       <p className="text-sm text-muted-foreground">Automatically calibrate sensors based on environment</p>
                     </div>
-                    <Switch checked={autoCalibrate} onCheckedChange={setAutoCalibrate} />
+                    <div className="ml-4">
+                      <Switch 
+                        checked={autoCalibrate} 
+                        onCheckedChange={setAutoCalibrate}
+                        className="data-[state=checked]:bg-sourdough-500"
+                      />
+                    </div>
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-base">Manual Sensor Override</Label>
+                    <div className="flex-1">
+                      <Label className="text-base font-medium">Manual Sensor Override</Label>
                       <p className="text-sm text-muted-foreground">Allow manual input when sensors unavailable</p>
                     </div>
-                    <Switch checked={sensorOverride} onCheckedChange={setSensorOverride} />
+                    <div className="ml-4">
+                      <Switch 
+                        checked={sensorOverride} 
+                        onCheckedChange={setSensorOverride}
+                        className="data-[state=checked]:bg-sourdough-500"
+                      />
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -252,11 +265,17 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                 <Separator />
                 
                 <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-base">Auto Notifications</Label>
+                  <div className="flex-1">
+                    <Label className="text-base font-medium">Auto Notifications</Label>
                     <p className="text-sm text-muted-foreground">Send notifications for timeline milestones</p>
                   </div>
-                  <Switch checked={autoNotifications} onCheckedChange={setAutoNotifications} />
+                  <div className="ml-4">
+                    <Switch 
+                      checked={autoNotifications} 
+                      onCheckedChange={setAutoNotifications}
+                      className="data-[state=checked]:bg-sourdough-500"
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -321,11 +340,17 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                 <Separator />
                 
                 <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-base">Environmental Compensation</Label>
+                  <div className="flex-1">
+                    <Label className="text-base font-medium">Environmental Compensation</Label>
                     <p className="text-sm text-muted-foreground">Adjust timings based on temperature and humidity</p>
                   </div>
-                  <Switch checked={envCompensation} onCheckedChange={setEnvCompensation} />
+                  <div className="ml-4">
+                    <Switch 
+                      checked={envCompensation} 
+                      onCheckedChange={setEnvCompensation}
+                      className="data-[state=checked]:bg-sourdough-500"
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -359,27 +384,45 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-base">High Contrast Mode</Label>
+                    <div className="flex-1">
+                      <Label className="text-base font-medium">High Contrast Mode</Label>
                       <p className="text-sm text-muted-foreground">Enhanced visibility for better readability</p>
                     </div>
-                    <Switch checked={highContrast} onCheckedChange={setHighContrast} />
+                    <div className="ml-4">
+                      <Switch 
+                        checked={highContrast} 
+                        onCheckedChange={setHighContrast}
+                        className="data-[state=checked]:bg-sourdough-500"
+                      />
+                    </div>
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-base">Voice Notifications</Label>
+                    <div className="flex-1">
+                      <Label className="text-base font-medium">Voice Notifications</Label>
                       <p className="text-sm text-muted-foreground">Spoken alerts for timeline events</p>
                     </div>
-                    <Switch checked={voiceNotifications} onCheckedChange={setVoiceNotifications} />
+                    <div className="ml-4">
+                      <Switch 
+                        checked={voiceNotifications} 
+                        onCheckedChange={setVoiceNotifications}
+                        className="data-[state=checked]:bg-sourdough-500"
+                      />
+                    </div>
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-base">Haptic Feedback</Label>
+                    <div className="flex-1">
+                      <Label className="text-base font-medium">Haptic Feedback</Label>
                       <p className="text-sm text-muted-foreground">Vibration feedback on mobile devices</p>
                     </div>
-                    <Switch checked={hapticFeedback} onCheckedChange={setHapticFeedback} />
+                    <div className="ml-4">
+                      <Switch 
+                        checked={hapticFeedback} 
+                        onCheckedChange={setHapticFeedback}
+                        className="data-[state=checked]:bg-sourdough-500"
+                      />
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -425,19 +468,31 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
               <CardContent className="space-y-4">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-base">Debug Mode</Label>
+                    <div className="flex-1">
+                      <Label className="text-base font-medium">Debug Mode</Label>
                       <p className="text-sm text-muted-foreground">Show detailed logging and error information</p>
                     </div>
-                    <Switch checked={debugMode} onCheckedChange={setDebugMode} />
+                    <div className="ml-4">
+                      <Switch 
+                        checked={debugMode} 
+                        onCheckedChange={setDebugMode}
+                        className="data-[state=checked]:bg-sourdough-500"
+                      />
+                    </div>
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-base">Show Raw Sensor Data</Label>
+                    <div className="flex-1">
+                      <Label className="text-base font-medium">Show Raw Sensor Data</Label>
                       <p className="text-sm text-muted-foreground">Display unprocessed sensor readings</p>
                     </div>
-                    <Switch checked={showRawData} onCheckedChange={setShowRawData} />
+                    <div className="ml-4">
+                      <Switch 
+                        checked={showRawData} 
+                        onCheckedChange={setShowRawData}
+                        className="data-[state=checked]:bg-sourdough-500"
+                      />
+                    </div>
                   </div>
                 </div>
                 
