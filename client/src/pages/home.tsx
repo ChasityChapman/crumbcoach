@@ -122,10 +122,8 @@ export default function Home() {
         {/* Active Bake Cards */}
         {activeBakes.length > 0 ? (
           <div className="space-y-4">
-            {/* Show all active bakes */}
-            {activeBakes.map((bake) => (
-              <ActiveBakeCard key={bake.id} bake={bake} />
-            ))}
+            {/* Show only the most recent active bake */}
+            <ActiveBakeCard key={activeBakes[0].id} bake={activeBakes[0]} />
           </div>
         ) : (
           <div className="p-4">
