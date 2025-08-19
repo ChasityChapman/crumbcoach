@@ -172,26 +172,30 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                 <Separator />
                 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex-1">
                       <Label className="text-base font-medium">Auto-Calibration</Label>
                       <p className="text-sm text-muted-foreground">Automatically calibrate sensors based on environment</p>
                     </div>
-                    <Switch 
-                      checked={autoCalibrate} 
-                      onCheckedChange={setAutoCalibrate}
-                    />
+                    <div className="flex-shrink-0 ml-4">
+                      <Switch 
+                        checked={autoCalibrate} 
+                        onCheckedChange={setAutoCalibrate}
+                      />
+                    </div>
                   </div>
                   
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex-1">
                       <Label className="text-base font-medium">Manual Sensor Override</Label>
                       <p className="text-sm text-muted-foreground">Allow manual input when sensors unavailable</p>
                     </div>
-                    <Switch 
-                      checked={sensorOverride} 
-                      onCheckedChange={setSensorOverride}
-                    />
+                    <div className="flex-shrink-0 ml-4">
+                      <Switch 
+                        checked={sensorOverride} 
+                        onCheckedChange={setSensorOverride}
+                      />
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -258,15 +262,17 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                 
                 <Separator />
                 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex-1">
                     <Label className="text-base font-medium">Auto Notifications</Label>
                     <p className="text-sm text-muted-foreground">Send notifications for timeline milestones</p>
                   </div>
-                  <Switch 
-                    checked={autoNotifications} 
-                    onCheckedChange={setAutoNotifications}
-                  />
+                  <div className="flex-shrink-0 ml-4">
+                    <Switch 
+                      checked={autoNotifications} 
+                      onCheckedChange={setAutoNotifications}
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -330,15 +336,17 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                 
                 <Separator />
                 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex-1">
                     <Label className="text-base font-medium">Environmental Compensation</Label>
                     <p className="text-sm text-muted-foreground">Adjust timings based on temperature and humidity</p>
                   </div>
-                  <Switch 
-                    checked={envCompensation} 
-                    onCheckedChange={setEnvCompensation}
-                  />
+                  <div className="flex-shrink-0 ml-4">
+                    <Switch 
+                      checked={envCompensation} 
+                      onCheckedChange={setEnvCompensation}
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -371,37 +379,43 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                 <Separator />
                 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex-1">
                       <Label className="text-base font-medium">High Contrast Mode</Label>
                       <p className="text-sm text-muted-foreground">Enhanced visibility for better readability</p>
                     </div>
-                    <Switch 
-                      checked={highContrast} 
-                      onCheckedChange={setHighContrast}
-                    />
+                    <div className="flex-shrink-0 ml-4">
+                      <Switch 
+                        checked={highContrast} 
+                        onCheckedChange={setHighContrast}
+                      />
+                    </div>
                   </div>
                   
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex-1">
                       <Label className="text-base font-medium">Voice Notifications</Label>
                       <p className="text-sm text-muted-foreground">Spoken alerts for timeline events</p>
                     </div>
-                    <Switch 
-                      checked={voiceNotifications} 
-                      onCheckedChange={setVoiceNotifications}
-                    />
+                    <div className="flex-shrink-0 ml-4">
+                      <Switch 
+                        checked={voiceNotifications} 
+                        onCheckedChange={setVoiceNotifications}
+                      />
+                    </div>
                   </div>
                   
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex-1">
                       <Label className="text-base font-medium">Haptic Feedback</Label>
                       <p className="text-sm text-muted-foreground">Vibration feedback on mobile devices</p>
                     </div>
-                    <Switch 
-                      checked={hapticFeedback} 
-                      onCheckedChange={setHapticFeedback}
-                    />
+                    <div className="flex-shrink-0 ml-4">
+                      <Switch 
+                        checked={hapticFeedback} 
+                        onCheckedChange={setHapticFeedback}
+                      />
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -446,26 +460,30 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex-1">
                       <Label className="text-base font-medium">Debug Mode</Label>
                       <p className="text-sm text-muted-foreground">Show detailed logging and error information</p>
                     </div>
-                    <Switch 
-                      checked={debugMode} 
-                      onCheckedChange={setDebugMode}
-                    />
+                    <div className="flex-shrink-0 ml-4">
+                      <Switch 
+                        checked={debugMode} 
+                        onCheckedChange={setDebugMode}
+                      />
+                    </div>
                   </div>
                   
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex-1">
                       <Label className="text-base font-medium">Show Raw Sensor Data</Label>
                       <p className="text-sm text-muted-foreground">Display unprocessed sensor readings</p>
                     </div>
-                    <Switch 
-                      checked={showRawData} 
-                      onCheckedChange={setShowRawData}
-                    />
+                    <div className="flex-shrink-0 ml-4">
+                      <Switch 
+                        checked={showRawData} 
+                        onCheckedChange={setShowRawData}
+                      />
+                    </div>
                   </div>
                 </div>
                 
