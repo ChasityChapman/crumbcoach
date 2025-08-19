@@ -1,0 +1,104 @@
+import { sql } from "drizzle-orm";
+import { pgTable, text, varchar, integer, timestamp, boolean, jsonb } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+
+export const recipes = pgTable("recipes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description"),
+  totalTimeHours: integer("total_time_hours").notNull(),
+  difficulty: text("difficulty").notNull(), // 'beginner', 'intermediate', 'advanced'
+  ingredients: jsonb("ingredients").notNull(), // Array of {name: string, amount: string}
+  steps: jsonb("steps").notNull(), // Array of {id: string, name: string, duration: number, description: string}
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const bakes = pgTable("bakes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  recipeId: varchar("recipe_id").notNull().references(() => recipes.id),
+  name: text("name").notNull(),
+  status: text("status").notNull(), // 'active', 'completed', 'paused'
+  currentStep: integer("current_step").default(0),
+  startTime: timestamp("start_time").defaultNow(),
+  estimatedEndTime: timestamp("estimated_end_time"),
+  actualEndTime: timestamp("actual_end_time"),
+  environmentalData: jsonb("environmental_data"), // {temperature: number, humidity: number}
+  timelineAdjustments: jsonb("timeline_adjustments"), // Array of adjustments made
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const timelineSteps = pgTable("timeline_steps", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bakeId: varchar("bake_id").notNull().references(() => bakes.id),
+  stepIndex: integer("step_index").notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  estimatedDuration: integer("estimated_duration_minutes").notNull(),
+  actualDuration: integer("actual_duration_minutes"),
+  startTime: timestamp("start_time"),
+  endTime: timestamp("end_time"),
+  status: text("status").notNull(), // 'pending', 'active', 'completed'
+  autoAdjustments: jsonb("auto_adjustments"), // Tracking recalibrations
+});
+
+export const bakeNotes = pgTable("bake_notes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bakeId: varchar("bake_id").notNull().references(() => bakes.id),
+  stepIndex: integer("step_index"),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const bakePhotos = pgTable("bake_photos", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bakeId: varchar("bake_id").notNull().references(() => bakes.id),
+  stepIndex: integer("step_index"),
+  filename: text("filename").notNull(),
+  caption: text("caption"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const tutorials = pgTable("tutorials", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  description: text("description"),
+  difficulty: text("difficulty").notNull(),
+  steps: jsonb("steps").notNull(), // Array of tutorial steps with images/videos
+  duration: integer("duration_minutes"),
+  thumbnail: text("thumbnail"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const sensorReadings = pgTable("sensor_readings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bakeId: varchar("bake_id").references(() => bakes.id),
+  temperature: integer("temperature"), // Celsius * 10 for precision
+  humidity: integer("humidity"), // Percentage
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+// Insert schemas
+export const insertRecipeSchema = createInsertSchema(recipes).omit({ id: true, createdAt: true });
+export const insertBakeSchema = createInsertSchema(bakes).omit({ id: true, createdAt: true });
+export const insertTimelineStepSchema = createInsertSchema(timelineSteps).omit({ id: true });
+export const insertBakeNoteSchema = createInsertSchema(bakeNotes).omit({ id: true, createdAt: true });
+export const insertBakePhotoSchema = createInsertSchema(bakePhotos).omit({ id: true, createdAt: true });
+export const insertTutorialSchema = createInsertSchema(tutorials).omit({ id: true, createdAt: true });
+export const insertSensorReadingSchema = createInsertSchema(sensorReadings).omit({ id: true, timestamp: true });
+
+// Types
+export type Recipe = typeof recipes.$inferSelect;
+export type InsertRecipe = z.infer<typeof insertRecipeSchema>;
+export type Bake = typeof bakes.$inferSelect;
+export type InsertBake = z.infer<typeof insertBakeSchema>;
+export type TimelineStep = typeof timelineSteps.$inferSelect;
+export type InsertTimelineStep = z.infer<typeof insertTimelineStepSchema>;
+export type BakeNote = typeof bakeNotes.$inferSelect;
+export type InsertBakeNote = z.infer<typeof insertBakeNoteSchema>;
+export type BakePhoto = typeof bakePhotos.$inferSelect;
+export type InsertBakePhoto = z.infer<typeof insertBakePhotoSchema>;
+export type Tutorial = typeof tutorials.$inferSelect;
+export type InsertTutorial = z.infer<typeof insertTutorialSchema>;
+export type SensorReading = typeof sensorReadings.$inferSelect;
+export type InsertSensorReading = z.infer<typeof insertSensorReadingSchema>;
