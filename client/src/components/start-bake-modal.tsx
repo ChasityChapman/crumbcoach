@@ -96,11 +96,20 @@ export default function StartBakeModal({ isOpen, onClose }: StartBakeModalProps)
     const now = new Date();
     const estimatedEndTime = new Date(now.getTime() + (selectedRecipe?.totalTimeHours || 24) * 60 * 60 * 1000);
 
-    // Try with minimal required fields first
     startBakeMutation.mutate({
       recipeId: selectedRecipeId,
       name: bakeName.trim(),
       status: 'active',
+      currentStep: 0,
+      startTime: now.toISOString(),
+      estimatedEndTime: estimatedEndTime.toISOString(),
+      actualEndTime: null,
+      environmentalData: sensorData ? {
+        temperature: sensorData.temperature,
+        humidity: sensorData.humidity,
+        timestamp: sensorData.timestamp.toISOString()
+      } : null,
+      timelineAdjustments: null,
     });
   };
 
