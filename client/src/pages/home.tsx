@@ -11,6 +11,7 @@ import BottomNavigation from "@/components/bottom-navigation";
 import CameraModal from "@/components/camera-modal";
 import NotesModal from "@/components/notes-modal";
 import StartBakeModal from "@/components/start-bake-modal";
+import NewRecipeModal from "@/components/new-recipe-modal";
 import { useState, useEffect } from "react";
 import { Wheat, Bell } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -20,6 +21,7 @@ export default function Home() {
   const [cameraOpen, setCameraOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
   const [startBakeOpen, setStartBakeOpen] = useState(false);
+  const [newRecipeOpen, setNewRecipeOpen] = useState(false);
   
   // Clear any stale bake cache data on component mount
   useEffect(() => {
@@ -144,6 +146,7 @@ export default function Home() {
           onOpenCamera={() => setCameraOpen(true)}
           onOpenNotes={() => setNotesOpen(true)}
           onStartBake={() => setStartBakeOpen(true)}
+          onNewRecipe={() => setNewRecipeOpen(true)}
           hasActiveBake={activeBakes.length > 0}
         />
 
@@ -173,6 +176,10 @@ export default function Home() {
       <StartBakeModal
         isOpen={startBakeOpen}
         onClose={() => setStartBakeOpen(false)}
+      />
+      <NewRecipeModal
+        isOpen={newRecipeOpen}
+        onClose={() => setNewRecipeOpen(false)}
       />
     </div>
   );

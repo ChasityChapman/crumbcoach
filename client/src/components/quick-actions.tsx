@@ -1,9 +1,10 @@
-import { Camera, StickyNote, Clock, Plus } from "lucide-react";
+import { Camera, StickyNote, Clock, Plus, ChefHat } from "lucide-react";
 
 interface QuickActionsProps {
   onOpenCamera: () => void;
   onOpenNotes: () => void;
   onStartBake: () => void;
+  onNewRecipe?: () => void;
   onAdjustTimeline?: () => void;
   hasActiveBake: boolean;
 }
@@ -12,13 +13,14 @@ export default function QuickActions({
   onOpenCamera, 
   onOpenNotes, 
   onStartBake,
+  onNewRecipe,
   onAdjustTimeline,
   hasActiveBake
 }: QuickActionsProps) {
   return (
     <div className="px-4 mb-6">
       <h3 className="font-semibold text-sourdough-800 mb-3">Quick Actions</h3>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-4 gap-3">
         <button 
           onClick={onOpenCamera}
           className="bg-white rounded-xl p-4 shadow-sm border border-sourdough-100 text-center hover:bg-sourdough-50 transition-colors"
@@ -49,6 +51,14 @@ export default function QuickActions({
           <p className="text-sm font-medium">
             {hasActiveBake ? 'New Bake' : 'Start Bake'}
           </p>
+        </button>
+        
+        <button 
+          onClick={onNewRecipe}
+          className="bg-white rounded-xl p-4 shadow-sm border border-sourdough-100 text-center hover:bg-sourdough-50 transition-colors"
+        >
+          <ChefHat className="w-6 h-6 text-blue-500 mx-auto mb-2" />
+          <p className="text-sm font-medium text-sourdough-800">New Recipe</p>
         </button>
       </div>
     </div>

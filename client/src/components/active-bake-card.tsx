@@ -322,6 +322,49 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
               </button>
             </div>
             
+            {/* Control Buttons */}
+            <div className="mb-4">
+              <h4 className="text-sm font-medium mb-2">Bake Controls</h4>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  onClick={handleSkipStep}
+                  disabled={skipStepMutation.isPending || !activeStep}
+                  size="sm"
+                  className="bg-green-600 hover:bg-green-700 text-white disabled:bg-gray-400"
+                >
+                  <CheckCircle className="w-4 h-4 mr-1" />
+                  Complete
+                </Button>
+                <Button
+                  onClick={handleSkipWithoutCompleting}
+                  disabled={skipWithoutCompletingMutation.isPending || !activeStep}
+                  size="sm"
+                  className="bg-yellow-600 hover:bg-yellow-700 text-white disabled:bg-gray-400"
+                >
+                  <SkipForward className="w-4 h-4 mr-1" />
+                  Skip
+                </Button>
+                <Button
+                  onClick={handleCancelBake}
+                  disabled={cancelBakeMutation.isPending}
+                  size="sm"
+                  className="bg-orange-600 hover:bg-orange-700 text-white"
+                >
+                  <AlertTriangle className="w-4 h-4 mr-1" />
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleStopBake}
+                  disabled={stopBakeMutation.isPending}
+                  size="sm"
+                  variant="destructive"
+                >
+                  <Square className="w-4 h-4 mr-1" />
+                  Delete
+                </Button>
+              </div>
+            </div>
+            
             {/* Timeline Steps Overview */}
             {timelineSteps && timelineSteps.length > 0 && (
               <div className="mb-4">
@@ -448,43 +491,15 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
               </div>
             )}
             
-            {/* Control Buttons */}
-            <div className="grid grid-cols-2 gap-2">
+            {/* Step Actions (only shown when step is active) */}
+            <div className="flex space-x-2">
               <Button
-                onClick={handleSkipStep}
-                disabled={skipStepMutation.isPending}
+                onClick={resetStepTimer}
                 size="sm"
-                className="bg-green-600 hover:bg-green-700 text-white"
+                variant="outline"
+                className="flex-1 bg-white/10 hover:bg-white/20 text-white border-white/30"
               >
-                <CheckCircle className="w-4 h-4 mr-1" />
-                Complete
-              </Button>
-              <Button
-                onClick={handleSkipWithoutCompleting}
-                disabled={skipWithoutCompletingMutation.isPending}
-                size="sm"
-                className="bg-yellow-600 hover:bg-yellow-700 text-white"
-              >
-                <SkipForward className="w-4 h-4 mr-1" />
-                Skip
-              </Button>
-              <Button
-                onClick={handleCancelBake}
-                disabled={cancelBakeMutation.isPending}
-                size="sm"
-                className="bg-orange-600 hover:bg-orange-700 text-white"
-              >
-                <AlertTriangle className="w-4 h-4 mr-1" />
-                Cancel
-              </Button>
-              <Button
-                onClick={handleStopBake}
-                disabled={stopBakeMutation.isPending}
-                size="sm"
-                variant="destructive"
-              >
-                <Square className="w-4 h-4 mr-1" />
-                Delete
+                Reset Timer
               </Button>
             </div>
           </div>
