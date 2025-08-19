@@ -123,21 +123,14 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
   // Stop bake mutation
   const stopBakeMutation = useMutation({
     mutationFn: () => apiRequest("DELETE", `/api/bakes/${bake.id}`),
-    onSuccess: () => {
-      // Aggressively clear all cache data
-      queryClient.setQueryData(['/api/bakes'], (oldData: any) => {
-        if (!oldData) return [];
-        return oldData.filter((b: any) => b.id !== bake.id);
-      });
+    onSuccess: async () => {
+      // Clear all cache data completely
+      queryClient.clear();
       
-      // Remove all queries related to this bake
-      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}`], exact: false });
-      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}/timeline`], exact: false });
-      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}/notes`], exact: false });
-      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}/photos`], exact: false });
-      
-      // Force invalidate to trigger re-renders
-      queryClient.invalidateQueries({ queryKey: ["/api/bakes"] });
+      // Wait a moment then refetch fresh data
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ["/api/bakes"] });
+      }, 100);
       
       toast({
         title: "Bake Stopped",
