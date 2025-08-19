@@ -1,6 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
-import type { Bake, Recipe, SensorReading } from "@shared/schema";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import type { Bake, Recipe, SensorReading, TimelineStep } from "@shared/schema";
 import ActiveBakeCard from "@/components/active-bake-card";
 import SensorWidget from "@/components/sensor-widget";
 import QuickActions from "@/components/quick-actions";
@@ -11,10 +11,12 @@ import BottomNavigation from "@/components/bottom-navigation";
 import CameraModal from "@/components/camera-modal";
 import NotesModal from "@/components/notes-modal";
 import StartBakeModal from "@/components/start-bake-modal";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Wheat, Bell } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
+  const { toast } = useToast();
   const [cameraOpen, setCameraOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
   const [startBakeOpen, setStartBakeOpen] = useState(false);
@@ -27,6 +29,63 @@ export default function Home() {
     queryKey: ["/api/sensors/latest"],
     refetchInterval: 30000, // Refresh every 30 seconds
   });
+
+  const { data: recipes } = useQuery<Recipe[]>({
+    queryKey: ["/api/recipes"],
+  });
+
+  const { data: timelineSteps } = useQuery<TimelineStep[]>({
+    queryKey: [`/api/bakes/${activeBake?.id}/timeline`],
+    enabled: !!activeBake?.id,
+  });
+
+  // Helper function to create timeline steps for existing bake
+  const createTimelineSteps = async (bake: Bake) => {
+    console.log('Creating timeline steps for existing bake:', bake.id);
+    const recipe = recipes?.find(r => r.id === bake.recipeId);
+    
+    if (recipe && recipe.steps) {
+      const steps = recipe.steps as any[];
+      console.log('Found recipe with', steps.length, 'steps');
+      
+      for (let i = 0; i < steps.length; i++) {
+        const step = steps[i];
+        try {
+          const timelineStep = await apiRequest("POST", "/api/timeline-steps", {
+            bakeId: bake.id,
+            stepIndex: i,
+            name: step.name,
+            description: step.description || null,
+            estimatedDuration: step.duration,
+            status: i === 0 ? 'active' : 'pending',
+            startTime: i === 0 ? new Date().toISOString() : null,
+            endTime: null,
+            actualDuration: null,
+            autoAdjustments: null
+          });
+          console.log('Created timeline step:', timelineStep);
+        } catch (error) {
+          console.error('Failed to create timeline step:', error);
+        }
+      }
+      
+      // Refresh timeline after creation
+      queryClient.invalidateQueries({ queryKey: [`/api/bakes/${bake.id}/timeline`] });
+      
+      toast({
+        title: "Timeline Created!",
+        description: "Your baking timeline is now ready",
+      });
+    }
+  };
+
+  // Auto-create timeline steps if bake exists but has no timeline
+  useEffect(() => {
+    if (activeBake && recipes && timelineSteps !== undefined && timelineSteps.length === 0) {
+      console.log('Active bake found with no timeline steps, creating them...');
+      createTimelineSteps(activeBake);
+    }
+  }, [activeBake, recipes, timelineSteps]);
 
   return (
     <div className="min-h-screen bg-sourdough-50">

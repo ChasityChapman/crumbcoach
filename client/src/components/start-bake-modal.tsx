@@ -80,6 +80,7 @@ export default function StartBakeModal({ isOpen, onClose }: StartBakeModalProps)
 
       queryClient.invalidateQueries({ queryKey: ["/api/bakes"] });
       queryClient.invalidateQueries({ queryKey: ["/api/bakes/active"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/bakes/${newBake.id}/timeline`] });
       
       toast({
         title: "Bake started!",
