@@ -21,9 +21,12 @@ export default function Home() {
   const [notesOpen, setNotesOpen] = useState(false);
   const [startBakeOpen, setStartBakeOpen] = useState(false);
 
-  const { data: activeBake } = useQuery<Bake | null>({
-    queryKey: ["/api/bakes/active"],
+  // Get all bakes and filter for active ones
+  const { data: allBakes } = useQuery<Bake[]>({
+    queryKey: ["/api/bakes"],
   });
+  
+  const activeBakes = allBakes?.filter(bake => bake.status === 'active') || [];
 
   const { data: latestSensor } = useQuery<SensorReading | null>({
     queryKey: ["/api/sensors/latest"],
@@ -34,10 +37,13 @@ export default function Home() {
     queryKey: ["/api/recipes"],
   });
 
-  const { data: timelineSteps } = useQuery<TimelineStep[]>({
-    queryKey: [`/api/bakes/${activeBake?.id}/timeline`],
-    enabled: !!activeBake?.id,
-  });
+  // Timeline steps queries for all active bakes
+  const timelineQueries = activeBakes.map(bake => 
+    useQuery<TimelineStep[]>({
+      queryKey: [`/api/bakes/${bake.id}/timeline`],
+      enabled: !!bake.id,
+    })
+  );
 
   // Helper function to create timeline steps for existing bake
   const createTimelineSteps = async (bake: Bake) => {
@@ -79,13 +85,18 @@ export default function Home() {
     }
   };
 
-  // Auto-create timeline steps if bake exists but has no timeline
+  // Auto-create timeline steps for any active bakes that don't have them
   useEffect(() => {
-    if (activeBake && recipes && timelineSteps !== undefined && timelineSteps.length === 0) {
-      console.log('Active bake found with no timeline steps, creating them...');
-      createTimelineSteps(activeBake);
+    if (recipes && activeBakes.length > 0) {
+      activeBakes.forEach((bake, index) => {
+        const timelineData = timelineQueries[index]?.data;
+        if (timelineData !== undefined && timelineData.length === 0) {
+          console.log('Active bake found with no timeline steps, creating them...', bake.id);
+          createTimelineSteps(bake);
+        }
+      });
     }
-  }, [activeBake, recipes, timelineSteps]);
+  }, [activeBakes, recipes, timelineQueries]);
 
   return (
     <div className="min-h-screen bg-sourdough-50">
@@ -109,8 +120,24 @@ export default function Home() {
       </header>
 
       <div className="pb-20">
-        {/* Active Bake Card */}
-        {activeBake && <ActiveBakeCard bake={activeBake} />}
+        {/* Active Bake Cards */}
+        {activeBakes.length > 0 ? (
+          <div className="space-y-1">
+            {activeBakes.map((bake) => (
+              <ActiveBakeCard key={bake.id} bake={bake} />
+            ))}
+          </div>
+        ) : (
+          <div className="p-4">
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-sourdough-200 rounded-full mx-auto mb-3 flex items-center justify-center">
+                <span className="text-2xl">🍞</span>
+              </div>
+              <p className="text-sourdough-600 mb-2">No active bakes</p>
+              <p className="text-sm text-sourdough-500">Start a new bake to begin your sourdough journey</p>
+            </div>
+          </div>
+        )}
 
         {/* Sensor Data */}
         <SensorWidget reading={latestSensor} />
@@ -120,11 +147,10 @@ export default function Home() {
           onOpenCamera={() => setCameraOpen(true)}
           onOpenNotes={() => setNotesOpen(true)}
           onStartBake={() => setStartBakeOpen(true)}
-          hasActiveBake={!!activeBake}
+          hasActiveBake={activeBakes.length > 0}
         />
 
-        {/* Timeline */}
-        {activeBake && <TimelineView bakeId={activeBake.id} />}
+        {/* Note: Timeline view is now integrated into each ActiveBakeCard */}
 
         {/* Tutorial Preview */}
         <TutorialPreview />
@@ -140,12 +166,12 @@ export default function Home() {
       <CameraModal
         isOpen={cameraOpen}
         onClose={() => setCameraOpen(false)}
-        bakeId={activeBake?.id}
+        bakeId={activeBakes[0]?.id}
       />
       <NotesModal
         isOpen={notesOpen}
         onClose={() => setNotesOpen(false)}
-        bakeId={activeBake?.id}
+        bakeId={activeBakes[0]?.id}
       />
       <StartBakeModal
         isOpen={startBakeOpen}

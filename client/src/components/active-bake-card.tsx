@@ -112,7 +112,6 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
     onSuccess: () => {
       // Invalidate all relevant queries to update UI
       queryClient.invalidateQueries({ queryKey: ["/api/bakes"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/bakes/active"] });
       queryClient.invalidateQueries({ queryKey: [`/api/bakes/${bake.id}/timeline`] });
       queryClient.invalidateQueries({ queryKey: [`/api/bakes/${bake.id}/notes`] });
       toast({
