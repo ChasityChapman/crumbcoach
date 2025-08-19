@@ -21,6 +21,7 @@ interface StartBakeModalProps {
 export default function StartBakeModal({ isOpen, onClose }: StartBakeModalProps) {
   const [selectedRecipeId, setSelectedRecipeId] = useState("");
   const [bakeName, setBakeName] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { sensorData } = useSensors();
 
@@ -31,6 +32,7 @@ export default function StartBakeModal({ isOpen, onClose }: StartBakeModalProps)
   const startBakeMutation = useMutation({
     mutationFn: (bakeData: any) => apiRequest("POST", "/api/bakes", bakeData),
     onSuccess: async (newBake: any) => {
+      setIsSubmitting(false);
       console.log('New bake created:', newBake);
       // Create timeline steps for the new bake
       const recipe = recipes?.find(r => r.id === selectedRecipeId);
@@ -90,8 +92,10 @@ export default function StartBakeModal({ isOpen, onClose }: StartBakeModalProps)
       onClose();
       setBakeName("");
       setSelectedRecipeId("");
+      setIsSubmitting(false);
     },
     onError: () => {
+      setIsSubmitting(false);
       toast({
         title: "Failed to start bake",
         description: "Please try again.",
@@ -103,6 +107,10 @@ export default function StartBakeModal({ isOpen, onClose }: StartBakeModalProps)
   const selectedRecipe = recipes?.find(r => r.id === selectedRecipeId);
 
   const handleStartBake = () => {
+    if (isSubmitting || startBakeMutation.isPending) {
+      return; // Prevent multiple submissions
+    }
+    
     if (!selectedRecipeId || !bakeName.trim()) {
       toast({
         title: "Missing information",
@@ -111,6 +119,8 @@ export default function StartBakeModal({ isOpen, onClose }: StartBakeModalProps)
       });
       return;
     }
+    
+    setIsSubmitting(true);
 
     const now = new Date();
     const estimatedEndTime = new Date(now.getTime() + (selectedRecipe?.totalTimeHours || 24) * 60 * 60 * 1000);
@@ -247,10 +257,10 @@ export default function StartBakeModal({ isOpen, onClose }: StartBakeModalProps)
           </Button>
           <Button
             onClick={handleStartBake}
-            disabled={!selectedRecipeId || !bakeName.trim() || startBakeMutation.isPending}
+            disabled={!selectedRecipeId || !bakeName.trim() || startBakeMutation.isPending || isSubmitting}
             className="flex-1 bg-sourdough-500 hover:bg-sourdough-600 text-white"
           >
-            {startBakeMutation.isPending ? "Starting..." : "Start Baking"}
+            {(startBakeMutation.isPending || isSubmitting) ? "Starting..." : "Start Baking"}
           </Button>
         </div>
       </DialogContent>
