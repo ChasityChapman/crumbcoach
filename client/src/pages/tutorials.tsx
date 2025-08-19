@@ -5,11 +5,27 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, Play, Wheat } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function Tutorials() {
+  const { toast } = useToast();
+  const [selectedTutorial, setSelectedTutorial] = useState<Tutorial | null>(null);
+  const [tutorialOpen, setTutorialOpen] = useState(false);
+  
   const { data: tutorials, isLoading } = useQuery<Tutorial[]>({
     queryKey: ["/api/tutorials"],
   });
+  
+  const startTutorial = (tutorial: Tutorial) => {
+    setSelectedTutorial(tutorial);
+    setTutorialOpen(true);
+    toast({
+      title: "Tutorial Started!",
+      description: `Starting: ${tutorial.title}`,
+    });
+  };
 
   if (isLoading) {
     return (
@@ -94,7 +110,10 @@ export default function Tutorials() {
                       </div>
                       <span>{(tutorial.steps as any[])?.length || 0} steps</span>
                     </div>
-                    <Button className="bg-accent-orange-500 hover:bg-accent-orange-600 text-white">
+                    <Button 
+                      onClick={() => startTutorial(tutorial)}
+                      className="bg-accent-orange-500 hover:bg-accent-orange-600 text-white"
+                    >
                       Start
                     </Button>
                   </div>
@@ -114,6 +133,80 @@ export default function Tutorials() {
       </div>
 
       <BottomNavigation currentPath="/tutorials" />
+      
+      {/* Tutorial Modal */}
+      <Dialog open={tutorialOpen} onOpenChange={setTutorialOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Play className="w-5 h-5" />
+              <span>{selectedTutorial?.title}</span>
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedTutorial && (
+            <div className="space-y-4">
+              {selectedTutorial.thumbnail && (
+                <div className="relative">
+                  <img 
+                    src={selectedTutorial.thumbnail} 
+                    alt={selectedTutorial.title}
+                    className="w-full h-48 object-cover rounded-lg"
+                  />
+                </div>
+              )}
+              
+              <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                <div className="flex items-center space-x-1">
+                  <Clock className="w-4 h-4" />
+                  <span>{selectedTutorial.duration} minutes</span>
+                </div>
+                <Badge variant="outline">{selectedTutorial.difficulty}</Badge>
+              </div>
+              
+              {selectedTutorial.description && (
+                <p className="text-sourdough-700">{selectedTutorial.description}</p>
+              )}
+              
+              {selectedTutorial.steps && (selectedTutorial.steps as any[]).length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-lg">Tutorial Steps:</h3>
+                  <div className="space-y-2">
+                    {(selectedTutorial.steps as any[]).map((step, index) => (
+                      <div key={index} className="flex space-x-3 p-3 bg-sourdough-50 rounded-lg">
+                        <div className="w-6 h-6 bg-sourdough-500 text-white rounded-full flex items-center justify-center text-sm font-medium">
+                          {index + 1}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-sourdough-800">{step.title || `Step ${index + 1}`}</h4>
+                          {step.description && (
+                            <p className="text-sm text-sourdough-600 mt-1">{step.description}</p>
+                          )}
+                          {step.duration && (
+                            <div className="flex items-center space-x-1 mt-2 text-xs text-sourdough-500">
+                              <Clock className="w-3 h-3" />
+                              <span>{step.duration} min</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button variant="outline" onClick={() => setTutorialOpen(false)}>
+                  Close
+                </Button>
+                <Button className="bg-accent-orange-500 hover:bg-accent-orange-600 text-white">
+                  Begin Tutorial
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
