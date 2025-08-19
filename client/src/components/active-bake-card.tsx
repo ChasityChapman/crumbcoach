@@ -43,7 +43,35 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
     return timelineSteps?.find(step => step.status === 'active');
   };
   
+  const isAllStepsCompleted = () => {
+    if (!timelineSteps || timelineSteps.length === 0) return false;
+    return timelineSteps.every(step => step.status === 'completed');
+  };
+  
   const activeStep = getActiveStep();
+  const allCompleted = isAllStepsCompleted();
+  
+  // Mark bake as completed when all steps are done
+  const completeBakeMutation = useMutation({
+    mutationFn: () => apiRequest("PATCH", `/api/bakes/${bake.id}`, {
+      status: "completed",
+      endTime: new Date().toISOString(),
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/bakes"] });
+      toast({
+        title: "Bake Complete! 🎉",
+        description: "Congratulations! Your sourdough journey is finished.",
+      });
+    },
+  });
+  
+  // Auto-complete bake when all steps are done
+  useEffect(() => {
+    if (allCompleted && bake.status !== 'completed') {
+      completeBakeMutation.mutate();
+    }
+  }, [allCompleted, bake.status]);
   
   // Timer functionality
   useEffect(() => {
@@ -157,8 +185,19 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
           </div>
         </div>
 
+        {/* Completion State */}
+        {allCompleted && (
+          <div className="bg-green-500/20 rounded-lg p-4 border border-green-400/30">
+            <div className="text-center">
+              <CheckCircle className="w-8 h-8 text-green-200 mx-auto mb-2" />
+              <p className="font-medium text-lg text-green-100">Bake Complete!</p>
+              <p className="text-sm text-green-200">All steps finished successfully</p>
+            </div>
+          </div>
+        )}
+        
         {/* Active Step with Timer */}
-        {activeStep && (
+        {activeStep && !allCompleted && (
           <div className="bg-white/10 rounded-lg p-4">
             <div className="flex items-center justify-between mb-3">
               <div>
@@ -252,26 +291,26 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
           </div>
         )}
         
-        {/* Fallback for when no active step */}
-        {!activeStep && (
+        {/* Fallback for when no active step but not all completed */}
+        {!activeStep && !allCompleted && (
           <div className="bg-white/10 rounded-lg p-3">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-sourdough-100">
-                  {timeRemaining > 0 ? "Next Step" : "Completed"}
+                  {timeRemaining > 0 ? "Next Step" : "Ready"}
                 </p>
                 <p className="font-medium">
-                  {timeRemaining > 0 ? getCurrentStage() : "Bake Complete!"}
+                  {timeRemaining > 0 ? getCurrentStage() : "Timeline Ready"}
                 </p>
               </div>
               <div className="text-right">
                 <p className="text-sm text-sourdough-100">
-                  {timeRemaining > 0 ? "In" : "Finished"}
+                  {timeRemaining > 0 ? "In" : "Waiting"}
                 </p>
                 <p className="font-semibold text-lg">
                   {timeRemaining > 0 
                     ? `${hoursRemaining}h ${minutesRemaining}m`
-                    : "Done!"
+                    : "Ready!"
                   }
                 </p>
               </div>
