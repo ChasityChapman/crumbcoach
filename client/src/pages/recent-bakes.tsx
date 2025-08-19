@@ -14,21 +14,21 @@ interface BakeDetailModalProps {
 
 function BakeDetailModal({ bake, isOpen, onClose }: BakeDetailModalProps) {
   const { data: notes } = useQuery<BakeNote[]>({
-    queryKey: [`/api/bakes/${bake.id}/notes`],
-    enabled: isOpen,
+    queryKey: [`/api/bakes/${bake?.id}/notes`],
+    enabled: isOpen && !!bake?.id,
   });
 
   const { data: photos } = useQuery<BakePhoto[]>({
-    queryKey: [`/api/bakes/${bake.id}/photos`],
-    enabled: isOpen,
+    queryKey: [`/api/bakes/${bake?.id}/photos`],
+    enabled: isOpen && !!bake?.id,
   });
 
   const { data: timelineSteps } = useQuery<TimelineStep[]>({
-    queryKey: [`/api/bakes/${bake.id}/timeline`],
-    enabled: isOpen,
+    queryKey: [`/api/bakes/${bake?.id}/timeline`],
+    enabled: isOpen && !!bake?.id,
   });
 
-  if (!isOpen) return null;
+  if (!isOpen || !bake) return null;
 
   const startTime = new Date(bake.startTime || Date.now());
   const endTime = bake.actualEndTime ? new Date(bake.actualEndTime) : new Date(bake.estimatedEndTime || Date.now());
@@ -151,6 +151,14 @@ export default function RecentBakesPage() {
   });
 
   const completedBakes = bakes?.filter(bake => bake.status === 'completed') || [];
+  
+  // Sort bakes from newest to oldest based on completion time
+  const sortedBakes = completedBakes.sort((a, b) => {
+    const aTime = a.actualEndTime || a.estimatedEndTime || a.startTime;
+    const bTime = b.actualEndTime || b.estimatedEndTime || b.startTime;
+    if (!aTime || !bTime) return 0;
+    return new Date(bTime).getTime() - new Date(aTime).getTime();
+  });
 
   return (
     <div className="min-h-screen bg-sourdough-50">
@@ -167,10 +175,10 @@ export default function RecentBakesPage() {
       </header>
 
       <div className="pb-20">
-        {completedBakes.length > 0 ? (
+        {sortedBakes.length > 0 ? (
           <div className="p-4">
             <div className="space-y-4">
-              {completedBakes.map((bake) => (
+              {sortedBakes.map((bake) => (
                 <div key={bake.id} className="bg-white rounded-xl p-4 shadow-sm border border-sourdough-100">
                   <div className="flex items-start space-x-4">
                     {/* Placeholder image */}
