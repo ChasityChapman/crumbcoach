@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { Timer, Play, Pause, CheckCircle, Square, SkipForward, ChevronDown, ChevronUp, X } from "lucide-react";
+import { Timer, Play, Pause, CheckCircle, Square, SkipForward, ChevronDown, ChevronUp, X, Camera, FileText, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ActiveBakeCardProps {
@@ -16,6 +16,8 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
   const [stepTimer, setStepTimer] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [notesOpen, setNotesOpen] = useState(false);
   
   const startTime = new Date(bake.startTime || Date.now());
   const estimatedEnd = new Date(bake.estimatedEndTime || Date.now());
@@ -25,10 +27,10 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
     queryKey: [`/api/bakes/${bake.id}/timeline`],
   });
   
-  // Calculate progress based on start time and estimated end time
-  const totalDuration = estimatedEnd.getTime() - startTime.getTime();
-  const elapsed = now.getTime() - startTime.getTime();
-  const progress = Math.min(Math.max(elapsed / totalDuration * 100, 0), 100);
+  // Calculate progress based on completed steps
+  const completedSteps = timelineSteps?.filter(step => step.status === 'completed').length || 0;
+  const totalSteps = timelineSteps?.length || 1;
+  const progress = (completedSteps / totalSteps) * 100;
   
   const timeRemaining = estimatedEnd.getTime() - now.getTime();
   const hoursRemaining = Math.floor(timeRemaining / (1000 * 60 * 60));
@@ -206,8 +208,8 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
             {/* Timeline Progress */}
             <div className="mb-4">
               <div className="flex justify-between text-sm mb-2">
-                <span>Progress</span>
-                <span>{Math.round(progress)}%</span>
+                <span>Steps Progress</span>
+                <span>{completedSteps}/{totalSteps} ({Math.round(progress)}%)</span>
               </div>
               <div className="w-full bg-white/20 rounded-full h-2">
                 <div 
@@ -216,6 +218,69 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
                 />
               </div>
             </div>
+            
+            {/* Quick Actions */}
+            <div className="flex space-x-2 mb-4">
+              <button
+                onClick={() => setCameraOpen(true)}
+                className="flex-1 flex items-center justify-center space-x-2 bg-white/10 hover:bg-white/20 rounded-lg py-2 px-3 transition-colors"
+              >
+                <Camera className="w-4 h-4" />
+                <span className="text-sm">Photo</span>
+              </button>
+              <button
+                onClick={() => setNotesOpen(true)}
+                className="flex-1 flex items-center justify-center space-x-2 bg-white/10 hover:bg-white/20 rounded-lg py-2 px-3 transition-colors"
+              >
+                <FileText className="w-4 h-4" />
+                <span className="text-sm">Notes</span>
+              </button>
+            </div>
+            
+            {/* Timeline Steps Overview */}
+            {timelineSteps && timelineSteps.length > 0 && (
+              <div className="mb-4">
+                <h4 className="text-sm font-medium mb-2">Baking Steps</h4>
+                <div className="space-y-2">
+                  {timelineSteps.map((step, index) => (
+                    <div key={step.id} className="flex items-center space-x-3 text-sm">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
+                        step.status === 'completed' ? 'bg-green-500 text-white' :
+                        step.status === 'active' ? 'bg-white text-sourdough-600' :
+                        'bg-white/20 text-white/60'
+                      }`}>
+                        {step.status === 'completed' ? (
+                          <CheckCircle className="w-3 h-3" />
+                        ) : step.status === 'active' ? (
+                          <Clock className="w-3 h-3" />
+                        ) : (
+                          index + 1
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <p className={`font-medium ${
+                          step.status === 'active' ? 'text-white' : 
+                          step.status === 'completed' ? 'text-green-100' :
+                          'text-white/60'
+                        }`}>
+                          {step.name}
+                        </p>
+                        {step.estimatedDuration && (
+                          <p className="text-xs text-white/60">
+                            {step.estimatedDuration} min
+                          </p>
+                        )}
+                      </div>
+                      {step.status === 'active' && (
+                        <div className="text-xs text-white/80">
+                          Active
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Completion State */}
         {allCompleted && (
@@ -350,6 +415,74 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
               </div>
             )}
           </>
+        )}
+        
+        {/* Camera Modal */}
+        {cameraOpen && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg p-4 w-full max-w-md">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-semibold text-sourdough-800">Take Photo</h3>
+                <button
+                  onClick={() => setCameraOpen(false)}
+                  className="p-1 hover:bg-sourdough-100 rounded"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="text-center py-8">
+                <Camera className="w-12 h-12 text-sourdough-400 mx-auto mb-4" />
+                <p className="text-sourdough-600 mb-4">Camera functionality will be available soon!</p>
+                <button
+                  onClick={() => setCameraOpen(false)}
+                  className="bg-sourdough-500 text-white px-4 py-2 rounded-lg hover:bg-sourdough-600 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Notes Modal */}
+        {notesOpen && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg p-4 w-full max-w-md">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-semibold text-sourdough-800">Add Note</h3>
+                <button
+                  onClick={() => setNotesOpen(false)}
+                  className="p-1 hover:bg-sourdough-100 rounded"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <textarea
+                placeholder="Add notes about this step..."
+                className="w-full h-32 p-3 border border-sourdough-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-sourdough-500"
+              />
+              <div className="flex space-x-2 mt-4">
+                <button
+                  onClick={() => setNotesOpen(false)}
+                  className="flex-1 bg-sourdough-100 text-sourdough-700 px-4 py-2 rounded-lg hover:bg-sourdough-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    toast({
+                      title: "Note Saved!",
+                      description: "Your baking note has been saved",
+                    });
+                    setNotesOpen(false);
+                  }}
+                  className="flex-1 bg-sourdough-500 text-white px-4 py-2 rounded-lg hover:bg-sourdough-600 transition-colors"
+                >
+                  Save Note
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
