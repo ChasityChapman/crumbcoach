@@ -1,10 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Bake, BakePhoto } from "@shared/schema";
 import { Button } from "@/components/ui/button";
-import { Share2 } from "lucide-react";
+import { Share2, RefreshCw } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 export default function RecentBakes() {
+  const { toast } = useToast();
   const { data: bakes } = useQuery<Bake[]>({
     queryKey: ["/api/bakes"],
   });
@@ -23,6 +26,34 @@ export default function RecentBakes() {
     }
   };
 
+  // Restart bake mutation
+  const restartBakeMutation = useMutation({
+    mutationFn: async (bake: Bake) => {
+      return apiRequest("POST", "/api/bakes", {
+        recipeId: bake.recipeId,
+        name: `${bake.name} (Restart)`,
+        status: "active",
+        startTime: new Date().toISOString(),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/bakes"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bakes/active"] });
+      toast({
+        title: "Bake Restarted! 🍞",
+        description: "Your new baking session has begun",
+      });
+    },
+  });
+
+  const handleBakeClick = (bake: Bake, e: React.MouseEvent) => {
+    // Prevent click when clicking share button
+    if ((e.target as HTMLElement).closest('button[data-share]')) {
+      return;
+    }
+    restartBakeMutation.mutate(bake);
+  };
+
   const completedBakes = bakes?.filter(bake => bake.status === 'completed') || [];
   const recentBakes = completedBakes.slice(0, 4); // Show last 4 completed bakes
 
@@ -38,7 +69,11 @@ export default function RecentBakes() {
       {recentBakes.length > 0 ? (
         <div className="grid grid-cols-2 gap-3">
           {recentBakes.map((bake) => (
-            <div key={bake.id} className="relative group">
+            <div 
+              key={bake.id} 
+              className="relative group cursor-pointer transform transition-transform hover:scale-105"
+              onClick={(e) => handleBakeClick(bake, e)}
+            >
               {/* Placeholder image - in a real app, this would be from BakePhoto */}
               <img 
                 src="https://images.unsplash.com/photo-1549931319-a545dcf3bc73?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200" 
@@ -46,9 +81,21 @@ export default function RecentBakes() {
                 className="w-full h-32 object-cover rounded-xl"
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-xl">
+                {/* Restart icon hint */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="bg-white/90 rounded-full p-2">
+                    <RefreshCw className="w-4 h-4 text-sourdough-600" />
+                  </div>
+                </div>
+                
+                {/* Share button */}
                 <button 
-                  onClick={() => handleShare(bake)}
-                  className="absolute top-2 right-2 bg-white/80 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                  data-share
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleShare(bake);
+                  }}
+                  className="absolute top-2 right-2 bg-white/80 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10"
                 >
                   <Share2 className="w-3 h-3 text-sourdough-600" />
                 </button>
@@ -60,6 +107,9 @@ export default function RecentBakes() {
                     ? formatDistanceToNow(new Date(bake.actualEndTime), { addSuffix: true })
                     : 'Recently completed'
                   }
+                </p>
+                <p className="text-xs text-accent-orange-600 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  Click to restart this bake
                 </p>
               </div>
             </div>
