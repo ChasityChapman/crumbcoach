@@ -52,7 +52,7 @@ export default function StartBakeModal({ isOpen, onClose }: StartBakeModalProps)
             description: step.description || null,
             estimatedDuration: step.duration,
             status: i === 0 ? 'active' : 'pending',
-            startTime: i === 0 ? new Date() : null,
+            startTime: i === 0 ? new Date().toISOString() : null,
             endTime: null,
             actualDuration: null,
             autoAdjustments: null
