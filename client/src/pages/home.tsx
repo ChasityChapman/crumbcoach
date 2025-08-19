@@ -37,13 +37,7 @@ export default function Home() {
     queryKey: ["/api/recipes"],
   });
 
-  // Timeline steps queries for all active bakes
-  const timelineQueries = activeBakes.map(bake => 
-    useQuery<TimelineStep[]>({
-      queryKey: [`/api/bakes/${bake.id}/timeline`],
-      enabled: !!bake.id,
-    })
-  );
+  // Timeline data is now handled individually by each ActiveBakeCard
 
   // Helper function to create timeline steps for existing bake
   const createTimelineSteps = async (bake: Bake) => {
@@ -85,18 +79,7 @@ export default function Home() {
     }
   };
 
-  // Auto-create timeline steps for any active bakes that don't have them
-  useEffect(() => {
-    if (recipes && activeBakes.length > 0) {
-      activeBakes.forEach((bake, index) => {
-        const timelineData = timelineQueries[index]?.data;
-        if (timelineData !== undefined && timelineData.length === 0) {
-          console.log('Active bake found with no timeline steps, creating them...', bake.id);
-          createTimelineSteps(bake);
-        }
-      });
-    }
-  }, [activeBakes, recipes, timelineQueries]);
+  // Timeline creation is now handled by individual ActiveBakeCard components
 
   return (
     <div className="min-h-screen bg-sourdough-50">

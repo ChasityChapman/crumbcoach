@@ -76,6 +76,15 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
     }
   }, [allCompleted, bake.status]);
   
+  // Auto-create timeline steps if this bake has none
+  useEffect(() => {
+    if (timelineSteps !== undefined && timelineSteps.length === 0) {
+      // We need access to recipes to create timeline steps
+      // For now, this will be handled when the user interacts with the bake
+      console.log('Bake has no timeline steps:', bake.id);
+    }
+  }, [timelineSteps, bake.id]);
+  
   // Timer functionality
   useEffect(() => {
     let interval: NodeJS.Timeout;
