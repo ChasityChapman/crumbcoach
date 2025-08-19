@@ -124,6 +124,14 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
     }
   }, [allCompleted, bake.status]);
   
+  // Auto-create timeline when bake card loads and no timeline exists
+  useEffect(() => {
+    if (timelineSteps !== undefined && timelineSteps.length === 0 && recipes && bake.id) {
+      console.log('Auto-creating timeline for bake:', bake.id);
+      createTimelineSteps(bake);
+    }
+  }, [timelineSteps, recipes, bake.id]);
+  
   // Auto-create timeline steps if this bake has none
   useEffect(() => {
     if (timelineSteps !== undefined && timelineSteps.length === 0) {
@@ -399,14 +407,8 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
               ) : (
                 <div className="text-sm text-white/60 bg-white/10 rounded-lg p-3 text-center">
                   <Clock className="w-5 h-5 mx-auto mb-2 text-white/40" />
-                  <p>No timeline steps created yet</p>
-                  <p className="text-xs mt-1 text-white/40">Steps will appear here once your bake begins</p>
-                  <button
-                    onClick={() => createTimelineSteps(bake)}
-                    className="mt-3 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                  >
-                    Create Timeline
-                  </button>
+                  <p>Creating timeline...</p>
+                  <p className="text-xs mt-1 text-white/40">Setting up your baking steps</p>
                 </div>
               )}
             </div>
