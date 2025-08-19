@@ -119,10 +119,15 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
   const stopBakeMutation = useMutation({
     mutationFn: () => apiRequest("DELETE", `/api/bakes/${bake.id}`),
     onSuccess: () => {
-      // Invalidate all relevant queries to update UI
+      // Force refresh all bake-related queries
       queryClient.invalidateQueries({ queryKey: ["/api/bakes"] });
-      queryClient.invalidateQueries({ queryKey: [`/api/bakes/${bake.id}/timeline`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/bakes/${bake.id}/notes`] });
+      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}/timeline`] });
+      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}/notes`] });
+      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}/photos`] });
+      
+      // Force refetch to update UI immediately
+      queryClient.refetchQueries({ queryKey: ["/api/bakes"] });
+      
       toast({
         title: "Bake Stopped",
         description: "Your baking session has been ended",
