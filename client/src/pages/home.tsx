@@ -30,9 +30,6 @@ export default function Home() {
         return key?.includes('/api/bakes/') && (key?.includes('/timeline') || key?.includes('/notes') || key?.includes('/photos'));
       }
     });
-    
-    // Force refetch fresh bakes data
-    queryClient.refetchQueries({ queryKey: ['/api/bakes'] });
   }, []);
 
   // Get all bakes and filter for active ones

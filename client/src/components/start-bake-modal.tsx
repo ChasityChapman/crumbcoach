@@ -80,12 +80,9 @@ export default function StartBakeModal({ isOpen, onClose }: StartBakeModalProps)
         });
       }
 
-      // Update cache with new bake instead of just invalidating
-      queryClient.setQueryData(['/api/bakes'], (oldData: any) => {
-        if (!oldData || !Array.isArray(oldData)) return [newBake];
-        return [...oldData, newBake];
-      });
-      
+      // Force refresh the bakes list to show the new bake
+      queryClient.invalidateQueries({ queryKey: ["/api/bakes"] });
+      queryClient.refetchQueries({ queryKey: ["/api/bakes"] });
       queryClient.invalidateQueries({ queryKey: [`/api/bakes/${newBake.id}/timeline`] });
       
       toast({
