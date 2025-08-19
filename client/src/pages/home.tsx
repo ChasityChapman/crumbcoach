@@ -13,7 +13,7 @@ import NotesModal from "@/components/notes-modal";
 import StartBakeModal from "@/components/start-bake-modal";
 import NewRecipeModal from "@/components/new-recipe-modal";
 import { useState, useEffect } from "react";
-import { Wheat, Bell } from "lucide-react";
+import { Wheat, Bell, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
@@ -22,6 +22,7 @@ export default function Home() {
   const [notesOpen, setNotesOpen] = useState(false);
   const [startBakeOpen, setStartBakeOpen] = useState(false);
   const [newRecipeOpen, setNewRecipeOpen] = useState(false);
+  const [showAllBakes, setShowAllBakes] = useState(false);
   
   // Clear any stale bake cache data on component mount
   useEffect(() => {
@@ -122,10 +123,36 @@ export default function Home() {
         {/* Active Bake Cards */}
         {activeBakes.length > 0 ? (
           <div className="space-y-4">
-            {/* Show all active bakes */}
-            {activeBakes.map((bake) => (
-              <ActiveBakeCard key={bake.id} bake={bake} />
-            ))}
+            {/* Toggle to show all bakes */}
+            {activeBakes.length > 1 && (
+              <div className="px-4">
+                <button
+                  onClick={() => setShowAllBakes(!showAllBakes)}
+                  className="flex items-center space-x-2 text-sourdough-600 hover:text-sourdough-800 transition-colors"
+                >
+                  {showAllBakes ? (
+                    <>
+                      <EyeOff className="w-4 h-4" />
+                      <span className="text-sm">Show only latest bake</span>
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="w-4 h-4" />
+                      <span className="text-sm">Show all active bakes ({activeBakes.length})</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+            
+            {/* Show bakes based on toggle */}
+            {showAllBakes ? (
+              activeBakes.map((bake) => (
+                <ActiveBakeCard key={bake.id} bake={bake} />
+              ))
+            ) : (
+              <ActiveBakeCard key={activeBakes[0].id} bake={activeBakes[0]} />
+            )}
           </div>
         ) : (
           <div className="p-4">
