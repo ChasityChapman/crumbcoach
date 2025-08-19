@@ -258,18 +258,18 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
             {/* Quick Actions */}
             <div className="flex space-x-2 mb-4">
               <button
-                onClick={() => setCameraOpen(true)}
-                className="flex-1 flex items-center justify-center space-x-2 bg-white/10 hover:bg-white/20 rounded-lg py-2 px-3 transition-colors"
-              >
-                <Camera className="w-4 h-4" />
-                <span className="text-sm">Photo</span>
-              </button>
-              <button
                 onClick={() => setNotesOpen(true)}
                 className="flex-1 flex items-center justify-center space-x-2 bg-white/10 hover:bg-white/20 rounded-lg py-2 px-3 transition-colors"
               >
                 <FileText className="w-4 h-4" />
                 <span className="text-sm">Notes</span>
+              </button>
+              <button
+                onClick={() => setCameraOpen(true)}
+                className="flex-1 flex items-center justify-center space-x-2 bg-white/10 hover:bg-white/20 rounded-lg py-2 px-3 transition-colors"
+              >
+                <Camera className="w-4 h-4" />
+                <span className="text-sm">Photo</span>
               </button>
             </div>
             
@@ -277,15 +277,6 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
             <div className="mb-4">
               <h4 className="text-sm font-medium mb-2">Bake Controls</h4>
               <div className="grid grid-cols-2 gap-2">
-                <Button
-                  onClick={handleSkipStep}
-                  disabled={skipStepMutation.isPending || !activeStep}
-                  size="sm"
-                  className="bg-green-600 hover:bg-green-700 text-white disabled:bg-gray-400"
-                >
-                  <CheckCircle className="w-4 h-4 mr-1" />
-                  Complete
-                </Button>
                 <Button
                   onClick={handleSkipWithoutCompleting}
                   disabled={skipWithoutCompletingMutation.isPending || !activeStep}
@@ -295,23 +286,37 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
                   <SkipForward className="w-4 h-4 mr-1" />
                   Skip
                 </Button>
+                <Button
+                  onClick={handleSkipStep}
+                  disabled={skipStepMutation.isPending || !activeStep}
+                  size="sm"
+                  className="bg-green-600 hover:bg-green-700 text-white disabled:bg-gray-400"
+                >
+                  <CheckCircle className="w-4 h-4 mr-1" />
+                  Complete
+                </Button>
               </div>
             </div>
             
-            {/* Timeline Steps Overview */}
-            {timelineSteps && timelineSteps.length > 0 && (
-              <div className="mb-4">
-                <h4 className="text-sm font-medium mb-2">Baking Steps</h4>
+            {/* Baking Steps */}
+            <div className="mb-4">
+              <h4 className="text-sm font-medium mb-2">Baking Steps</h4>
+              {timelineSteps && timelineSteps.length > 0 ? (
                 <div className="space-y-2">
                   {timelineSteps.map((step, index) => (
-                    <div key={step.id} className="flex items-center space-x-3 text-sm">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
+                    <div key={step.id} className={`flex items-center space-x-3 p-2 rounded-lg text-sm ${
+                      step.status === 'active' ? 'bg-white/10' : ''
+                    }`}>
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium ${
                         step.status === 'completed' ? 'bg-green-500 text-white' :
+                        step.status === 'skipped' ? 'bg-yellow-500 text-white' :
                         step.status === 'active' ? 'bg-white text-sourdough-600' :
                         'bg-white/20 text-white/60'
                       }`}>
                         {step.status === 'completed' ? (
                           <CheckCircle className="w-3 h-3" />
+                        ) : step.status === 'skipped' ? (
+                          <SkipForward className="w-3 h-3" />
                         ) : step.status === 'active' ? (
                           <Clock className="w-3 h-3" />
                         ) : (
@@ -322,26 +327,40 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
                         <p className={`font-medium ${
                           step.status === 'active' ? 'text-white' : 
                           step.status === 'completed' ? 'text-green-100' :
+                          step.status === 'skipped' ? 'text-yellow-100' :
                           'text-white/60'
                         }`}>
                           {step.name}
                         </p>
-                        {step.estimatedDuration && (
-                          <p className="text-xs text-white/60">
-                            {step.estimatedDuration} min
-                          </p>
+                        <div className="flex items-center space-x-2 text-xs text-white/60">
+                          <span>{step.estimatedDuration} min</span>
+                          {step.status === 'completed' && step.actualDuration && (
+                            <span className="text-green-300">({step.actualDuration} min actual)</span>
+                          )}
+                          {step.status === 'skipped' && (
+                            <span className="text-yellow-300">(skipped)</span>
+                          )}
+                        </div>
+                        {step.description && (
+                          <p className="text-xs text-white/50 mt-1">{step.description}</p>
                         )}
                       </div>
                       {step.status === 'active' && (
-                        <div className="text-xs text-white/80">
-                          Active
+                        <div className="text-xs text-white/80 bg-white/10 px-2 py-1 rounded">
+                          Current
                         </div>
                       )}
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="text-sm text-white/60 bg-white/10 rounded-lg p-3 text-center">
+                  <Clock className="w-5 h-5 mx-auto mb-2 text-white/40" />
+                  <p>No timeline steps created yet</p>
+                  <p className="text-xs mt-1 text-white/40">Steps will appear here once your bake begins</p>
+                </div>
+              )}
+            </div>
 
             {/* Completion State */}
         {allCompleted && (
