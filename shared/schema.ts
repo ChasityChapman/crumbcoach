@@ -80,8 +80,19 @@ export const sensorReadings = pgTable("sensor_readings", {
 
 // Insert schemas
 export const insertRecipeSchema = createInsertSchema(recipes).omit({ id: true, createdAt: true });
-export const insertBakeSchema = createInsertSchema(bakes).omit({ id: true, createdAt: true });
-export const insertTimelineStepSchema = createInsertSchema(timelineSteps).omit({ id: true });
+export const insertBakeSchema = createInsertSchema(bakes)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    startTime: z.union([z.date(), z.string().datetime().transform((str) => new Date(str))]).optional(),
+    estimatedEndTime: z.union([z.date(), z.string().datetime().transform((str) => new Date(str))]).optional(),
+    actualEndTime: z.union([z.date(), z.string().datetime().transform((str) => new Date(str))]).optional().nullable(),
+  });
+export const insertTimelineStepSchema = createInsertSchema(timelineSteps)
+  .omit({ id: true })
+  .extend({
+    startTime: z.union([z.date(), z.string().datetime().transform((str) => new Date(str))]).optional().nullable(),
+    endTime: z.union([z.date(), z.string().datetime().transform((str) => new Date(str))]).optional().nullable(),
+  });
 export const insertBakeNoteSchema = createInsertSchema(bakeNotes).omit({ id: true, createdAt: true });
 export const insertBakePhotoSchema = createInsertSchema(bakePhotos).omit({ id: true, createdAt: true });
 export const insertTutorialSchema = createInsertSchema(tutorials).omit({ id: true, createdAt: true });
