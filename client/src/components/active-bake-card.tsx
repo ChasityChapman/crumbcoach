@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { Timer, Play, Pause, CheckCircle, Square, SkipForward, ChevronDown, ChevronUp, X, Camera, FileText, Clock } from "lucide-react";
+import { Timer, Play, Pause, CheckCircle, Square, SkipForward, ChevronDown, ChevronUp, X, Camera, FileText, Clock, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ActiveBakeCardProps {
@@ -170,12 +170,78 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
     },
   });
   
+  // Skip step without completing mutation
+  const skipWithoutCompletingMutation = useMutation({
+    mutationFn: async () => {
+      if (!activeStep) return;
+      
+      // Mark current step as skipped
+      await apiRequest("PATCH", `/api/timeline-steps/${activeStep.id}`, {
+        status: "skipped",
+        endTime: new Date().toISOString(),
+        actualDuration: Math.floor(stepTimer / 60),
+      });
+      
+      // Find and activate next step
+      const nextStep = timelineSteps?.find(step => step.stepIndex === activeStep.stepIndex + 1);
+      if (nextStep) {
+        await apiRequest("PATCH", `/api/timeline-steps/${nextStep.id}`, {
+          status: "active",
+          startTime: new Date().toISOString(),
+        });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/bakes/${bake.id}/timeline`] });
+      setStepTimer(0);
+      setIsTimerRunning(false);
+      toast({
+        title: "Step Skipped",
+        description: "Moved to the next step without completing current one",
+        variant: "default",
+      });
+    },
+  });
+  
+  // Cancel bake mutation (mark as cancelled instead of deleting)
+  const cancelBakeMutation = useMutation({
+    mutationFn: () => apiRequest("PATCH", `/api/bakes/${bake.id}`, {
+      status: "cancelled",
+      actualEndTime: new Date().toISOString(),
+    }),
+    onSuccess: () => {
+      // Update the cache to mark bake as cancelled
+      queryClient.setQueryData(['/api/bakes'], (oldData: any) => {
+        if (!oldData || !Array.isArray(oldData)) return oldData;
+        return oldData.map((b: any) => 
+          b.id === bake.id ? { ...b, status: 'cancelled' } : b
+        );
+      });
+      
+      queryClient.invalidateQueries({ queryKey: [`/api/bakes/${bake.id}/timeline`] });
+      
+      toast({
+        title: "Bake Cancelled",
+        description: "Your baking session has been cancelled and saved",
+        variant: "destructive",
+      });
+    },
+  });
+  
   const handleStopBake = () => {
     stopBakeMutation.mutate();
   };
   
   const handleSkipStep = () => {
     skipStepMutation.mutate();
+  };
+  
+  const handleSkipWithoutCompleting = () => {
+    skipWithoutCompletingMutation.mutate();
+  };
+  
+  const handleCancelBake = () => {
+    cancelBakeMutation.mutate();
   };
   
   const handleMinimize = () => {
@@ -383,25 +449,42 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
             )}
             
             {/* Control Buttons */}
-            <div className="flex space-x-2">
+            <div className="grid grid-cols-2 gap-2">
               <Button
                 onClick={handleSkipStep}
                 disabled={skipStepMutation.isPending}
                 size="sm"
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                className="bg-green-600 hover:bg-green-700 text-white"
               >
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Complete Step
+                <CheckCircle className="w-4 h-4 mr-1" />
+                Complete
+              </Button>
+              <Button
+                onClick={handleSkipWithoutCompleting}
+                disabled={skipWithoutCompletingMutation.isPending}
+                size="sm"
+                className="bg-yellow-600 hover:bg-yellow-700 text-white"
+              >
+                <SkipForward className="w-4 h-4 mr-1" />
+                Skip
+              </Button>
+              <Button
+                onClick={handleCancelBake}
+                disabled={cancelBakeMutation.isPending}
+                size="sm"
+                className="bg-orange-600 hover:bg-orange-700 text-white"
+              >
+                <AlertTriangle className="w-4 h-4 mr-1" />
+                Cancel
               </Button>
               <Button
                 onClick={handleStopBake}
                 disabled={stopBakeMutation.isPending}
                 size="sm"
                 variant="destructive"
-                className="flex-1"
               >
-                <Square className="w-4 h-4 mr-2" />
-                Stop Bake
+                <Square className="w-4 h-4 mr-1" />
+                Delete
               </Button>
             </div>
           </div>
