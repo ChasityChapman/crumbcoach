@@ -250,8 +250,26 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
     setIsMinimized(!isMinimized);
   };
   
+  // Delete bake mutation
+  const deleteBakeMutation = useMutation({
+    mutationFn: () => apiRequest("DELETE", `/api/bakes/${bake.id}`),
+    onSuccess: () => {
+      // Immediately update the cache by removing this bake
+      queryClient.setQueryData(['/api/bakes'], (oldData: any) => {
+        if (!oldData || !Array.isArray(oldData)) return [];
+        return oldData.filter((b: any) => b.id !== bake.id);
+      });
+      
+      toast({
+        title: "Bake Deleted",
+        description: "Your baking session has been removed",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleClose = () => {
-    // Remove close functionality for now
+    deleteBakeMutation.mutate();
   };
 
   return (

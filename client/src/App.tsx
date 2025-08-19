@@ -9,7 +9,6 @@ import Recipes from "@/pages/recipes";
 import RecentBakes from "@/pages/recent-bakes";
 import Tutorials from "@/pages/tutorials";
 import Profile from "@/pages/profile";
-import Timeline from "@/pages/timeline";
 
 function Router() {
   return (
@@ -17,7 +16,6 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/recipes" component={Recipes} />
       <Route path="/recent-bakes" component={RecentBakes} />
-      <Route path="/timeline" component={Timeline} />
       <Route path="/tutorials" component={Tutorials} />
       <Route path="/profile" component={Profile} />
       <Route component={NotFound} />
