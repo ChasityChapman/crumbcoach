@@ -114,11 +114,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/timeline-steps", async (req, res) => {
     try {
+      console.log('Received timeline step data:', JSON.stringify(req.body, null, 2));
       const validatedData = insertTimelineStepSchema.parse(req.body);
+      console.log('Validated timeline step data:', JSON.stringify(validatedData, null, 2));
       const step = await storage.createTimelineStep(validatedData);
       res.status(201).json(step);
     } catch (error) {
-      res.status(400).json({ message: "Invalid timeline step data" });
+      console.error('Timeline step validation error:', error);
+      if (error instanceof Error) {
+        console.error('Error details:', error.message);
+      }
+      res.status(400).json({ message: "Invalid timeline step data", error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 

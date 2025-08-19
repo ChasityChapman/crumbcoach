@@ -29,17 +29,7 @@ export default function StartBakeModal({ isOpen, onClose }: StartBakeModalProps)
   });
 
   const startBakeMutation = useMutation({
-    mutationFn: (bakeData: { 
-      recipeId: string; 
-      name: string; 
-      status: string;
-      currentStep: number;
-      startTime: string;
-      estimatedEndTime: string;
-      actualEndTime: null;
-      environmentalData: any;
-      timelineAdjustments: any;
-    }) => apiRequest("POST", "/api/bakes", bakeData),
+    mutationFn: (bakeData: any) => apiRequest("POST", "/api/bakes", bakeData),
     onSuccess: async (newBake: any) => {
       // Create timeline steps for the new bake
       const recipe = recipes?.find(r => r.id === selectedRecipeId);
@@ -54,7 +44,7 @@ export default function StartBakeModal({ isOpen, onClose }: StartBakeModalProps)
             description: step.description || null,
             estimatedDuration: step.duration,
             status: i === 0 ? 'active' : 'pending',
-            startTime: i === 0 ? new Date() : null,
+            startTime: i === 0 ? new Date().toISOString() : null,
             endTime: null,
             actualDuration: null,
             autoAdjustments: null
@@ -111,11 +101,8 @@ export default function StartBakeModal({ isOpen, onClose }: StartBakeModalProps)
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-lg mx-auto max-h-[90vh] flex flex-col">
-        <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <DialogHeader className="pb-4">
           <DialogTitle className="font-display text-sourdough-800">Start New Bake</DialogTitle>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="w-4 h-4" />
-          </Button>
         </DialogHeader>
 
         <div className="space-y-4 flex-1 overflow-y-auto">
