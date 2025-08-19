@@ -43,7 +43,9 @@ export default function Home() {
     refetchOnMount: true,
   });
   
-  const activeBakes = (allBakes || []).filter((bake: Bake) => bake && bake.id && bake.status === 'active');
+  const activeBakes = (allBakes || [])
+    .filter((bake: Bake) => bake && bake.id && bake.status === 'active')
+    .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()); // Sort by newest first
 
   const { data: latestSensor } = useQuery<SensorReading | null>({
     queryKey: ["/api/sensors/latest"],
