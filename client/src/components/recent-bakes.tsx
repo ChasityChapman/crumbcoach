@@ -2,9 +2,10 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Bake, BakePhoto } from "@shared/schema";
 import { Button } from "@/components/ui/button";
-import { Share2, RefreshCw } from "lucide-react";
+import { Share2, RefreshCw, FileText, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 export default function RecentBakes() {
   const { toast } = useToast();
@@ -46,12 +47,19 @@ export default function RecentBakes() {
     },
   });
 
+  const [selectedBakeDetail, setSelectedBakeDetail] = useState<Bake | null>(null);
+
   const handleBakeClick = (bake: Bake, e: React.MouseEvent) => {
-    // Prevent click when clicking share button
-    if ((e.target as HTMLElement).closest('button[data-share]')) {
+    // Prevent click when clicking share button or view details button
+    if ((e.target as HTMLElement).closest('button[data-share]') || 
+        (e.target as HTMLElement).closest('button[data-details]')) {
       return;
     }
     restartBakeMutation.mutate(bake);
+  };
+  
+  const handleViewDetails = (bake: Bake) => {
+    setSelectedBakeDetail(bake);
   };
 
   const completedBakes = bakes?.filter(bake => bake.status === 'completed') || [];
@@ -88,17 +96,31 @@ export default function RecentBakes() {
                   </div>
                 </div>
                 
-                {/* Share button */}
-                <button 
-                  data-share
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleShare(bake);
-                  }}
-                  className="absolute top-2 right-2 bg-white/80 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                >
-                  <Share2 className="w-3 h-3 text-sourdough-600" />
-                </button>
+                {/* Action buttons */}
+                <div className="absolute top-2 right-2 flex space-x-1">
+                  <button 
+                    data-details
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleViewDetails(bake);
+                    }}
+                    className="bg-white/80 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    title="View details"
+                  >
+                    <FileText className="w-3 h-3 text-sourdough-600" />
+                  </button>
+                  <button 
+                    data-share
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleShare(bake);
+                    }}
+                    className="bg-white/80 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    title="Share"
+                  >
+                    <Share2 className="w-3 h-3 text-sourdough-600" />
+                  </button>
+                </div>
               </div>
               <div className="mt-2">
                 <p className="text-sm font-medium text-sourdough-800">{bake.name}</p>
@@ -109,7 +131,7 @@ export default function RecentBakes() {
                   }
                 </p>
                 <p className="text-xs text-accent-orange-600 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  Click to restart this bake
+                  Click to restart • Top-right for details
                 </p>
               </div>
             </div>
@@ -122,6 +144,28 @@ export default function RecentBakes() {
           </div>
           <p className="text-sourdough-600">No completed bakes yet</p>
           <p className="text-sm text-sourdough-500">Start your first bake to see photos here</p>
+        </div>
+      )}
+      
+      {/* Bake Detail Modal */}
+      {selectedBakeDetail && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-lg w-full max-w-md my-8">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-sourdough-100">
+              <h2 className="font-semibold text-lg text-sourdough-800">{selectedBakeDetail.name}</h2>
+              <button
+                onClick={() => setSelectedBakeDetail(null)}
+                className="p-1 hover:bg-sourdough-100 rounded transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 text-center">
+              <p className="text-sourdough-600">Detailed view coming soon!</p>
+              <p className="text-sm text-sourdough-500 mt-2">Use the Recent Bakes tab for full details</p>
+            </div>
+          </div>
         </div>
       )}
     </div>
