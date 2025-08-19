@@ -116,7 +116,12 @@ export class MemStorage implements IStorage {
 
   async createRecipe(insertRecipe: InsertRecipe): Promise<Recipe> {
     const id = randomUUID();
-    const recipe: Recipe = { ...insertRecipe, id, createdAt: new Date() };
+    const recipe: Recipe = { 
+      ...insertRecipe, 
+      id, 
+      createdAt: new Date(),
+      description: insertRecipe.description || null
+    };
     this.recipes.set(id, recipe);
     return recipe;
   }
@@ -136,7 +141,17 @@ export class MemStorage implements IStorage {
 
   async createBake(insertBake: InsertBake): Promise<Bake> {
     const id = randomUUID();
-    const bake: Bake = { ...insertBake, id, createdAt: new Date() };
+    const bake: Bake = { 
+      ...insertBake, 
+      id, 
+      createdAt: new Date(),
+      currentStep: insertBake.currentStep || null,
+      startTime: insertBake.startTime || null,
+      estimatedEndTime: insertBake.estimatedEndTime || null,
+      actualEndTime: insertBake.actualEndTime || null,
+      environmentalData: insertBake.environmentalData || null,
+      timelineAdjustments: insertBake.timelineAdjustments || null
+    };
     this.bakes.set(id, bake);
     return bake;
   }
@@ -159,7 +174,15 @@ export class MemStorage implements IStorage {
 
   async createTimelineStep(insertStep: InsertTimelineStep): Promise<TimelineStep> {
     const id = randomUUID();
-    const step: TimelineStep = { ...insertStep, id };
+    const step: TimelineStep = { 
+      ...insertStep, 
+      id,
+      description: insertStep.description || null,
+      actualDuration: insertStep.actualDuration || null,
+      startTime: insertStep.startTime || null,
+      endTime: insertStep.endTime || null,
+      autoAdjustments: insertStep.autoAdjustments || null
+    };
     this.timelineSteps.set(id, step);
     return step;
   }
@@ -182,7 +205,12 @@ export class MemStorage implements IStorage {
 
   async createBakeNote(insertNote: InsertBakeNote): Promise<BakeNote> {
     const id = randomUUID();
-    const note: BakeNote = { ...insertNote, id, createdAt: new Date() };
+    const note: BakeNote = { 
+      ...insertNote, 
+      id, 
+      createdAt: new Date(),
+      stepIndex: insertNote.stepIndex || null
+    };
     this.bakeNotes.set(id, note);
     return note;
   }
@@ -196,7 +224,13 @@ export class MemStorage implements IStorage {
 
   async createBakePhoto(insertPhoto: InsertBakePhoto): Promise<BakePhoto> {
     const id = randomUUID();
-    const photo: BakePhoto = { ...insertPhoto, id, createdAt: new Date() };
+    const photo: BakePhoto = { 
+      ...insertPhoto, 
+      id, 
+      createdAt: new Date(),
+      caption: insertPhoto.caption || null,
+      stepIndex: insertPhoto.stepIndex || null
+    };
     this.bakePhotos.set(id, photo);
     return photo;
   }
@@ -221,7 +255,14 @@ export class MemStorage implements IStorage {
 
   async createSensorReading(insertReading: InsertSensorReading): Promise<SensorReading> {
     const id = randomUUID();
-    const reading: SensorReading = { ...insertReading, id, timestamp: new Date() };
+    const reading: SensorReading = { 
+      ...insertReading, 
+      id, 
+      timestamp: new Date(),
+      bakeId: insertReading.bakeId || null,
+      temperature: insertReading.temperature || null,
+      humidity: insertReading.humidity || null
+    };
     this.sensorReadings.set(id, reading);
     return reading;
   }

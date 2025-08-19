@@ -10,12 +10,14 @@ import RecentBakes from "@/components/recent-bakes";
 import BottomNavigation from "@/components/bottom-navigation";
 import CameraModal from "@/components/camera-modal";
 import NotesModal from "@/components/notes-modal";
+import StartBakeModal from "@/components/start-bake-modal";
 import { useState } from "react";
 import { Wheat, Bell } from "lucide-react";
 
 export default function Home() {
   const [cameraOpen, setCameraOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
+  const [startBakeOpen, setStartBakeOpen] = useState(false);
 
   const { data: activeBake } = useQuery<Bake | null>({
     queryKey: ["/api/bakes/active"],
@@ -58,6 +60,8 @@ export default function Home() {
         <QuickActions
           onOpenCamera={() => setCameraOpen(true)}
           onOpenNotes={() => setNotesOpen(true)}
+          onStartBake={() => setStartBakeOpen(true)}
+          hasActiveBake={!!activeBake}
         />
 
         {/* Timeline */}
@@ -83,6 +87,10 @@ export default function Home() {
         isOpen={notesOpen}
         onClose={() => setNotesOpen(false)}
         bakeId={activeBake?.id}
+      />
+      <StartBakeModal
+        isOpen={startBakeOpen}
+        onClose={() => setStartBakeOpen(false)}
       />
     </div>
   );

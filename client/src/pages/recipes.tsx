@@ -1,11 +1,16 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { Recipe } from "@shared/schema";
 import BottomNavigation from "@/components/bottom-navigation";
+import RecipeModal from "@/components/recipe-modal";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Users, Wheat } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Clock, Users, Wheat, Plus } from "lucide-react";
 
 export default function Recipes() {
+  const [recipeModalOpen, setRecipeModalOpen] = useState(false);
+  
   const { data: recipes, isLoading } = useQuery<Recipe[]>({
     queryKey: ["/api/recipes"],
   });
@@ -44,6 +49,14 @@ export default function Recipes() {
             </div>
             <h1 className="font-display font-semibold text-lg text-sourdough-800">Recipes</h1>
           </div>
+          <Button 
+            onClick={() => setRecipeModalOpen(true)}
+            className="bg-sourdough-500 hover:bg-sourdough-600 text-white"
+            size="sm"
+          >
+            <Plus className="w-4 h-4 mr-1" />
+            New
+          </Button>
         </div>
       </header>
 
@@ -89,12 +102,24 @@ export default function Recipes() {
             <h3 className="font-display font-semibold text-lg text-sourdough-800 mb-2">
               No Recipes Yet
             </h3>
-            <p className="text-sourdough-600">Start by creating your first sourdough recipe.</p>
+            <p className="text-sourdough-600 mb-4">Start by creating your first sourdough recipe.</p>
+            <Button 
+              onClick={() => setRecipeModalOpen(true)}
+              className="bg-sourdough-500 hover:bg-sourdough-600 text-white"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Your First Recipe
+            </Button>
           </div>
         )}
       </div>
 
       <BottomNavigation currentPath="/recipes" />
+      
+      <RecipeModal
+        isOpen={recipeModalOpen}
+        onClose={() => setRecipeModalOpen(false)}
+      />
     </div>
   );
 }
