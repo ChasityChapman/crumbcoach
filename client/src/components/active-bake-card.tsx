@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { Timer, Play, Pause, CheckCircle, SkipForward, ChevronDown, ChevronUp, X, Camera, FileText, Clock } from "lucide-react";
+import { Timer, Play, Pause, CheckCircle, SkipForward, ChevronDown, ChevronUp, X, Camera, FileText, Clock, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ActiveBakeCardProps {
@@ -267,6 +267,18 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
       });
     },
   });
+  
+  // Recalibrate timeline mutation
+  const recalibrateMutation = useMutation({
+    mutationFn: () => apiRequest("POST", `/api/bakes/${bake.id}/recalibrate`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/bakes"] });
+      toast({
+        title: "Timeline Recalibrated!",
+        description: "Your baking schedule has been optimized for current conditions",
+      });
+    },
+  });
 
   const handleClose = () => {
     deleteBakeMutation.mutate();
@@ -342,29 +354,24 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
               </button>
             </div>
             
-            {/* Control Buttons */}
+            {/* Timeline Management */}
             <div className="mb-4">
-              <h4 className="text-sm font-medium mb-2">Bake Controls</h4>
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  onClick={handleSkipWithoutCompleting}
-                  disabled={skipWithoutCompletingMutation.isPending || !activeStep}
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-sm font-medium">Timeline Management</h4>
+                <Button 
+                  variant="ghost"
                   size="sm"
-                  className="bg-yellow-600 hover:bg-yellow-700 text-white disabled:bg-gray-400"
+                  onClick={() => recalibrateMutation.mutate()}
+                  disabled={recalibrateMutation.isPending}
+                  className="text-accent-orange-500 hover:text-accent-orange-600 text-xs px-2 py-1 h-auto"
                 >
-                  <SkipForward className="w-4 h-4 mr-1" />
-                  Skip
-                </Button>
-                <Button
-                  onClick={handleSkipStep}
-                  disabled={skipStepMutation.isPending || !activeStep}
-                  size="sm"
-                  className="bg-green-600 hover:bg-green-700 text-white disabled:bg-gray-400"
-                >
-                  <CheckCircle className="w-4 h-4 mr-1" />
-                  Complete
+                  <RefreshCw className={`w-3 h-3 mr-1 ${recalibrateMutation.isPending ? 'animate-spin' : ''}`} />
+                  Recalibrate
                 </Button>
               </div>
+              <p className="text-xs text-white/60">
+                Optimize timeline based on current environmental conditions
+              </p>
             </div>
             
             {/* Baking Steps */}
@@ -555,6 +562,33 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
           </>
         )}
         
+        {/* Bake Controls - Moved to bottom */}
+        {!isMinimized && (
+          <div className="border-t border-white/10 pt-4 mt-4">
+            <h4 className="text-sm font-medium mb-3">Bake Controls</h4>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                onClick={handleSkipWithoutCompleting}
+                disabled={skipWithoutCompletingMutation.isPending || !activeStep}
+                size="sm"
+                className="bg-yellow-600 hover:bg-yellow-700 text-white disabled:bg-gray-400"
+              >
+                <SkipForward className="w-4 h-4 mr-1" />
+                Skip
+              </Button>
+              <Button
+                onClick={handleSkipStep}
+                disabled={skipStepMutation.isPending || !activeStep}
+                size="sm"
+                className="bg-green-600 hover:bg-green-700 text-white disabled:bg-gray-400"
+              >
+                <CheckCircle className="w-4 h-4 mr-1" />
+                Complete
+              </Button>
+            </div>
+          </div>
+        )}
+        
         {/* Camera Modal */}
         {cameraOpen && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -597,7 +631,7 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
               </div>
               <textarea
                 placeholder="Add notes about this step..."
-                className="w-full h-32 p-3 border border-sourdough-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-sourdough-500"
+                className="w-full h-32 p-3 border border-sourdough-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-sourdough-500 text-black"
               />
               <div className="flex space-x-2 mt-4">
                 <button

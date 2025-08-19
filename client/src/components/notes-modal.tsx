@@ -83,7 +83,7 @@ export default function NotesModal({ isOpen, onClose, bakeId }: NotesModalProps)
             <Textarea
               value={newNote}
               onChange={(e) => setNewNote(e.target.value)}
-              className="bg-white rounded-lg border-sourdough-200 resize-none"
+              className="bg-white rounded-lg border-sourdough-200 resize-none text-black"
               rows={3}
               placeholder="Add your observations..."
             />

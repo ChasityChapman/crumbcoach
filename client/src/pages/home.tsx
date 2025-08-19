@@ -13,9 +13,8 @@ import NotesModal from "@/components/notes-modal";
 import StartBakeModal from "@/components/start-bake-modal";
 import NewRecipeModal from "@/components/new-recipe-modal";
 import { useState, useEffect } from "react";
-import { Wheat, Bell, RefreshCw } from "lucide-react";
+import { Wheat, Bell } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const { toast } = useToast();
@@ -23,22 +22,6 @@ export default function Home() {
   const [notesOpen, setNotesOpen] = useState(false);
   const [startBakeOpen, setStartBakeOpen] = useState(false);
   const [newRecipeOpen, setNewRecipeOpen] = useState(false);
-  
-  // Recalibrate timeline mutation
-  const recalibrateMutation = useMutation({
-    mutationFn: (bakeId: string) => apiRequest("POST", `/api/bakes/${bakeId}/recalibrate`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/bakes"] });
-      toast({
-        title: "Timeline Recalibrated!",
-        description: "Your baking schedule has been optimized for current conditions",
-      });
-    },
-  });
-  
-  const handleRecalibrate = (bakeId: string) => {
-    recalibrateMutation.mutate(bakeId);
-  };
   
   // Clear any stale bake cache data on component mount
   useEffect(() => {
@@ -159,29 +142,6 @@ export default function Home() {
         {/* Sensor Data */}
         <SensorWidget reading={latestSensor} />
 
-        {/* Timeline Section */}
-        {activeBakes.length > 0 && (
-          <div className="px-4 mb-6">
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-sourdough-100">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-sourdough-800">Timeline Management</h3>
-                <Button 
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleRecalibrate(activeBakes[0].id)}
-                  disabled={recalibrateMutation.isPending}
-                  className="text-accent-orange-500 hover:text-accent-orange-600"
-                >
-                  <RefreshCw className={`w-4 h-4 mr-1 ${recalibrateMutation.isPending ? 'animate-spin' : ''}`} />
-                  Recalibrate
-                </Button>
-              </div>
-              <p className="text-sm text-sourdough-600">
-                Optimize your baking timeline based on current environmental conditions
-              </p>
-            </div>
-          </div>
-        )}
         
         {/* Quick Actions */}
         <QuickActions
