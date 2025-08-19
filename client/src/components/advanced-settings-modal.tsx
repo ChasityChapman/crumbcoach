@@ -154,8 +154,8 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                   </div>
                   
                   <div className="space-y-2">
-                    <Label>Polling Frequency</Label>
-                    <p className="text-xs text-muted-foreground mb-2">How often to check sensors for new readings</p>
+                    <Label>Update Frequency</Label>
+                    <p className="text-xs text-muted-foreground mb-2">How often Crumb Coach checks your temperature and humidity sensors. Faster updates use more battery</p>
                     <div className="space-y-2">
                       <Slider
                         value={[sensorPolling]}
@@ -177,13 +177,10 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                       <Label className="text-base font-medium">Auto-Calibration</Label>
                       <p className="text-sm text-muted-foreground">Automatically calibrate sensors based on environment</p>
                     </div>
-                    <div className="ml-4">
-                      <Switch 
-                        checked={autoCalibrate} 
-                        onCheckedChange={setAutoCalibrate}
-                        className="data-[state=checked]:bg-sourdough-500"
-                      />
-                    </div>
+                    <Switch 
+                      checked={autoCalibrate} 
+                      onCheckedChange={setAutoCalibrate}
+                    />
                   </div>
                   
                   <div className="flex items-center justify-between">
@@ -191,13 +188,10 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                       <Label className="text-base font-medium">Manual Sensor Override</Label>
                       <p className="text-sm text-muted-foreground">Allow manual input when sensors unavailable</p>
                     </div>
-                    <div className="ml-4">
-                      <Switch 
-                        checked={sensorOverride} 
-                        onCheckedChange={setSensorOverride}
-                        className="data-[state=checked]:bg-sourdough-500"
-                      />
-                    </div>
+                    <Switch 
+                      checked={sensorOverride} 
+                      onCheckedChange={setSensorOverride}
+                    />
                   </div>
                 </div>
               </CardContent>
@@ -269,13 +263,10 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                     <Label className="text-base font-medium">Auto Notifications</Label>
                     <p className="text-sm text-muted-foreground">Send notifications for timeline milestones</p>
                   </div>
-                  <div className="ml-4">
-                    <Switch 
-                      checked={autoNotifications} 
-                      onCheckedChange={setAutoNotifications}
-                      className="data-[state=checked]:bg-sourdough-500"
-                    />
-                  </div>
+                  <Switch 
+                    checked={autoNotifications} 
+                    onCheckedChange={setAutoNotifications}
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -344,13 +335,10 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                     <Label className="text-base font-medium">Environmental Compensation</Label>
                     <p className="text-sm text-muted-foreground">Adjust timings based on temperature and humidity</p>
                   </div>
-                  <div className="ml-4">
-                    <Switch 
-                      checked={envCompensation} 
-                      onCheckedChange={setEnvCompensation}
-                      className="data-[state=checked]:bg-sourdough-500"
-                    />
-                  </div>
+                  <Switch 
+                    checked={envCompensation} 
+                    onCheckedChange={setEnvCompensation}
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -388,13 +376,10 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                       <Label className="text-base font-medium">High Contrast Mode</Label>
                       <p className="text-sm text-muted-foreground">Enhanced visibility for better readability</p>
                     </div>
-                    <div className="ml-4">
-                      <Switch 
-                        checked={highContrast} 
-                        onCheckedChange={setHighContrast}
-                        className="data-[state=checked]:bg-sourdough-500"
-                      />
-                    </div>
+                    <Switch 
+                      checked={highContrast} 
+                      onCheckedChange={setHighContrast}
+                    />
                   </div>
                   
                   <div className="flex items-center justify-between">
@@ -402,13 +387,10 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                       <Label className="text-base font-medium">Voice Notifications</Label>
                       <p className="text-sm text-muted-foreground">Spoken alerts for timeline events</p>
                     </div>
-                    <div className="ml-4">
-                      <Switch 
-                        checked={voiceNotifications} 
-                        onCheckedChange={setVoiceNotifications}
-                        className="data-[state=checked]:bg-sourdough-500"
-                      />
-                    </div>
+                    <Switch 
+                      checked={voiceNotifications} 
+                      onCheckedChange={setVoiceNotifications}
+                    />
                   </div>
                   
                   <div className="flex items-center justify-between">
@@ -416,13 +398,10 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                       <Label className="text-base font-medium">Haptic Feedback</Label>
                       <p className="text-sm text-muted-foreground">Vibration feedback on mobile devices</p>
                     </div>
-                    <div className="ml-4">
-                      <Switch 
-                        checked={hapticFeedback} 
-                        onCheckedChange={setHapticFeedback}
-                        className="data-[state=checked]:bg-sourdough-500"
-                      />
-                    </div>
+                    <Switch 
+                      checked={hapticFeedback} 
+                      onCheckedChange={setHapticFeedback}
+                    />
                   </div>
                 </div>
               </CardContent>
@@ -472,13 +451,10 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                       <Label className="text-base font-medium">Debug Mode</Label>
                       <p className="text-sm text-muted-foreground">Show detailed logging and error information</p>
                     </div>
-                    <div className="ml-4">
-                      <Switch 
-                        checked={debugMode} 
-                        onCheckedChange={setDebugMode}
-                        className="data-[state=checked]:bg-sourdough-500"
-                      />
-                    </div>
+                    <Switch 
+                      checked={debugMode} 
+                      onCheckedChange={setDebugMode}
+                    />
                   </div>
                   
                   <div className="flex items-center justify-between">
@@ -486,13 +462,10 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                       <Label className="text-base font-medium">Show Raw Sensor Data</Label>
                       <p className="text-sm text-muted-foreground">Display unprocessed sensor readings</p>
                     </div>
-                    <div className="ml-4">
-                      <Switch 
-                        checked={showRawData} 
-                        onCheckedChange={setShowRawData}
-                        className="data-[state=checked]:bg-sourdough-500"
-                      />
-                    </div>
+                    <Switch 
+                      checked={showRawData} 
+                      onCheckedChange={setShowRawData}
+                    />
                   </div>
                 </div>
                 
