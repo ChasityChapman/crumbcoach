@@ -123,14 +123,12 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
   // Stop bake mutation
   const stopBakeMutation = useMutation({
     mutationFn: () => apiRequest("DELETE", `/api/bakes/${bake.id}`),
-    onSuccess: async () => {
-      // Clear all cache data completely
-      queryClient.clear();
-      
-      // Wait a moment then refetch fresh data
-      setTimeout(() => {
-        queryClient.refetchQueries({ queryKey: ["/api/bakes"] });
-      }, 100);
+    onSuccess: () => {
+      // Update the bakes list cache immediately
+      queryClient.setQueryData(['/api/bakes'], (oldData: any) => {
+        if (!oldData || !Array.isArray(oldData)) return [];
+        return oldData.filter((b: any) => b.id !== bake.id);
+      });
       
       toast({
         title: "Bake Stopped",
