@@ -101,13 +101,13 @@ export default function StartBakeModal({ isOpen, onClose }: StartBakeModalProps)
       name: bakeName.trim(),
       status: 'active',
       currentStep: 0,
-      startTime: now,
-      estimatedEndTime: estimatedEndTime,
+      startTime: now.toISOString(),
+      estimatedEndTime: estimatedEndTime.toISOString(),
       actualEndTime: null,
       environmentalData: sensorData ? {
         temperature: sensorData.temperature,
         humidity: sensorData.humidity,
-        timestamp: sensorData.timestamp
+        timestamp: sensorData.timestamp.toISOString()
       } : null,
       timelineAdjustments: null,
     });
