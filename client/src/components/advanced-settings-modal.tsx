@@ -178,10 +178,13 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                       <p className="text-sm text-muted-foreground">Automatically calibrate sensors based on environment</p>
                     </div>
                     <div className="flex-shrink-0 ml-4">
-                      <Switch 
-                        checked={autoCalibrate} 
-                        onCheckedChange={setAutoCalibrate}
-                      />
+                      <Button 
+                        variant={autoCalibrate ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setAutoCalibrate(!autoCalibrate)}
+                      >
+                        {autoCalibrate ? "ON" : "OFF"}
+                      </Button>
                     </div>
                   </div>
                   
@@ -191,10 +194,13 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                       <p className="text-sm text-muted-foreground">Allow manual input when sensors unavailable</p>
                     </div>
                     <div className="flex-shrink-0 ml-4">
-                      <Switch 
-                        checked={sensorOverride} 
-                        onCheckedChange={setSensorOverride}
-                      />
+                      <Button 
+                        variant={sensorOverride ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setSensorOverride(!sensorOverride)}
+                      >
+                        {sensorOverride ? "ON" : "OFF"}
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -268,10 +274,13 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                     <p className="text-sm text-muted-foreground">Send notifications for timeline milestones</p>
                   </div>
                   <div className="flex-shrink-0 ml-4">
-                    <Switch 
-                      checked={autoNotifications} 
-                      onCheckedChange={setAutoNotifications}
-                    />
+                    <Button 
+                      variant={autoNotifications ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setAutoNotifications(!autoNotifications)}
+                    >
+                      {autoNotifications ? "ON" : "OFF"}
+                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -342,10 +351,13 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                     <p className="text-sm text-muted-foreground">Adjust timings based on temperature and humidity</p>
                   </div>
                   <div className="flex-shrink-0 ml-4">
-                    <Switch 
-                      checked={envCompensation} 
-                      onCheckedChange={setEnvCompensation}
-                    />
+                    <Button 
+                      variant={envCompensation ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setEnvCompensation(!envCompensation)}
+                    >
+                      {envCompensation ? "ON" : "OFF"}
+                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -385,10 +397,13 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                       <p className="text-sm text-muted-foreground">Enhanced visibility for better readability</p>
                     </div>
                     <div className="flex-shrink-0 ml-4">
-                      <Switch 
-                        checked={highContrast} 
-                        onCheckedChange={setHighContrast}
-                      />
+                      <Button 
+                        variant={highContrast ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setHighContrast(!highContrast)}
+                      >
+                        {highContrast ? "ON" : "OFF"}
+                      </Button>
                     </div>
                   </div>
                   
@@ -398,10 +413,13 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                       <p className="text-sm text-muted-foreground">Spoken alerts for timeline events</p>
                     </div>
                     <div className="flex-shrink-0 ml-4">
-                      <Switch 
-                        checked={voiceNotifications} 
-                        onCheckedChange={setVoiceNotifications}
-                      />
+                      <Button 
+                        variant={voiceNotifications ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setVoiceNotifications(!voiceNotifications)}
+                      >
+                        {voiceNotifications ? "ON" : "OFF"}
+                      </Button>
                     </div>
                   </div>
                   
@@ -411,10 +429,13 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                       <p className="text-sm text-muted-foreground">Vibration feedback on mobile devices</p>
                     </div>
                     <div className="flex-shrink-0 ml-4">
-                      <Switch 
-                        checked={hapticFeedback} 
-                        onCheckedChange={setHapticFeedback}
-                      />
+                      <Button 
+                        variant={hapticFeedback ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setHapticFeedback(!hapticFeedback)}
+                      >
+                        {hapticFeedback ? "ON" : "OFF"}
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -466,10 +487,13 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                       <p className="text-sm text-muted-foreground">Show detailed logging and error information</p>
                     </div>
                     <div className="flex-shrink-0 ml-4">
-                      <Switch 
-                        checked={debugMode} 
-                        onCheckedChange={setDebugMode}
-                      />
+                      <Button 
+                        variant={debugMode ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setDebugMode(!debugMode)}
+                      >
+                        {debugMode ? "ON" : "OFF"}
+                      </Button>
                     </div>
                   </div>
                   
@@ -479,10 +503,13 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                       <p className="text-sm text-muted-foreground">Display unprocessed sensor readings</p>
                     </div>
                     <div className="flex-shrink-0 ml-4">
-                      <Switch 
-                        checked={showRawData} 
-                        onCheckedChange={setShowRawData}
-                      />
+                      <Button 
+                        variant={showRawData ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setShowRawData(!showRawData)}
+                      >
+                        {showRawData ? "ON" : "OFF"}
+                      </Button>
                     </div>
                   </div>
                 </div>
