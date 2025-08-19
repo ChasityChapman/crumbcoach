@@ -119,14 +119,17 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
   const stopBakeMutation = useMutation({
     mutationFn: () => apiRequest("DELETE", `/api/bakes/${bake.id}`),
     onSuccess: () => {
-      // Force refresh all bake-related queries
-      queryClient.invalidateQueries({ queryKey: ["/api/bakes"] });
+      // Update cache data directly by filtering out the deleted bake
+      queryClient.setQueryData(['/api/bakes'], (oldData: any) => {
+        if (!oldData) return oldData;
+        return oldData.filter((b: any) => b.id !== bake.id);
+      });
+      
+      // Clean up related cache entries
+      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}`] });
       queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}/timeline`] });
       queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}/notes`] });
       queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}/photos`] });
-      
-      // Force refetch to update UI immediately
-      queryClient.refetchQueries({ queryKey: ["/api/bakes"] });
       
       toast({
         title: "Bake Stopped",
