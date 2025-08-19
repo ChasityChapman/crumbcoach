@@ -34,9 +34,9 @@ export default function StartBakeModal({ isOpen, onClose }: StartBakeModalProps)
       name: string; 
       status: string;
       currentStep: number;
-      startTime: Date;
-      estimatedEndTime: Date;
-      actualEndTime: Date | null;
+      startTime: string;
+      estimatedEndTime: string;
+      actualEndTime: null;
       environmentalData: any;
       timelineAdjustments: any;
     }) => apiRequest("POST", "/api/bakes", bakeData),
@@ -103,13 +103,13 @@ export default function StartBakeModal({ isOpen, onClose }: StartBakeModalProps)
       name: bakeName.trim(),
       status: 'active',
       currentStep: 0,
-      startTime: now,
-      estimatedEndTime,
+      startTime: now.toISOString(),
+      estimatedEndTime: estimatedEndTime.toISOString(),
       actualEndTime: null,
       environmentalData: sensorData ? {
         temperature: sensorData.temperature,
         humidity: sensorData.humidity,
-        timestamp: sensorData.timestamp
+        timestamp: sensorData.timestamp.toISOString()
       } : null,
       timelineAdjustments: null,
     });

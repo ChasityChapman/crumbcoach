@@ -76,11 +76,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/bakes", async (req, res) => {
     try {
+      console.log('Received bake data:', JSON.stringify(req.body, null, 2));
       const validatedData = insertBakeSchema.parse(req.body);
+      console.log('Validated data:', JSON.stringify(validatedData, null, 2));
       const bake = await storage.createBake(validatedData);
       res.status(201).json(bake);
     } catch (error) {
       console.error('Bake validation error:', error);
+      if (error instanceof Error) {
+        console.error('Error details:', error.message);
+      }
       res.status(400).json({ message: "Invalid bake data", error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
