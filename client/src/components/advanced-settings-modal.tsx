@@ -252,6 +252,7 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                 
                 <div className="space-y-2">
                   <Label>Global Time Adjustment</Label>
+                  <p className="text-xs text-muted-foreground mb-2">Speeds up or slows down all recipe timings. Use +% for cold kitchens, -% for warm kitchens</p>
                   <div className="space-y-2">
                     <Slider
                       value={[timeAdjustment]}
