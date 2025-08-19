@@ -1,15 +1,18 @@
 import type { Bake, TimelineStep } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { Timer, Play, Pause, CheckCircle } from "lucide-react";
+import { Timer, Play, Pause, CheckCircle, Square, SkipForward } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface ActiveBakeCardProps {
   bake: Bake;
 }
 
 export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
+  const { toast } = useToast();
   const [stepTimer, setStepTimer] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   
@@ -70,6 +73,59 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
   const resetStepTimer = () => {
     setStepTimer(0);
     setIsTimerRunning(false);
+  };
+  
+  // Stop bake mutation
+  const stopBakeMutation = useMutation({
+    mutationFn: () => apiRequest("DELETE", `/api/bakes/${bake.id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/bakes"] });
+      toast({
+        title: "Bake Stopped",
+        description: "Your baking session has been ended",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Skip to next step mutation
+  const skipStepMutation = useMutation({
+    mutationFn: async () => {
+      if (!activeStep) return;
+      
+      // Mark current step as completed
+      await apiRequest("PATCH", `/api/timeline-steps/${activeStep.id}`, {
+        status: "completed",
+        endTime: new Date().toISOString(),
+        actualDuration: Math.floor(stepTimer / 60),
+      });
+      
+      // Find and activate next step
+      const nextStep = timelineSteps?.find(step => step.stepIndex === activeStep.stepIndex + 1);
+      if (nextStep) {
+        await apiRequest("PATCH", `/api/timeline-steps/${nextStep.id}`, {
+          status: "active",
+          startTime: new Date().toISOString(),
+        });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/bakes/${bake.id}/timeline`] });
+      setStepTimer(0);
+      setIsTimerRunning(false);
+      toast({
+        title: "Step Completed!",
+        description: "Moved to the next baking step",
+      });
+    },
+  });
+  
+  const handleStopBake = () => {
+    stopBakeMutation.mutate();
+  };
+  
+  const handleSkipStep = () => {
+    skipStepMutation.mutate();
   };
 
   return (
@@ -157,7 +213,7 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
             
             {/* Progress indicator */}
             {activeStep.estimatedDuration && (
-              <div>
+              <div className="mb-4">
                 <div className="flex justify-between text-sm mb-1">
                   <span>Step Progress</span>
                   <span>{Math.min(Math.round((stepTimer / 60) / activeStep.estimatedDuration * 100), 100)}%</span>
@@ -170,6 +226,29 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
                 </div>
               </div>
             )}
+            
+            {/* Control Buttons */}
+            <div className="flex space-x-2">
+              <Button
+                onClick={handleSkipStep}
+                disabled={skipStepMutation.isPending}
+                size="sm"
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Complete Step
+              </Button>
+              <Button
+                onClick={handleStopBake}
+                disabled={stopBakeMutation.isPending}
+                size="sm"
+                variant="destructive"
+                className="flex-1"
+              >
+                <Square className="w-4 h-4 mr-2" />
+                Stop Bake
+              </Button>
+            </div>
           </div>
         )}
         
