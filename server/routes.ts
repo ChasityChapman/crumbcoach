@@ -80,7 +80,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const bake = await storage.createBake(validatedData);
       res.status(201).json(bake);
     } catch (error) {
-      res.status(400).json({ message: "Invalid bake data" });
+      console.error('Bake validation error:', error);
+      res.status(400).json({ message: "Invalid bake data", error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 

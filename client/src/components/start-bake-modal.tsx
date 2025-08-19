@@ -36,7 +36,9 @@ export default function StartBakeModal({ isOpen, onClose }: StartBakeModalProps)
       currentStep: number;
       startTime: Date;
       estimatedEndTime: Date;
-      environmentalData?: any;
+      actualEndTime: Date | null;
+      environmentalData: any;
+      timelineAdjustments: any;
     }) => apiRequest("POST", "/api/bakes", bakeData),
     onSuccess: async (newBake: any) => {
       // Create timeline steps for the new bake
@@ -103,11 +105,13 @@ export default function StartBakeModal({ isOpen, onClose }: StartBakeModalProps)
       currentStep: 0,
       startTime: now,
       estimatedEndTime,
+      actualEndTime: null,
       environmentalData: sensorData ? {
         temperature: sensorData.temperature,
         humidity: sensorData.humidity,
         timestamp: sensorData.timestamp
       } : null,
+      timelineAdjustments: null,
     });
   };
 
