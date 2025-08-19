@@ -127,13 +127,8 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
       // Immediately update the cache by removing this bake
       queryClient.setQueryData(['/api/bakes'], (oldData: any) => {
         if (!oldData || !Array.isArray(oldData)) return [];
-        const filtered = oldData.filter((b: any) => b.id !== bake.id);
-        console.log('Updated bakes cache, removed:', bake.id, 'remaining:', filtered.length);
-        return filtered;
+        return oldData.filter((b: any) => b.id !== bake.id);
       });
-      
-      // Also force a fresh fetch from server
-      queryClient.refetchQueries({ queryKey: ['/api/bakes'] });
       
       toast({
         title: "Bake Stopped",
