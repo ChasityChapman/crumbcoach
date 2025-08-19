@@ -87,7 +87,11 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
     setDefaultHydration(75);
     setFontSize(16);
     setHighContrast(false);
+    setVoiceNotifications(false);
+    setHapticFeedback(true);
+    setSensorOverride(false);
     setDebugMode(false);
+    setShowRawData(false);
     
     toast({
       title: "Settings Reset",
@@ -208,7 +212,9 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                         min={15}
                         step={1}
                       />
-                      <div className="text-sm text-muted-foreground">{defaultTemp}°{tempUnit === 'celsius' ? 'C' : 'F'}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {tempUnit === 'celsius' ? defaultTemp : Math.round((defaultTemp * 9/5) + 32)}°{tempUnit === 'celsius' ? 'C' : 'F'}
+                      </div>
                     </div>
                   </div>
                   
