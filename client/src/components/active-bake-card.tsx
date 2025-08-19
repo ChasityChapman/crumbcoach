@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { Timer, Play, Pause, CheckCircle, Square, SkipForward, ChevronDown, ChevronUp, X, Camera, FileText, Clock, AlertTriangle } from "lucide-react";
+import { Timer, Play, Pause, CheckCircle, SkipForward, ChevronDown, ChevronUp, X, Camera, FileText, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ActiveBakeCardProps {
@@ -120,23 +120,6 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
     setIsTimerRunning(false);
   };
   
-  // Stop bake mutation
-  const stopBakeMutation = useMutation({
-    mutationFn: () => apiRequest("DELETE", `/api/bakes/${bake.id}`),
-    onSuccess: () => {
-      // Immediately update the cache by removing this bake
-      queryClient.setQueryData(['/api/bakes'], (oldData: any) => {
-        if (!oldData || !Array.isArray(oldData)) return [];
-        return oldData.filter((b: any) => b.id !== bake.id);
-      });
-      
-      toast({
-        title: "Bake Stopped",
-        description: "Your baking session has been ended",
-        variant: "destructive",
-      });
-    },
-  });
   
   // Skip to next step mutation
   const skipStepMutation = useMutation({
@@ -203,34 +186,6 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
     },
   });
   
-  // Cancel bake mutation (mark as cancelled instead of deleting)
-  const cancelBakeMutation = useMutation({
-    mutationFn: () => apiRequest("PATCH", `/api/bakes/${bake.id}`, {
-      status: "cancelled",
-      actualEndTime: new Date().toISOString(),
-    }),
-    onSuccess: () => {
-      // Update the cache to mark bake as cancelled
-      queryClient.setQueryData(['/api/bakes'], (oldData: any) => {
-        if (!oldData || !Array.isArray(oldData)) return oldData;
-        return oldData.map((b: any) => 
-          b.id === bake.id ? { ...b, status: 'cancelled' } : b
-        );
-      });
-      
-      queryClient.invalidateQueries({ queryKey: [`/api/bakes/${bake.id}/timeline`] });
-      
-      toast({
-        title: "Bake Cancelled",
-        description: "Your baking session has been cancelled and saved",
-        variant: "destructive",
-      });
-    },
-  });
-  
-  const handleStopBake = () => {
-    stopBakeMutation.mutate();
-  };
   
   const handleSkipStep = () => {
     skipStepMutation.mutate();
@@ -240,16 +195,12 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
     skipWithoutCompletingMutation.mutate();
   };
   
-  const handleCancelBake = () => {
-    cancelBakeMutation.mutate();
-  };
-  
   const handleMinimize = () => {
     setIsMinimized(!isMinimized);
   };
   
   const handleClose = () => {
-    stopBakeMutation.mutate();
+    // Remove close functionality for now
   };
 
   return (
@@ -343,24 +294,6 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
                 >
                   <SkipForward className="w-4 h-4 mr-1" />
                   Skip
-                </Button>
-                <Button
-                  onClick={handleCancelBake}
-                  disabled={cancelBakeMutation.isPending}
-                  size="sm"
-                  className="bg-orange-600 hover:bg-orange-700 text-white"
-                >
-                  <AlertTriangle className="w-4 h-4 mr-1" />
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleStopBake}
-                  disabled={stopBakeMutation.isPending}
-                  size="sm"
-                  variant="destructive"
-                >
-                  <Square className="w-4 h-4 mr-1" />
-                  Delete
                 </Button>
               </div>
             </div>
