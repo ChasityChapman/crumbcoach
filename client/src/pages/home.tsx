@@ -39,12 +39,11 @@ export default function Home() {
   const { data: allBakes } = useQuery<Bake[]>({
     queryKey: ["/api/bakes"],
     staleTime: 0, // Always refetch to ensure fresh data
-    cacheTime: 0, // Don't cache the data
     refetchOnWindowFocus: true,
     refetchOnMount: true,
   });
   
-  const activeBakes = allBakes?.filter(bake => bake && bake.id && bake.status === 'active') || [];
+  const activeBakes = (allBakes || []).filter((bake: Bake) => bake && bake.id && bake.status === 'active');
 
   const { data: latestSensor } = useQuery<SensorReading | null>({
     queryKey: ["/api/sensors/latest"],
