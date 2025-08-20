@@ -4,8 +4,9 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { Timer, Play, Pause, CheckCircle, SkipForward, ChevronDown, ChevronUp, X, Camera, FileText, Clock, RefreshCw } from "lucide-react";
+import { Timer, Play, Pause, CheckCircle, SkipForward, ChevronDown, ChevronUp, X, Camera, FileText, Clock, RefreshCw, Bell, BellOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { bakeNotifications } from "@/lib/notifications";
 
 interface ActiveBakeCardProps {
   bake: Bake;
@@ -18,6 +19,7 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
   const [isMinimized, setIsMinimized] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(bakeNotifications.hasPermission());
   
   // Helper function to create timeline steps for this bake
   const createTimelineSteps = async (bake: Bake) => {
@@ -133,9 +135,45 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
   // Auto-complete bake when all steps are done
   useEffect(() => {
     if (allCompleted && bake.status !== 'completed') {
+      bakeNotifications.clearAllAlarms();
       completeBakeMutation.mutate();
     }
   }, [allCompleted, bake.status]);
+
+  // Schedule alarms for upcoming steps
+  useEffect(() => {
+    if (!timelineSteps || !notificationsEnabled) return;
+
+    // Clear existing alarms
+    bakeNotifications.clearAllAlarms();
+
+    // Schedule alarms for pending steps
+    timelineSteps.forEach((step) => {
+      if (step.status === 'pending' && step.startTime) {
+        const stepStart = new Date(step.startTime);
+        bakeNotifications.scheduleStepAlarm(
+          step.id,
+          step.name,
+          stepStart,
+          bake.id
+        );
+      }
+    });
+
+    // Listen for alarm events
+    const handleStepAlarm = (event: CustomEvent) => {
+      toast({
+        title: "🍞 Step Ready!",
+        description: `Time for: ${event.detail.stepName}`,
+        duration: 10000,
+      });
+    };
+
+    window.addEventListener('bake-step-alarm', handleStepAlarm as EventListener);
+    return () => {
+      window.removeEventListener('bake-step-alarm', handleStepAlarm as EventListener);
+    };
+  }, [timelineSteps, notificationsEnabled, bake.id, toast]);
   
   // Auto-create timeline when bake card loads and no timeline exists
   useEffect(() => {
@@ -326,7 +364,34 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
   });
 
   const handleClose = () => {
+    bakeNotifications.clearAllAlarms();
     deleteBakeMutation.mutate();
+  };
+
+  const handleToggleNotifications = async () => {
+    if (!notificationsEnabled) {
+      const granted = await bakeNotifications.requestPermission();
+      setNotificationsEnabled(granted);
+      if (granted) {
+        toast({
+          title: "Notifications Enabled",
+          description: "You'll be alerted when your next baking step is ready",
+        });
+      } else {
+        toast({
+          title: "Notifications Blocked",
+          description: "Enable notifications in your browser settings to get step alerts",
+          variant: "destructive",
+        });
+      }
+    } else {
+      setNotificationsEnabled(false);
+      bakeNotifications.clearAllAlarms();
+      toast({
+        title: "Notifications Disabled",
+        description: "Step alarms have been turned off",
+      });
+    }
   };
 
   return (
@@ -403,19 +468,41 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
             <div className="mb-4">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-sm font-medium">Timeline Management</h4>
-                <Button 
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => recalibrateMutation.mutate()}
-                  disabled={recalibrateMutation.isPending}
-                  className="text-accent-orange-500 hover:text-accent-orange-600 text-xs px-2 py-1 h-auto"
-                >
-                  <RefreshCw className={`w-3 h-3 mr-1 ${recalibrateMutation.isPending ? 'animate-spin' : ''}`} />
-                  Recalibrate
-                </Button>
+                <div className="flex space-x-2">
+                  <Button 
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleToggleNotifications}
+                    className={`text-xs px-2 py-1 h-auto ${
+                      notificationsEnabled 
+                        ? 'text-green-400 hover:text-green-300' 
+                        : 'text-white/60 hover:text-white/80'
+                    }`}
+                  >
+                    {notificationsEnabled ? (
+                      <Bell className="w-3 h-3 mr-1" />
+                    ) : (
+                      <BellOff className="w-3 h-3 mr-1" />
+                    )}
+                    Alarms
+                  </Button>
+                  <Button 
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => recalibrateMutation.mutate()}
+                    disabled={recalibrateMutation.isPending}
+                    className="text-accent-orange-500 hover:text-accent-orange-600 text-xs px-2 py-1 h-auto"
+                  >
+                    <RefreshCw className={`w-3 h-3 mr-1 ${recalibrateMutation.isPending ? 'animate-spin' : ''}`} />
+                    Recalibrate
+                  </Button>
+                </div>
               </div>
               <p className="text-xs text-white/60">
-                Optimize timeline based on current environmental conditions
+                {notificationsEnabled 
+                  ? "Alarms enabled - you'll be notified when steps are ready" 
+                  : "Enable alarms to get notifications for upcoming baking steps"
+                }
               </p>
             </div>
             
@@ -472,11 +559,19 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
                           <p className="text-xs text-white/50 mt-1">{step.description}</p>
                         )}
                       </div>
-                      {step.status === 'active' && (
-                        <div className="text-xs text-white/80 bg-white/10 px-2 py-1 rounded">
-                          Current
-                        </div>
-                      )}
+                      <div className="flex items-center space-x-1">
+                        {step.status === 'pending' && notificationsEnabled && step.startTime && (
+                          <div className="text-xs text-amber-300 bg-amber-500/20 px-2 py-1 rounded flex items-center">
+                            <Bell className="w-2 h-2 mr-1" />
+                            Alarm
+                          </div>
+                        )}
+                        {step.status === 'active' && (
+                          <div className="text-xs text-white/80 bg-white/10 px-2 py-1 rounded">
+                            Current
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
