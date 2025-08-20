@@ -63,7 +63,7 @@ export default function Profile() {
   const handleShareApp = () => {
     if (navigator.share) {
       navigator.share({
-        title: 'SourDough Pro',
+        title: 'Crumb Coach',
         text: 'Check out this amazing sourdough baking assistant!',
         url: window.location.href,
       });

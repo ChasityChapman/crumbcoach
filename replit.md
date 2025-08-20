@@ -1,8 +1,8 @@
-# SourDough Pro - Smart Sourdough Baking Assistant
+# Crumb Coach - Smart Sourdough Baking Assistant
 
 ## Overview
 
-SourDough Pro is a smart sourdough baking application that provides real-time environmental monitoring, automated timeline adjustments, and comprehensive baking guidance. The app uses sensor data to optimize baking schedules based on temperature and humidity conditions, while providing features for recipe management, progress tracking, photo documentation, and note-taking throughout the baking process.
+Crumb Coach is a smart sourdough baking application that provides real-time environmental monitoring, automated timeline adjustments, and comprehensive baking guidance. The app uses sensor data to optimize baking schedules based on temperature and humidity conditions, while providing features for recipe management, progress tracking, photo documentation, and note-taking throughout the baking process.
 
 ## User Preferences
 

@@ -18,7 +18,7 @@ export default function Landing() {
             </div>
           </div>
           <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-4">
-            SourDough Pro
+            Crumb Coach
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             Your intelligent sourdough baking assistant with real-time environmental monitoring, 
