@@ -164,13 +164,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/timeline-steps/:id", isAuthenticated, async (req, res) => {
     try {
-      const step = await storage.updateTimelineStep(req.params.id, req.body);
+      console.log("Updating timeline step:", req.params.id, "with data:", JSON.stringify(req.body, null, 2));
+      
+      // Validate the update data using the same schema but make all fields optional
+      const updateData = {
+        ...req.body,
+        // Convert date strings to Date objects if present
+        startTime: req.body.startTime ? new Date(req.body.startTime) : undefined,
+        endTime: req.body.endTime ? new Date(req.body.endTime) : undefined,
+      };
+      
+      console.log("Processed update data:", JSON.stringify(updateData, null, 2));
+      
+      const step = await storage.updateTimelineStep(req.params.id, updateData);
       if (!step) {
         return res.status(404).json({ message: "Timeline step not found" });
       }
+      console.log("Successfully updated timeline step:", step.id);
       res.json(step);
     } catch (error) {
-      res.status(500).json({ message: "Failed to update timeline step" });
+      console.error("Timeline step update error:", error);
+      if (error instanceof Error) {
+        console.error("Error message:", error.message);
+        console.error("Error stack:", error.stack);
+      }
+      res.status(500).json({ message: "Failed to update timeline step", error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
