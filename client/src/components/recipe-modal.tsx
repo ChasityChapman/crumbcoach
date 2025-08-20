@@ -221,36 +221,6 @@ export default function RecipeModal({ isOpen, onClose }: RecipeModalProps) {
             />
           </div>
 
-          {/* Hydration Presets */}
-          <Card className="border-sourdough-200">
-            <CardHeader>
-              <CardTitle className="text-base flex items-center space-x-2">
-                <Droplets className="w-5 h-5 text-blue-500" />
-                <span>Hydration Presets</span>
-              </CardTitle>
-              <p className="text-sm text-muted-foreground mt-2">
-                Choose water-to-flour ratio. Higher hydration creates more open crumb but is harder to handle.
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid grid-cols-2 gap-2">
-                {HYDRATION_PRESETS.map((preset) => (
-                  <Button
-                    key={preset.percentage}
-                    variant={selectedHydration === preset.percentage ? "default" : "outline"}
-                    onClick={() => applyHydrationPreset(preset.percentage)}
-                    className="text-left justify-start h-auto p-3"
-                  >
-                    <div>
-                      <div className="font-medium">{preset.name}</div>
-                      <div className="text-xs opacity-75">{preset.percentage}% - {preset.description}</div>
-                    </div>
-                  </Button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Ingredients */}
           <Card className="border-sourdough-200">
             <CardHeader>
@@ -287,6 +257,36 @@ export default function RecipeModal({ isOpen, onClose }: RecipeModalProps) {
                   </Button>
                 </div>
               ))}
+            </CardContent>
+          </Card>
+
+          {/* Hydration Presets */}
+          <Card className="border-sourdough-200">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center space-x-2">
+                <Droplets className="w-5 h-5 text-blue-500" />
+                <span>Hydration Presets</span>
+              </CardTitle>
+              <p className="text-sm text-muted-foreground mt-2">
+                Choose water-to-flour ratio. Higher hydration creates more open crumb but is harder to handle.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                {HYDRATION_PRESETS.map((preset) => (
+                  <Button
+                    key={preset.percentage}
+                    variant={selectedHydration === preset.percentage ? "default" : "outline"}
+                    onClick={() => applyHydrationPreset(preset.percentage)}
+                    className="text-left justify-start h-auto p-3"
+                  >
+                    <div>
+                      <div className="font-medium">{preset.name}</div>
+                      <div className="text-xs opacity-75">{preset.percentage}% - {preset.description}</div>
+                    </div>
+                  </Button>
+                ))}
+              </div>
             </CardContent>
           </Card>
 
