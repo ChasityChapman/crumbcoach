@@ -285,6 +285,13 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
     onSuccess: () => {
       // Clear all cache data related to this bake
       queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}`] });
+      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}/timeline`] });
+      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}/notes`] });
+      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}/photos`] });
+      
+      // Force refresh of main bakes list to ensure deletion persists
+      queryClient.invalidateQueries({ queryKey: ['/api/bakes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/bakes/active'] });
       
       toast({
         title: "Bake Deleted",
