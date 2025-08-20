@@ -33,7 +33,7 @@ export default function Profile() {
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
   const bakesThisMonth = bakes?.filter(bake => {
-    const bakeDate = new Date(bake.createdAt);
+    const bakeDate = new Date(bake.createdAt || new Date());
     return bakeDate.getMonth() === currentMonth && bakeDate.getFullYear() === currentYear;
   }).length || 0;
   const activeRecipes = recipes?.length || 0;
@@ -102,7 +102,7 @@ export default function Profile() {
               <div className="w-16 h-16 bg-sourdough-500 rounded-full flex items-center justify-center">
                 {(user as UserType)?.profileImageUrl ? (
                   <img 
-                    src={(user as UserType).profileImageUrl} 
+                    src={(user as UserType).profileImageUrl || ''} 
                     alt={getUserDisplayName()} 
                     className="w-16 h-16 rounded-full object-cover"
                   />

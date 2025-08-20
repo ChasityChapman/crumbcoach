@@ -1,3 +1,5 @@
+import { timeMultiplierFromRH, getHumidity } from './humidity-adjustments';
+
 interface TimelineStep {
   id: string;
   name: string;
@@ -70,18 +72,14 @@ export class TimelineCalculator {
         }
       }
 
-      // Humidity adjustments
-      if (step.humidity) {
-        const humidityDiff = currentConditions.humidity - step.humidity;
+      // Humidity adjustments using smart rules
+      if (step.humidity || (step.name.includes('Fermentation') || step.name.includes('Rise'))) {
+        const humidityMultiplier = timeMultiplierFromRH(currentConditions.humidity);
+        adjustmentFactor *= humidityMultiplier;
         
-        if (humidityDiff < -10) {
-          // Very dry conditions slow fermentation
-          adjustmentFactor *= 1.1;
-          factors.push(`Low humidity (${currentConditions.humidity}% vs optimal ${step.humidity}%)`);
-        } else if (humidityDiff > 15) {
-          // Very humid conditions can speed up slightly
-          adjustmentFactor *= 0.95;
-          factors.push(`High humidity`);
+        if (humidityMultiplier !== 1.0) {
+          const description = this.getHumidityDescription(currentConditions.humidity);
+          factors.push(`${description} (${currentConditions.humidity}% RH, ×${humidityMultiplier.toFixed(2)})`);
         }
       }
 
@@ -168,6 +166,41 @@ export class TimelineCalculator {
     }
 
     return recommendations;
+  }
+
+  /**
+   * Get humidity condition description
+   */
+  private getHumidityDescription(rh: number): string {
+    if (rh >= 70) return "Very high humidity";
+    if (rh >= 55) return "High humidity";
+    if (rh <= 30) return "Very low humidity";
+    if (rh <= 40) return "Low humidity";
+    return "Normal humidity";
+  }
+
+  /**
+   * Calculate smart timeline adjustments with real humidity data
+   */
+  public async calculateSmartAdjustments(
+    currentConditions: EnvironmentalFactors,
+    steps: TimelineStep[] = this.baseSteps
+  ): Promise<{ adjustments: TimelineAdjustment[], humidityData: number | null }> {
+    // Try to get real humidity data
+    const realHumidity = await getHumidity().catch(() => null);
+    
+    // Use real humidity if available, otherwise fall back to provided value
+    const conditionsToUse = {
+      ...currentConditions,
+      humidity: realHumidity ?? currentConditions.humidity
+    };
+
+    const adjustments = this.calculateAdjustments(conditionsToUse, steps);
+    
+    return {
+      adjustments,
+      humidityData: realHumidity
+    };
   }
 }
 

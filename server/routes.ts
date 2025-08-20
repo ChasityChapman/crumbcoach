@@ -277,17 +277,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const latestReading = await storage.getLatestSensorReading();
       const currentTime = new Date();
       
-      // Basic recalibration logic based on temperature and humidity
+      // Smart recalibration logic using humidity rules
       let adjustment = 0;
+      let adjustmentNotes: string[] = [];
+      
       if (latestReading) {
-        const temp = (latestReading.temperature || 240) / 10; // Convert back from stored format
+        const temp = (latestReading.temperature || 240) / 10;
         const humidity = latestReading.humidity || 65;
         
-        // Adjust timing based on conditions
-        if (temp < 22) adjustment += 20; // Slower fermentation in cold
-        if (temp > 26) adjustment -= 15; // Faster fermentation in warmth
-        if (humidity < 60) adjustment += 10; // Dry conditions slow fermentation
-        if (humidity > 75) adjustment -= 5; // High humidity speeds up slightly
+        // Temperature adjustments
+        if (temp < 22) {
+          const tempAdjustment = 20 + (22 - temp) * 5;
+          adjustment += tempAdjustment;
+          adjustmentNotes.push(`Cold temperature: +${tempAdjustment}min`);
+        } else if (temp > 26) {
+          const tempAdjustment = 15 + (temp - 26) * 3;
+          adjustment -= tempAdjustment;
+          adjustmentNotes.push(`Warm temperature: -${tempAdjustment}min`);
+        }
+        
+        // Smart humidity adjustments
+        let humidityMultiplier = 1.0;
+        if (humidity >= 70) {
+          humidityMultiplier = 0.85;
+          adjustmentNotes.push(`Very high humidity: ×${humidityMultiplier}`);
+        } else if (humidity >= 55) {
+          humidityMultiplier = 0.90;
+          adjustmentNotes.push(`High humidity: ×${humidityMultiplier}`);
+        } else if (humidity <= 30) {
+          humidityMultiplier = 1.15;
+          adjustmentNotes.push(`Very low humidity: ×${humidityMultiplier}`);
+        } else if (humidity <= 40) {
+          humidityMultiplier = 1.10;
+          adjustmentNotes.push(`Low humidity: ×${humidityMultiplier}`);
+        }
+        
+        // Apply humidity multiplier to remaining time
+        if (humidityMultiplier !== 1.0) {
+          const remainingTime = Math.max(0, new Date(bake.estimatedEndTime || currentTime).getTime() - currentTime.getTime()) / 60000;
+          const humidityAdjustment = remainingTime * (humidityMultiplier - 1);
+          adjustment += humidityAdjustment;
+        }
+      } else {
+        adjustmentNotes.push("No sensor data available");
       }
 
       // Update the bake with new estimated end time
@@ -301,7 +333,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           {
             timestamp: currentTime,
             adjustment: adjustment,
-            reason: `Environmental conditions: ${latestReading ? `${((latestReading.temperature || 240) / 10).toFixed(1)}°C, ${latestReading.humidity}%` : 'Unknown'}`
+            reason: `Smart adjustments: ${adjustmentNotes.length > 0 ? adjustmentNotes.join(', ') : 'No adjustments needed'} ${latestReading ? `(${((latestReading.temperature || 240) / 10).toFixed(1)}°C, ${latestReading.humidity}% RH)` : ''}`
           }
         ]
       });

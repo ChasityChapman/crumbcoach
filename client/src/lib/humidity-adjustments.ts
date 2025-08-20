@@ -1,0 +1,68 @@
+export function hydrationDeltaFromRH(rh: number) {
+  if (rh >= 70) return -0.03;
+  if (rh >= 55) return -0.02;
+  if (rh <= 30) return +0.02;
+  if (rh <= 40) return +0.01;
+  return 0;
+}
+
+export function timeMultiplierFromRH(rh: number) {
+  if (rh >= 70) return 0.85;
+  if (rh >= 55) return 0.90;
+  if (rh <= 30) return 1.15;
+  if (rh <= 40) return 1.10;
+  return 1.0;
+}
+
+export type BakePlan = {
+  flourGrams: number;
+  waterGrams: number;
+  bulkMinutes: number;
+  proofMinutes: number;
+};
+
+export async function getHumidity(): Promise<number | null> {
+  // ask only when needed
+  const pos = await new Promise<GeolocationPosition>((res, rej) =>
+    navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 8000 })
+  ).catch(() => null);
+
+  if (!pos) return null;
+
+  const { latitude, longitude } = pos.coords;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=relative_humidity_2m&forecast_days=1&timezone=auto`;
+  const resp = await fetch(url).then(r => r.json()).catch(() => null);
+  const arr = resp?.hourly?.relative_humidity_2m;
+  if (!Array.isArray(arr) || !arr.length) return null;
+
+  const hour = new Date().getHours();
+  const rh = arr[Math.min(hour, arr.length - 1)];
+  return typeof rh === "number" ? rh : null;
+}
+
+export async function applyHumidityAdjustments(plan: BakePlan) {
+  const rh = await getHumidity();
+  if (rh == null) {
+    return { plan, rh: null, notes: ["Humidity unavailable. No auto adjustments applied."] };
+  }
+  const hydration = plan.waterGrams / plan.flourGrams;
+  const dHydration = hydrationDeltaFromRH(rh);
+  const newHydration = Math.max(0.50, Math.min(0.90, hydration + dHydration));
+  const newWater = Math.round(newHydration * plan.flourGrams);
+  const tMult = timeMultiplierFromRH(rh);
+
+  const adjusted: BakePlan = {
+    flourGrams: plan.flourGrams,
+    waterGrams: newWater,
+    bulkMinutes: Math.round(plan.bulkMinutes * tMult),
+    proofMinutes: Math.round(plan.proofMinutes * tMult),
+  };
+
+  const notes = [
+    `Local RH ${Math.round(rh)}%`,
+    dHydration === 0 ? "Water unchanged" : `Water ${dHydration > 0 ? "+" : ""}${Math.round(dHydration * 100)}%`,
+    tMult === 1 ? "Timing unchanged" : `Fermentation time ×${tMult.toFixed(2)}`
+  ];
+
+  return { plan: adjusted, rh, notes };
+}
