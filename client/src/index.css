@@ -4,20 +4,20 @@
 @tailwind utilities;
 
 :root {
-  --background: hsl(0 0% 100%);
-  --foreground: hsl(210 25% 7.8431%);
-  --card: hsl(180 6.6667% 97.0588%);
-  --card-foreground: hsl(210 25% 7.8431%);
+  --background: hsl(60 12% 98%);
+  --foreground: hsl(0 0% 18%);
+  --card: hsl(60 12% 98%);
+  --card-foreground: hsl(0 0% 18%);
   --popover: hsl(0 0% 100%);
   --popover-foreground: hsl(210 25% 7.8431%);
-  --primary: hsl(203.8863 88.2845% 53.1373%);
+  --primary: hsl(176 31% 33%);
   --primary-foreground: hsl(0 0% 100%);
-  --secondary: hsl(210 25% 7.8431%);
+  --secondary: hsl(93 23% 71%);
   --secondary-foreground: hsl(0 0% 100%);
-  --muted: hsl(240 1.9608% 90%);
-  --muted-foreground: hsl(210 25% 7.8431%);
-  --accent: hsl(211.5789 51.3514% 92.7451%);
-  --accent-foreground: hsl(203.8863 88.2845% 53.1373%);
+  --muted: hsl(93 23% 71%);
+  --muted-foreground: hsl(0 0% 18%);
+  --accent: hsl(33 87% 66%);
+  --accent-foreground: hsl(0 0% 18%);
   --destructive: hsl(356.3033 90.5579% 54.3137%);
   --destructive-foreground: hsl(0 0% 100%);
   --border: hsl(201.4286 30.4348% 90.9804%);
@@ -52,22 +52,22 @@
   --tracking-normal: 0em;
   --spacing: 0.25rem;
   
-  /* Sourdough color scheme */
-  --sourdough-50: hsl(30 100% 97%);
-  --sourdough-100: hsl(48 17% 95%);
-  --sourdough-200: hsl(33 53% 76%);
-  --sourdough-300: hsl(35 47% 73%);
-  --sourdough-400: hsl(30 62% 59%);
-  --sourdough-500: hsl(21 61% 31%);
-  --sourdough-600: hsl(23 54% 42%);
-  --sourdough-700: hsl(30 53% 28%);
-  --sourdough-800: hsl(28 26% 17%);
-  --sourdough-900: hsl(26 41% 13%);
+  /* Brand color scheme */
+  --sourdough-50: hsl(60 12% 98%);
+  --sourdough-100: hsl(60 12% 95%);
+  --sourdough-200: hsl(93 23% 81%);
+  --sourdough-300: hsl(93 23% 71%);
+  --sourdough-400: hsl(176 31% 43%);
+  --sourdough-500: hsl(176 31% 33%);
+  --sourdough-600: hsl(176 31% 28%);
+  --sourdough-700: hsl(176 31% 23%);
+  --sourdough-800: hsl(0 0% 18%);
+  --sourdough-900: hsl(0 0% 12%);
   
   /* Accent colors */
-  --accent-orange-400: hsl(20 100% 65%);
-  --accent-orange-500: hsl(15 100% 60%);
-  --accent-orange-600: hsl(13 85% 55%);
+  --accent-orange-400: hsl(33 87% 76%);
+  --accent-orange-500: hsl(33 87% 66%);
+  --accent-orange-600: hsl(33 87% 56%);
 }
 
 .dark {
@@ -116,8 +116,9 @@
   }
 
   body {
-    @apply font-sans antialiased bg-sourdough-50 text-foreground;
+    @apply font-sans antialiased text-foreground;
     font-family: var(--font-sans);
+    background-color: hsl(60 12% 98%);
   }
   
   .safe-area-pb {
