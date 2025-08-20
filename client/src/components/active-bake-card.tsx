@@ -423,6 +423,12 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
                         </p>
                         <div className="flex items-center space-x-2 text-xs text-white/60">
                           <span>{step.estimatedDuration} min</span>
+                          {step.startTime && (
+                            <span className="text-blue-300">
+                              {new Date(step.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - 
+                              {new Date(new Date(step.startTime).getTime() + step.estimatedDuration * 60 * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                            </span>
+                          )}
                           {step.status === 'completed' && step.actualDuration && (
                             <span className="text-green-300">({step.actualDuration} min actual)</span>
                           )}
