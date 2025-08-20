@@ -24,22 +24,6 @@ export default function QuickActions({
       <h3 className="font-semibold text-sourdough-800 mb-3">Quick Actions</h3>
       <div className="grid grid-cols-4 gap-3">
         <button 
-          onClick={onOpenCamera}
-          className="bg-white rounded-xl p-4 shadow-sm border border-sourdough-100 text-center hover:bg-sourdough-50 transition-colors"
-        >
-          <Camera className="w-6 h-6 text-accent-orange-500 mx-auto mb-2" />
-          <p className="text-sm font-medium text-sourdough-800">Photo</p>
-        </button>
-        
-        <button 
-          onClick={onOpenNotes}
-          className="bg-white rounded-xl p-4 shadow-sm border border-sourdough-100 text-center hover:bg-sourdough-50 transition-colors"
-        >
-          <StickyNote className="w-6 h-6 text-sourdough-500 mx-auto mb-2" />
-          <p className="text-sm font-medium text-sourdough-800">Notes</p>
-        </button>
-        
-        <button 
           onClick={onStartBake}
           disabled={isCreatingBake}
           className={`rounded-xl p-4 shadow-sm text-center transition-colors ${
@@ -54,6 +38,22 @@ export default function QuickActions({
           <p className="text-sm font-medium">
             {isCreatingBake ? 'Creating...' : (hasActiveBake ? 'New Bake' : 'Start Bake')}
           </p>
+        </button>
+        
+        <button 
+          onClick={onOpenCamera}
+          className="bg-white rounded-xl p-4 shadow-sm border border-sourdough-100 text-center hover:bg-sourdough-50 transition-colors"
+        >
+          <Camera className="w-6 h-6 text-accent-orange-500 mx-auto mb-2" />
+          <p className="text-sm font-medium text-sourdough-800">Photo</p>
+        </button>
+        
+        <button 
+          onClick={onOpenNotes}
+          className="bg-white rounded-xl p-4 shadow-sm border border-sourdough-100 text-center hover:bg-sourdough-50 transition-colors"
+        >
+          <StickyNote className="w-6 h-6 text-sourdough-500 mx-auto mb-2" />
+          <p className="text-sm font-medium text-sourdough-800">Notes</p>
         </button>
         
         <button 
