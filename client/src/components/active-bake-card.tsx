@@ -266,21 +266,25 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
   // Delete bake mutation
   const deleteBakeMutation = useMutation({
     mutationFn: () => apiRequest("DELETE", `/api/bakes/${bake.id}`),
-    onSuccess: () => {
-      // Clear all cache data related to this bake
-      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}`] });
-      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}/timeline`] });
-      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}/notes`] });
-      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}/photos`] });
+    onMutate: async () => {
+      // Cancel any outgoing refetches so they don't overwrite our optimistic update
+      await queryClient.cancelQueries({ queryKey: ['/api/bakes'] });
       
-      // Update the main bakes list by removing this bake
+      // Snapshot the previous value
+      const previousBakes = queryClient.getQueryData(['/api/bakes']);
+      
+      // Optimistically update to remove this bake immediately
       queryClient.setQueryData(['/api/bakes'], (oldData: any) => {
         if (!oldData || !Array.isArray(oldData)) return [];
         return oldData.filter((b: any) => b.id !== bake.id);
       });
       
-      // Also invalidate the main query to ensure fresh data
-      queryClient.invalidateQueries({ queryKey: ['/api/bakes'] });
+      // Return a context object with the snapshotted value
+      return { previousBakes };
+    },
+    onSuccess: () => {
+      // Clear all cache data related to this bake
+      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}`] });
       
       toast({
         title: "Bake Deleted",
@@ -288,7 +292,12 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
         variant: "destructive",
       });
     },
-    onError: () => {
+    onError: (err, variables, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousBakes) {
+        queryClient.setQueryData(['/api/bakes'], context.previousBakes);
+      }
+      
       toast({
         title: "Delete Failed",
         description: "Could not delete the bake. Please try again.",
