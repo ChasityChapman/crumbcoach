@@ -267,15 +267,31 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
   const deleteBakeMutation = useMutation({
     mutationFn: () => apiRequest("DELETE", `/api/bakes/${bake.id}`),
     onSuccess: () => {
-      // Immediately update the cache by removing this bake
+      // Clear all cache data related to this bake
+      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}`] });
+      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}/timeline`] });
+      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}/notes`] });
+      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}/photos`] });
+      
+      // Update the main bakes list by removing this bake
       queryClient.setQueryData(['/api/bakes'], (oldData: any) => {
         if (!oldData || !Array.isArray(oldData)) return [];
         return oldData.filter((b: any) => b.id !== bake.id);
       });
       
+      // Also invalidate the main query to ensure fresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/bakes'] });
+      
       toast({
         title: "Bake Deleted",
-        description: "Your baking session has been removed",
+        description: "Your baking session has been permanently removed",
+        variant: "destructive",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Delete Failed",
+        description: "Could not delete the bake. Please try again.",
         variant: "destructive",
       });
     },
