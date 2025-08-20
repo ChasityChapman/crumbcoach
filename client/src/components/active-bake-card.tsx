@@ -28,8 +28,16 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
       const steps = recipe.steps as any[];
       console.log('Found recipe with', steps.length, 'steps');
       
+      // Start with current time
+      let currentTime = new Date();
+      
       for (let i = 0; i < steps.length; i++) {
         const step = steps[i];
+        const stepStartTime = new Date(currentTime);
+        
+        // Calculate when this step should end (current time + duration in minutes)
+        const stepEndTime = new Date(currentTime.getTime() + (step.duration * 60 * 1000));
+        
         try {
           await apiRequest("POST", "/api/timeline-steps", {
             bakeId: bake.id,
@@ -38,11 +46,16 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
             description: step.description || null,
             estimatedDuration: step.duration,
             status: i === 0 ? 'active' : 'pending',
-            startTime: i === 0 ? new Date().toISOString() : null,
-            endTime: null,
+            startTime: stepStartTime.toISOString(),
+            endTime: null, // Will be set when step is completed
             actualDuration: null,
             autoAdjustments: null
           });
+          
+          // Next step starts when this step ends
+          currentTime = stepEndTime;
+          
+          console.log(`Step ${i + 1} (${step.name}): ${stepStartTime.toLocaleTimeString()} - ${stepEndTime.toLocaleTimeString()}`);
         } catch (error) {
           console.error('Failed to create timeline step:', error);
         }
