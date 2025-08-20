@@ -6,6 +6,7 @@ import { Share2, RefreshCw, FileText, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { useLocation } from "wouter";
 
 export default function RecentBakes() {
   const { toast } = useToast();
@@ -47,7 +48,7 @@ export default function RecentBakes() {
     },
   });
 
-  const [selectedBakeDetail, setSelectedBakeDetail] = useState<Bake | null>(null);
+  const [, setLocation] = useLocation();
 
   const handleBakeClick = (bake: Bake, e: React.MouseEvent) => {
     // Prevent click when clicking share button or view details button
@@ -59,7 +60,8 @@ export default function RecentBakes() {
   };
   
   const handleViewDetails = (bake: Bake) => {
-    setSelectedBakeDetail(bake);
+    // Navigate to recent tab
+    setLocation('/recent-bakes');
   };
 
   const completedBakes = bakes?.filter(bake => bake.status === 'completed') || [];
@@ -144,28 +146,6 @@ export default function RecentBakes() {
           </div>
           <p className="text-sourdough-600">No completed bakes yet</p>
           <p className="text-sm text-sourdough-500">Start your first bake to see photos here</p>
-        </div>
-      )}
-      
-      {/* Bake Detail Modal */}
-      {selectedBakeDetail && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-lg w-full max-w-md my-8">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-sourdough-100">
-              <h2 className="font-semibold text-lg text-sourdough-800">{selectedBakeDetail.name}</h2>
-              <button
-                onClick={() => setSelectedBakeDetail(null)}
-                className="p-1 hover:bg-sourdough-100 rounded transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-4 text-center">
-              <p className="text-sourdough-600">Detailed view coming soon!</p>
-              <p className="text-sm text-sourdough-500 mt-2">Use the Recent Bakes tab for full details</p>
-            </div>
-          </div>
         </div>
       )}
     </div>
