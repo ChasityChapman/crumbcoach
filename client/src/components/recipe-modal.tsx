@@ -228,6 +228,9 @@ export default function RecipeModal({ isOpen, onClose }: RecipeModalProps) {
                 <Droplets className="w-5 h-5 text-blue-500" />
                 <span>Hydration Presets</span>
               </CardTitle>
+              <p className="text-sm text-muted-foreground mt-2">
+                Choose water-to-flour ratio. Higher hydration creates more open crumb but is harder to handle.
+              </p>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="grid grid-cols-2 gap-2">
