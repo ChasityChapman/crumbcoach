@@ -6,14 +6,59 @@ import { Separator } from "@/components/ui/separator";
 import { User, Bell, Thermometer, Camera, Share2, Settings, Wheat } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+import type { Bake, Recipe, User as UserType } from "@shared/schema";
 import AdvancedSettingsModal from "@/components/advanced-settings-modal";
 
 export default function Profile() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState(true);
   const [autoSensors, setAutoSensors] = useState(true);
   const [photoBackup, setPhotoBackup] = useState(false);
   const [advancedSettingsOpen, setAdvancedSettingsOpen] = useState(false);
+
+  // Fetch real baking data
+  const { data: bakes } = useQuery<Bake[]>({
+    queryKey: ["/api/bakes"],
+  });
+
+  const { data: recipes } = useQuery<Recipe[]>({
+    queryKey: ["/api/recipes"],
+  });
+
+  // Calculate statistics
+  const totalBakes = bakes?.length || 0;
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+  const bakesThisMonth = bakes?.filter(bake => {
+    const bakeDate = new Date(bake.createdAt);
+    return bakeDate.getMonth() === currentMonth && bakeDate.getFullYear() === currentYear;
+  }).length || 0;
+  const activeRecipes = recipes?.length || 0;
+
+  const getUserDisplayName = () => {
+    const typedUser = user as UserType;
+    if (typedUser?.firstName && typedUser?.lastName) {
+      return `${typedUser.firstName} ${typedUser.lastName}`;
+    }
+    if (typedUser?.firstName) {
+      return typedUser.firstName;
+    }
+    if (typedUser?.email) {
+      return typedUser.email;
+    }
+    return "Sourdough Baker";
+  };
+
+  const getUserJoinDate = () => {
+    const typedUser = user as UserType;
+    if (typedUser?.createdAt) {
+      return new Date(typedUser.createdAt).getFullYear();
+    }
+    return new Date().getFullYear();
+  };
 
   const handleShareApp = () => {
     if (navigator.share) {
@@ -55,13 +100,21 @@ export default function Profile() {
           <CardContent className="p-6">
             <div className="flex items-center space-x-4">
               <div className="w-16 h-16 bg-sourdough-500 rounded-full flex items-center justify-center">
-                <User className="w-8 h-8 text-white" />
+                {(user as UserType)?.profileImageUrl ? (
+                  <img 
+                    src={(user as UserType).profileImageUrl} 
+                    alt={getUserDisplayName()} 
+                    className="w-16 h-16 rounded-full object-cover"
+                  />
+                ) : (
+                  <User className="w-8 h-8 text-white" />
+                )}
               </div>
               <div>
                 <h2 className="font-display font-semibold text-xl text-sourdough-800">
-                  Sourdough Baker
+                  {getUserDisplayName()}
                 </h2>
-                <p className="text-sourdough-600">Home baker since 2024</p>
+                <p className="text-sourdough-600">Home baker since {getUserJoinDate()}</p>
               </div>
             </div>
           </CardContent>
@@ -75,15 +128,15 @@ export default function Profile() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
-                <div className="text-2xl font-semibold text-sourdough-800">12</div>
+                <div className="text-2xl font-semibold text-sourdough-800">{totalBakes}</div>
                 <div className="text-sm text-sourdough-600">Total Bakes</div>
               </div>
               <div>
-                <div className="text-2xl font-semibold text-sourdough-800">8</div>
+                <div className="text-2xl font-semibold text-sourdough-800">{bakesThisMonth}</div>
                 <div className="text-sm text-sourdough-600">This Month</div>
               </div>
               <div>
-                <div className="text-2xl font-semibold text-sourdough-800">3</div>
+                <div className="text-2xl font-semibold text-sourdough-800">{activeRecipes}</div>
                 <div className="text-sm text-sourdough-600">Active Recipes</div>
               </div>
             </div>
