@@ -2,9 +2,12 @@ export class BakeNotifications {
   private static instance: BakeNotifications;
   private alarms: Map<string, NodeJS.Timeout> = new Map();
   private permission: NotificationPermission = "default";
+  private registration: ServiceWorkerRegistration | null = null;
+  private isServiceWorkerSupported = 'serviceWorker' in navigator;
 
   private constructor() {
     this.checkPermission();
+    this.registerServiceWorker();
   }
 
   public static getInstance(): BakeNotifications {
@@ -26,6 +29,12 @@ export class BakeNotifications {
   public async requestPermission(): Promise<boolean> {
     if ("Notification" in window) {
       this.permission = await Notification.requestPermission();
+      
+      // Also request persistent notification permission for mobile
+      if (this.registration && 'showNotification' in this.registration) {
+        console.log('Push notifications supported via service worker');
+      }
+      
       return this.permission === "granted";
     }
     return false;
@@ -59,24 +68,45 @@ export class BakeNotifications {
     console.log(`Scheduled alarm for "${stepName}" in ${Math.round(timeUntilAlarm / 1000 / 60)} minutes`);
   }
 
-  private triggerStepNotification(stepName: string, bakeId: string): void {
-    // Browser notification
-    if (this.permission === "granted") {
-      const notification = new Notification(`🍞 Baking Step Ready!`, {
-        body: `Time for: ${stepName}`,
-        icon: "/favicon.ico",
-        badge: "/favicon.ico",
-        tag: `bake-${bakeId}`,
-        requireInteraction: true
-      });
+  private async triggerStepNotification(stepName: string, bakeId: string): Promise<void> {
+    if (this.permission !== "granted") return;
 
-      notification.onclick = () => {
-        window.focus();
-        notification.close();
-      };
+    const notificationData = {
+      title: '🍞 Baking Step Ready!',
+      body: `Time for: ${stepName}`,
+      icon: '/favicon.ico',
+      badge: '/favicon.ico',
+      tag: `bake-${bakeId}`,
+      requireInteraction: true,
+      vibrate: [200, 100, 200], // Mobile vibration pattern
+      silent: false,
+      data: { stepName, bakeId } // Extra data for service worker
+    };
 
-      // Auto-close after 30 seconds
-      setTimeout(() => notification.close(), 30000);
+    // Use service worker for persistent notifications (better for mobile)
+    if (this.registration && 'showNotification' in this.registration) {
+      try {
+        await this.registration.showNotification(notificationData.title, {
+          body: notificationData.body,
+          icon: notificationData.icon,
+          badge: notificationData.badge,
+          tag: notificationData.tag,
+          requireInteraction: notificationData.requireInteraction,
+          vibrate: notificationData.vibrate,
+          data: notificationData.data,
+          actions: [
+            { action: 'view', title: '👀 View Bake' },
+            { action: 'dismiss', title: '✋ Dismiss' }
+          ]
+        });
+        console.log('Service worker notification sent');
+      } catch (error) {
+        console.log('Service worker notification failed, falling back to regular notification:', error);
+        this.showRegularNotification(notificationData);
+      }
+    } else {
+      // Fallback to regular notification
+      this.showRegularNotification(notificationData);
     }
 
     // Audio alert
@@ -129,6 +159,50 @@ export class BakeNotifications {
 
   public getScheduledAlarms(): string[] {
     return Array.from(this.alarms.keys());
+  }
+
+  private showRegularNotification(data: any): void {
+    const notification = new Notification(data.title, {
+      body: data.body,
+      icon: data.icon,
+      badge: data.badge,
+      tag: data.tag,
+      requireInteraction: data.requireInteraction
+    });
+
+    notification.onclick = () => {
+      window.focus();
+      notification.close();
+    };
+
+    // Auto-close after 30 seconds
+    setTimeout(() => notification.close(), 30000);
+  }
+
+  private async registerServiceWorker(): Promise<void> {
+    if (!this.isServiceWorkerSupported) {
+      console.log('Service Worker not supported');
+      return;
+    }
+
+    try {
+      this.registration = await navigator.serviceWorker.register('/sw.js', {
+        scope: '/'
+      });
+      console.log('Service Worker registered successfully');
+      
+      // Wait for service worker to be ready
+      await navigator.serviceWorker.ready;
+      console.log('Service Worker ready for notifications');
+    } catch (error) {
+      console.error('Service Worker registration failed:', error);
+    }
+  }
+
+  public async getMobileNotificationSupport(): Promise<boolean> {
+    return this.isServiceWorkerSupported && 
+           this.registration !== null && 
+           'showNotification' in (this.registration || {});
   }
 
   public hasPermission(): boolean {
