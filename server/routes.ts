@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import { 
   insertRecipeSchema, 
   insertBakeSchema, 
@@ -11,17 +12,33 @@ import {
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Recipes
-  app.get("/api/recipes", async (req, res) => {
+  // Auth middleware
+  await setupAuth(app);
+
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const recipes = await storage.getRecipes();
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Recipes
+  app.get("/api/recipes", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const recipes = await storage.getRecipes(userId);
       res.json(recipes);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch recipes" });
     }
   });
 
-  app.get("/api/recipes/:id", async (req, res) => {
+  app.get("/api/recipes/:id", isAuthenticated, async (req, res) => {
     try {
       const recipe = await storage.getRecipe(req.params.id);
       if (!recipe) {
@@ -33,9 +50,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/recipes", async (req, res) => {
+  app.post("/api/recipes", isAuthenticated, async (req: any, res) => {
     try {
-      const validatedData = insertRecipeSchema.parse(req.body);
+      const userId = req.user.claims.sub;
+      const validatedData = insertRecipeSchema.parse({ ...req.body, userId });
       const recipe = await storage.createRecipe(validatedData);
       res.status(201).json(recipe);
     } catch (error) {
@@ -44,25 +62,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Bakes
-  app.get("/api/bakes", async (req, res) => {
+  app.get("/api/bakes", isAuthenticated, async (req: any, res) => {
     try {
-      const bakes = await storage.getBakes();
+      const userId = req.user.claims.sub;
+      const bakes = await storage.getBakes(userId);
       res.json(bakes);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch bakes" });
     }
   });
 
-  app.get("/api/bakes/active", async (req, res) => {
+  app.get("/api/bakes/active", isAuthenticated, async (req: any, res) => {
     try {
-      const activeBake = await storage.getActiveBake();
+      const userId = req.user.claims.sub;
+      const activeBake = await storage.getActiveBake(userId);
       res.json(activeBake || null);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch active bake" });
     }
   });
 
-  app.get("/api/bakes/:id", async (req, res) => {
+  app.get("/api/bakes/:id", isAuthenticated, async (req, res) => {
     try {
       const bake = await storage.getBake(req.params.id);
       if (!bake) {
@@ -74,10 +94,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/bakes", async (req, res) => {
+  app.post("/api/bakes", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
       console.log('Received bake data:', JSON.stringify(req.body, null, 2));
-      const validatedData = insertBakeSchema.parse(req.body);
+      const validatedData = insertBakeSchema.parse({ ...req.body, userId });
       console.log('Validated data:', JSON.stringify(validatedData, null, 2));
       const bake = await storage.createBake(validatedData);
       res.status(201).json(bake);
@@ -90,7 +111,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/bakes/:id", async (req, res) => {
+  app.patch("/api/bakes/:id", isAuthenticated, async (req, res) => {
     try {
       const bake = await storage.updateBake(req.params.id, req.body);
       if (!bake) {
@@ -102,8 +123,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete bake
+  app.delete("/api/bakes/:id", isAuthenticated, async (req, res) => {
+    try {
+      const success = await storage.deleteBake(req.params.id);
+      if (!success) {
+        return res.status(404).json({ message: "Bake not found" });
+      }
+      res.status(200).json({ message: "Bake deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete bake" });
+    }
+  });
+
   // Timeline Steps
-  app.get("/api/bakes/:bakeId/timeline", async (req, res) => {
+  app.get("/api/bakes/:bakeId/timeline", isAuthenticated, async (req, res) => {
     try {
       const steps = await storage.getTimelineSteps(req.params.bakeId);
       res.json(steps);
@@ -112,7 +146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/timeline-steps", async (req, res) => {
+  app.post("/api/timeline-steps", isAuthenticated, async (req, res) => {
     try {
       console.log('Received timeline step data:', JSON.stringify(req.body, null, 2));
       const validatedData = insertTimelineStepSchema.parse(req.body);
@@ -128,7 +162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/timeline-steps/:id", async (req, res) => {
+  app.patch("/api/timeline-steps/:id", isAuthenticated, async (req, res) => {
     try {
       const step = await storage.updateTimelineStep(req.params.id, req.body);
       if (!step) {
@@ -141,7 +175,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Notes
-  app.get("/api/bakes/:bakeId/notes", async (req, res) => {
+  app.get("/api/bakes/:bakeId/notes", isAuthenticated, async (req, res) => {
     try {
       const notes = await storage.getBakeNotes(req.params.bakeId);
       res.json(notes);
@@ -150,7 +184,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/notes", async (req, res) => {
+  app.post("/api/notes", isAuthenticated, async (req, res) => {
     try {
       const validatedData = insertBakeNoteSchema.parse(req.body);
       const note = await storage.createBakeNote(validatedData);
@@ -161,7 +195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Photos
-  app.get("/api/bakes/:bakeId/photos", async (req, res) => {
+  app.get("/api/bakes/:bakeId/photos", isAuthenticated, async (req, res) => {
     try {
       const photos = await storage.getBakePhotos(req.params.bakeId);
       res.json(photos);
@@ -170,7 +204,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/photos", async (req, res) => {
+  app.post("/api/photos", isAuthenticated, async (req, res) => {
     try {
       const validatedData = insertBakePhotoSchema.parse(req.body);
       const photo = await storage.createBakePhoto(validatedData);
@@ -232,7 +266,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Timeline recalibration endpoint
-  app.post("/api/bakes/:id/recalibrate", async (req, res) => {
+  app.post("/api/bakes/:id/recalibrate", isAuthenticated, async (req, res) => {
     try {
       const bake = await storage.getBake(req.params.id);
       if (!bake) {

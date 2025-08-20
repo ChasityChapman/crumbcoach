@@ -1,276 +1,335 @@
-import { 
-  type Recipe, type InsertRecipe,
-  type Bake, type InsertBake,
-  type TimelineStep, type InsertTimelineStep,
-  type BakeNote, type InsertBakeNote,
-  type BakePhoto, type InsertBakePhoto,
-  type Tutorial, type InsertTutorial,
-  type SensorReading, type InsertSensorReading
+import {
+  users,
+  recipes,
+  bakes,
+  timelineSteps,
+  bakeNotes,
+  bakePhotos,
+  tutorials,
+  sensorReadings,
+  type User,
+  type UpsertUser,
+  type Recipe,
+  type InsertRecipe,
+  type Bake,
+  type InsertBake,
+  type TimelineStep,
+  type InsertTimelineStep,
+  type BakeNote,
+  type InsertBakeNote,
+  type BakePhoto,
+  type InsertBakePhoto,
+  type Tutorial,
+  type InsertTutorial,
+  type SensorReading,
+  type InsertSensorReading,
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, desc, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
+// Interface for storage operations
 export interface IStorage {
-  // Recipes
-  getRecipes(): Promise<Recipe[]>;
+  // User operations - mandatory for Replit Auth
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
+
+  // Recipe operations
+  getRecipes(userId?: string): Promise<Recipe[]>;
   getRecipe(id: string): Promise<Recipe | undefined>;
   createRecipe(recipe: InsertRecipe): Promise<Recipe>;
-  
-  // Bakes
-  getBakes(): Promise<Bake[]>;
+  updateRecipe(id: string, recipe: Partial<InsertRecipe>): Promise<Recipe | undefined>;
+  deleteRecipe(id: string): Promise<boolean>;
+
+  // Bake operations
+  getBakes(userId?: string): Promise<Bake[]>;
   getBake(id: string): Promise<Bake | undefined>;
-  getActiveBake(): Promise<Bake | undefined>;
+  getActiveBake(userId?: string): Promise<Bake | undefined>;
   createBake(bake: InsertBake): Promise<Bake>;
-  updateBake(id: string, updates: Partial<Bake>): Promise<Bake | undefined>;
-  
-  // Timeline Steps
+  updateBake(id: string, bake: Partial<InsertBake>): Promise<Bake | undefined>;
+  deleteBake(id: string): Promise<boolean>;
+
+  // Timeline step operations
   getTimelineSteps(bakeId: string): Promise<TimelineStep[]>;
+  getTimelineStep(id: string): Promise<TimelineStep | undefined>;
   createTimelineStep(step: InsertTimelineStep): Promise<TimelineStep>;
-  updateTimelineStep(id: string, updates: Partial<TimelineStep>): Promise<TimelineStep | undefined>;
-  
-  // Notes
+  updateTimelineStep(id: string, step: Partial<InsertTimelineStep>): Promise<TimelineStep | undefined>;
+  deleteTimelineStep(id: string): Promise<boolean>;
+
+  // Bake note operations
   getBakeNotes(bakeId: string): Promise<BakeNote[]>;
+  getBakeNote(id: string): Promise<BakeNote | undefined>;
   createBakeNote(note: InsertBakeNote): Promise<BakeNote>;
-  
-  // Photos
+  updateBakeNote(id: string, note: Partial<InsertBakeNote>): Promise<BakeNote | undefined>;
+  deleteBakeNote(id: string): Promise<boolean>;
+
+  // Bake photo operations
   getBakePhotos(bakeId: string): Promise<BakePhoto[]>;
+  getBakePhoto(id: string): Promise<BakePhoto | undefined>;
   createBakePhoto(photo: InsertBakePhoto): Promise<BakePhoto>;
-  
-  // Tutorials
+  updateBakePhoto(id: string, photo: Partial<InsertBakePhoto>): Promise<BakePhoto | undefined>;
+  deleteBakePhoto(id: string): Promise<boolean>;
+
+  // Tutorial operations
   getTutorials(): Promise<Tutorial[]>;
   getTutorial(id: string): Promise<Tutorial | undefined>;
-  
-  // Sensor Readings
-  getSensorReadings(bakeId?: string): Promise<SensorReading[]>;
-  createSensorReading(reading: InsertSensorReading): Promise<SensorReading>;
+  createTutorial(tutorial: InsertTutorial): Promise<Tutorial>;
+  updateTutorial(id: string, tutorial: Partial<InsertTutorial>): Promise<Tutorial | undefined>;
+  deleteTutorial(id: string): Promise<boolean>;
+
+  // Sensor reading operations
+  getSensorReadings(): Promise<SensorReading[]>;
   getLatestSensorReading(): Promise<SensorReading | undefined>;
+  createSensorReading(reading: InsertSensorReading): Promise<SensorReading>;
 }
 
-export class MemStorage implements IStorage {
-  private recipes: Map<string, Recipe> = new Map();
-  private bakes: Map<string, Bake> = new Map();
-  private timelineSteps: Map<string, TimelineStep> = new Map();
-  private bakeNotes: Map<string, BakeNote> = new Map();
-  private bakePhotos: Map<string, BakePhoto> = new Map();
-  private tutorials: Map<string, Tutorial> = new Map();
-  private sensorReadings: Map<string, SensorReading> = new Map();
-
-  constructor() {
-    this.initializeData();
+export class DatabaseStorage implements IStorage {
+  // User operations - mandatory for Replit Auth
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
-  private initializeData() {
-    // Initialize with a default classic sourdough recipe
-    const classicSourdoughId = randomUUID();
-    const classicSourdough: Recipe = {
-      id: classicSourdoughId,
-      name: "Classic Sourdough",
-      description: "Traditional sourdough bread with perfect crust and crumb",
-      totalTimeHours: 24,
-      difficulty: "intermediate",
-      ingredients: [
-        { name: "Sourdough starter", amount: "100g" },
-        { name: "Bread flour", amount: "500g" },
-        { name: "Water", amount: "375ml" },
-        { name: "Salt", amount: "10g" }
-      ],
-      steps: [
-        { id: "1", name: "Mix Ingredients", duration: 30, description: "Combine starter, flour, water, and salt" },
-        { id: "2", name: "Bulk Fermentation", duration: 480, description: "Let dough rise with periodic folds" },
-        { id: "3", name: "Shape Loaves", duration: 30, description: "Pre-shape and final shape" },
-        { id: "4", name: "Final Rise", duration: 240, description: "Cold proof in refrigerator" },
-        { id: "5", name: "Bake", duration: 45, description: "Bake in Dutch oven" }
-      ],
-      createdAt: new Date()
-    };
-    this.recipes.set(classicSourdoughId, classicSourdough);
-
-    // Initialize a tutorial
-    const shapingTutorialId = randomUUID();
-    const shapingTutorial: Tutorial = {
-      id: shapingTutorialId,
-      title: "Shaping Technique",
-      description: "Learn proper shaping for better rise",
-      difficulty: "intermediate",
-      steps: [
-        { step: 1, title: "Pre-shape", description: "Form loose rounds", duration: 300 },
-        { step: 2, title: "Rest", description: "Bench rest 20-30 minutes", duration: 1500 },
-        { step: 3, title: "Final Shape", description: "Shape into boules or batards", duration: 600 },
-        { step: 4, title: "Proof", description: "Final proofing setup", duration: 300 },
-        { step: 5, title: "Score", description: "Scoring patterns and technique", duration: 180 }
-      ],
-      duration: 45,
-      thumbnail: "https://images.unsplash.com/photo-1549931319-a545dcf3bc73",
-      createdAt: new Date()
-    };
-    this.tutorials.set(shapingTutorialId, shapingTutorial);
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
   }
 
-  // Recipes
-  async getRecipes(): Promise<Recipe[]> {
-    return Array.from(this.recipes.values());
+  // Recipe operations
+  async getRecipes(userId?: string): Promise<Recipe[]> {
+    if (userId) {
+      return await db.select().from(recipes).where(eq(recipes.userId, userId));
+    }
+    // For backwards compatibility, return all recipes if no userId provided
+    return await db.select().from(recipes);
   }
 
   async getRecipe(id: string): Promise<Recipe | undefined> {
-    return this.recipes.get(id);
-  }
-
-  async createRecipe(insertRecipe: InsertRecipe): Promise<Recipe> {
-    const id = randomUUID();
-    const recipe: Recipe = { 
-      ...insertRecipe, 
-      id, 
-      createdAt: new Date(),
-      description: insertRecipe.description || null
-    };
-    this.recipes.set(id, recipe);
+    const [recipe] = await db.select().from(recipes).where(eq(recipes.id, id));
     return recipe;
   }
 
-  // Bakes
-  async getBakes(): Promise<Bake[]> {
-    return Array.from(this.bakes.values());
+  async createRecipe(recipe: InsertRecipe): Promise<Recipe> {
+    const [newRecipe] = await db.insert(recipes).values(recipe).returning();
+    return newRecipe;
+  }
+
+  async updateRecipe(id: string, recipeData: Partial<InsertRecipe>): Promise<Recipe | undefined> {
+    const [updatedRecipe] = await db
+      .update(recipes)
+      .set(recipeData)
+      .where(eq(recipes.id, id))
+      .returning();
+    return updatedRecipe;
+  }
+
+  async deleteRecipe(id: string): Promise<boolean> {
+    const result = await db.delete(recipes).where(eq(recipes.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Bake operations
+  async getBakes(userId?: string): Promise<Bake[]> {
+    if (userId) {
+      return await db.select().from(bakes).where(eq(bakes.userId, userId)).orderBy(desc(bakes.createdAt));
+    }
+    // For backwards compatibility, return all bakes if no userId provided
+    return await db.select().from(bakes).orderBy(desc(bakes.createdAt));
   }
 
   async getBake(id: string): Promise<Bake | undefined> {
-    return this.bakes.get(id);
-  }
-
-  async getActiveBake(): Promise<Bake | undefined> {
-    return Array.from(this.bakes.values()).find(bake => bake.status === 'active');
-  }
-
-  async createBake(insertBake: InsertBake): Promise<Bake> {
-    const id = randomUUID();
-    const bake: Bake = { 
-      ...insertBake, 
-      id, 
-      createdAt: new Date(),
-      currentStep: insertBake.currentStep || null,
-      startTime: insertBake.startTime || null,
-      estimatedEndTime: insertBake.estimatedEndTime || null,
-      actualEndTime: insertBake.actualEndTime || null,
-      environmentalData: insertBake.environmentalData || null,
-      timelineAdjustments: insertBake.timelineAdjustments || null
-    };
-    this.bakes.set(id, bake);
+    const [bake] = await db.select().from(bakes).where(eq(bakes.id, id));
     return bake;
   }
 
-  async updateBake(id: string, updates: Partial<Bake>): Promise<Bake | undefined> {
-    const bake = this.bakes.get(id);
-    if (!bake) return undefined;
-    
-    const updatedBake = { ...bake, ...updates };
-    this.bakes.set(id, updatedBake);
+  async getActiveBake(userId?: string): Promise<Bake | undefined> {
+    if (userId) {
+      const [activeBake] = await db
+        .select()
+        .from(bakes)
+        .where(and(eq(bakes.userId, userId), eq(bakes.status, "active")));
+      return activeBake;
+    }
+    // For backwards compatibility
+    const [activeBake] = await db.select().from(bakes).where(eq(bakes.status, "active"));
+    return activeBake;
+  }
+
+  async createBake(bake: InsertBake): Promise<Bake> {
+    const [newBake] = await db.insert(bakes).values(bake).returning();
+    return newBake;
+  }
+
+  async updateBake(id: string, bakeData: Partial<InsertBake>): Promise<Bake | undefined> {
+    const [updatedBake] = await db
+      .update(bakes)
+      .set(bakeData)
+      .where(eq(bakes.id, id))
+      .returning();
     return updatedBake;
   }
 
-  // Timeline Steps
-  async getTimelineSteps(bakeId: string): Promise<TimelineStep[]> {
-    return Array.from(this.timelineSteps.values())
-      .filter(step => step.bakeId === bakeId)
-      .sort((a, b) => a.stepIndex - b.stepIndex);
+  async deleteBake(id: string): Promise<boolean> {
+    const result = await db.delete(bakes).where(eq(bakes.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
   }
 
-  async createTimelineStep(insertStep: InsertTimelineStep): Promise<TimelineStep> {
-    const id = randomUUID();
-    const step: TimelineStep = { 
-      ...insertStep, 
-      id,
-      description: insertStep.description || null,
-      actualDuration: insertStep.actualDuration || null,
-      startTime: insertStep.startTime || null,
-      endTime: insertStep.endTime || null,
-      autoAdjustments: insertStep.autoAdjustments || null
-    };
-    this.timelineSteps.set(id, step);
+  // Timeline step operations
+  async getTimelineSteps(bakeId: string): Promise<TimelineStep[]> {
+    return await db
+      .select()
+      .from(timelineSteps)
+      .where(eq(timelineSteps.bakeId, bakeId))
+      .orderBy(timelineSteps.stepIndex);
+  }
+
+  async getTimelineStep(id: string): Promise<TimelineStep | undefined> {
+    const [step] = await db.select().from(timelineSteps).where(eq(timelineSteps.id, id));
     return step;
   }
 
-  async updateTimelineStep(id: string, updates: Partial<TimelineStep>): Promise<TimelineStep | undefined> {
-    const step = this.timelineSteps.get(id);
-    if (!step) return undefined;
-    
-    const updatedStep = { ...step, ...updates };
-    this.timelineSteps.set(id, updatedStep);
+  async createTimelineStep(step: InsertTimelineStep): Promise<TimelineStep> {
+    const [newStep] = await db.insert(timelineSteps).values(step).returning();
+    return newStep;
+  }
+
+  async updateTimelineStep(id: string, stepData: Partial<InsertTimelineStep>): Promise<TimelineStep | undefined> {
+    const [updatedStep] = await db
+      .update(timelineSteps)
+      .set(stepData)
+      .where(eq(timelineSteps.id, id))
+      .returning();
     return updatedStep;
   }
 
-  // Notes
-  async getBakeNotes(bakeId: string): Promise<BakeNote[]> {
-    return Array.from(this.bakeNotes.values())
-      .filter(note => note.bakeId === bakeId)
-      .sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
+  async deleteTimelineStep(id: string): Promise<boolean> {
+    const result = await db.delete(timelineSteps).where(eq(timelineSteps.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
   }
 
-  async createBakeNote(insertNote: InsertBakeNote): Promise<BakeNote> {
-    const id = randomUUID();
-    const note: BakeNote = { 
-      ...insertNote, 
-      id, 
-      createdAt: new Date(),
-      stepIndex: insertNote.stepIndex || null
-    };
-    this.bakeNotes.set(id, note);
+  // Bake note operations
+  async getBakeNotes(bakeId: string): Promise<BakeNote[]> {
+    return await db
+      .select()
+      .from(bakeNotes)
+      .where(eq(bakeNotes.bakeId, bakeId))
+      .orderBy(desc(bakeNotes.createdAt));
+  }
+
+  async getBakeNote(id: string): Promise<BakeNote | undefined> {
+    const [note] = await db.select().from(bakeNotes).where(eq(bakeNotes.id, id));
     return note;
   }
 
-  // Photos
-  async getBakePhotos(bakeId: string): Promise<BakePhoto[]> {
-    return Array.from(this.bakePhotos.values())
-      .filter(photo => photo.bakeId === bakeId)
-      .sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
+  async createBakeNote(note: InsertBakeNote): Promise<BakeNote> {
+    const [newNote] = await db.insert(bakeNotes).values(note).returning();
+    return newNote;
   }
 
-  async createBakePhoto(insertPhoto: InsertBakePhoto): Promise<BakePhoto> {
-    const id = randomUUID();
-    const photo: BakePhoto = { 
-      ...insertPhoto, 
-      id, 
-      createdAt: new Date(),
-      caption: insertPhoto.caption || null,
-      stepIndex: insertPhoto.stepIndex || null
-    };
-    this.bakePhotos.set(id, photo);
+  async updateBakeNote(id: string, noteData: Partial<InsertBakeNote>): Promise<BakeNote | undefined> {
+    const [updatedNote] = await db
+      .update(bakeNotes)
+      .set(noteData)
+      .where(eq(bakeNotes.id, id))
+      .returning();
+    return updatedNote;
+  }
+
+  async deleteBakeNote(id: string): Promise<boolean> {
+    const result = await db.delete(bakeNotes).where(eq(bakeNotes.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Bake photo operations
+  async getBakePhotos(bakeId: string): Promise<BakePhoto[]> {
+    return await db
+      .select()
+      .from(bakePhotos)
+      .where(eq(bakePhotos.bakeId, bakeId))
+      .orderBy(desc(bakePhotos.createdAt));
+  }
+
+  async getBakePhoto(id: string): Promise<BakePhoto | undefined> {
+    const [photo] = await db.select().from(bakePhotos).where(eq(bakePhotos.id, id));
     return photo;
   }
 
-  // Tutorials
+  async createBakePhoto(photo: InsertBakePhoto): Promise<BakePhoto> {
+    const [newPhoto] = await db.insert(bakePhotos).values(photo).returning();
+    return newPhoto;
+  }
+
+  async updateBakePhoto(id: string, photoData: Partial<InsertBakePhoto>): Promise<BakePhoto | undefined> {
+    const [updatedPhoto] = await db
+      .update(bakePhotos)
+      .set(photoData)
+      .where(eq(bakePhotos.id, id))
+      .returning();
+    return updatedPhoto;
+  }
+
+  async deleteBakePhoto(id: string): Promise<boolean> {
+    const result = await db.delete(bakePhotos).where(eq(bakePhotos.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Tutorial operations
   async getTutorials(): Promise<Tutorial[]> {
-    return Array.from(this.tutorials.values());
+    return await db.select().from(tutorials).orderBy(desc(tutorials.createdAt));
   }
 
   async getTutorial(id: string): Promise<Tutorial | undefined> {
-    return this.tutorials.get(id);
+    const [tutorial] = await db.select().from(tutorials).where(eq(tutorials.id, id));
+    return tutorial;
   }
 
-  // Sensor Readings
-  async getSensorReadings(bakeId?: string): Promise<SensorReading[]> {
-    const readings = Array.from(this.sensorReadings.values());
-    if (bakeId) {
-      return readings.filter(reading => reading.bakeId === bakeId);
-    }
-    return readings.sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
+  async createTutorial(tutorial: InsertTutorial): Promise<Tutorial> {
+    const [newTutorial] = await db.insert(tutorials).values(tutorial).returning();
+    return newTutorial;
   }
 
-  async createSensorReading(insertReading: InsertSensorReading): Promise<SensorReading> {
-    const id = randomUUID();
-    const reading: SensorReading = { 
-      ...insertReading, 
-      id, 
-      timestamp: new Date(),
-      bakeId: insertReading.bakeId || null,
-      temperature: insertReading.temperature || null,
-      humidity: insertReading.humidity || null
-    };
-    this.sensorReadings.set(id, reading);
-    return reading;
+  async updateTutorial(id: string, tutorialData: Partial<InsertTutorial>): Promise<Tutorial | undefined> {
+    const [updatedTutorial] = await db
+      .update(tutorials)
+      .set(tutorialData)
+      .where(eq(tutorials.id, id))
+      .returning();
+    return updatedTutorial;
+  }
+
+  async deleteTutorial(id: string): Promise<boolean> {
+    const result = await db.delete(tutorials).where(eq(tutorials.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Sensor reading operations
+  async getSensorReadings(): Promise<SensorReading[]> {
+    return await db.select().from(sensorReadings).orderBy(desc(sensorReadings.timestamp));
   }
 
   async getLatestSensorReading(): Promise<SensorReading | undefined> {
-    const readings = await this.getSensorReadings();
-    return readings[0]; // Already sorted by timestamp desc
+    const [reading] = await db
+      .select()
+      .from(sensorReadings)
+      .orderBy(desc(sensorReadings.timestamp))
+      .limit(1);
+    return reading;
+  }
+
+  async createSensorReading(reading: InsertSensorReading): Promise<SensorReading> {
+    const [newReading] = await db.insert(sensorReadings).values(reading).returning();
+    return newReading;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

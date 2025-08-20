@@ -1,10 +1,39 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, boolean, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, boolean, jsonb, index } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Session storage table.
+// (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// User storage table.
+// (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type UpsertUser = typeof users.$inferInsert;
+export type User = typeof users.$inferSelect;
+
 export const recipes = pgTable("recipes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   description: text("description"),
   totalTimeHours: integer("total_time_hours").notNull(),
@@ -16,6 +45,7 @@ export const recipes = pgTable("recipes", {
 
 export const bakes = pgTable("bakes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
   recipeId: varchar("recipe_id").notNull().references(() => recipes.id),
   name: text("name").notNull(),
   status: text("status").notNull(), // 'active', 'completed', 'paused'
@@ -30,7 +60,7 @@ export const bakes = pgTable("bakes", {
 
 export const timelineSteps = pgTable("timeline_steps", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  bakeId: varchar("bake_id").notNull().references(() => bakes.id),
+  bakeId: varchar("bake_id").notNull().references(() => bakes.id, { onDelete: "cascade" }),
   stepIndex: integer("step_index").notNull(),
   name: text("name").notNull(),
   description: text("description"),
@@ -44,7 +74,7 @@ export const timelineSteps = pgTable("timeline_steps", {
 
 export const bakeNotes = pgTable("bake_notes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  bakeId: varchar("bake_id").notNull().references(() => bakes.id),
+  bakeId: varchar("bake_id").notNull().references(() => bakes.id, { onDelete: "cascade" }),
   stepIndex: integer("step_index"),
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
@@ -52,7 +82,7 @@ export const bakeNotes = pgTable("bake_notes", {
 
 export const bakePhotos = pgTable("bake_photos", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  bakeId: varchar("bake_id").notNull().references(() => bakes.id),
+  bakeId: varchar("bake_id").notNull().references(() => bakes.id, { onDelete: "cascade" }),
   stepIndex: integer("step_index"),
   filename: text("filename").notNull(),
   caption: text("caption"),
@@ -72,11 +102,60 @@ export const tutorials = pgTable("tutorials", {
 
 export const sensorReadings = pgTable("sensor_readings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  bakeId: varchar("bake_id").references(() => bakes.id),
+  bakeId: varchar("bake_id").references(() => bakes.id, { onDelete: "cascade" }),
   temperature: integer("temperature"), // Celsius * 10 for precision
   humidity: integer("humidity"), // Percentage
   timestamp: timestamp("timestamp").defaultNow(),
 });
+
+// Relations
+export const userRelations = relations(users, ({ many }) => ({
+  recipes: many(recipes),
+  bakes: many(bakes),
+}));
+
+export const recipeRelations = relations(recipes, ({ one, many }) => ({
+  user: one(users, {
+    fields: [recipes.userId],
+    references: [users.id],
+  }),
+  bakes: many(bakes),
+}));
+
+export const bakeRelations = relations(bakes, ({ one, many }) => ({
+  user: one(users, {
+    fields: [bakes.userId],
+    references: [users.id],
+  }),
+  recipe: one(recipes, {
+    fields: [bakes.recipeId],
+    references: [recipes.id],
+  }),
+  timelineSteps: many(timelineSteps),
+  notes: many(bakeNotes),
+  photos: many(bakePhotos),
+}));
+
+export const timelineStepRelations = relations(timelineSteps, ({ one }) => ({
+  bake: one(bakes, {
+    fields: [timelineSteps.bakeId],
+    references: [bakes.id],
+  }),
+}));
+
+export const bakeNoteRelations = relations(bakeNotes, ({ one }) => ({
+  bake: one(bakes, {
+    fields: [bakeNotes.bakeId],
+    references: [bakes.id],
+  }),
+}));
+
+export const bakePhotoRelations = relations(bakePhotos, ({ one }) => ({
+  bake: one(bakes, {
+    fields: [bakePhotos.bakeId],
+    references: [bakes.id],
+  }),
+}));
 
 // Insert schemas
 export const insertRecipeSchema = createInsertSchema(recipes).omit({ id: true, createdAt: true });

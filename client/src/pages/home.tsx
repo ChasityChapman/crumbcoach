@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import type { Bake, Recipe, SensorReading, TimelineStep } from "@shared/schema";
+import type { Bake, Recipe, SensorReading, TimelineStep, User } from "@shared/schema";
 import ActiveBakeCard from "@/components/active-bake-card";
 import SensorWidget from "@/components/sensor-widget";
 import QuickActions from "@/components/quick-actions";
@@ -13,16 +13,58 @@ import NotesModal from "@/components/notes-modal";
 import StartBakeModal from "@/components/start-bake-modal";
 import NewRecipeModal from "@/components/new-recipe-modal";
 import { useState, useEffect } from "react";
-import { Wheat, Bell } from "lucide-react";
+import { Wheat, Bell, LogOut, User as UserIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 
 export default function Home() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [cameraOpen, setCameraOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
   const [startBakeOpen, setStartBakeOpen] = useState(false);
   const [newRecipeOpen, setNewRecipeOpen] = useState(false);
   const [isCreatingBake, setIsCreatingBake] = useState(false);
+
+  const handleLogout = () => {
+    window.location.href = "/api/logout";
+  };
+
+  const getUserDisplayName = () => {
+    const typedUser = user as User;
+    if (typedUser?.firstName && typedUser?.lastName) {
+      return `${typedUser.firstName} ${typedUser.lastName}`;
+    }
+    if (typedUser?.firstName) {
+      return typedUser.firstName;
+    }
+    if (typedUser?.email) {
+      return typedUser.email;
+    }
+    return "User";
+  };
+
+  const getUserInitials = () => {
+    const typedUser = user as User;
+    if (typedUser?.firstName && typedUser?.lastName) {
+      return `${typedUser.firstName[0]}${typedUser.lastName[0]}`.toUpperCase();
+    }
+    if (typedUser?.firstName) {
+      return typedUser.firstName[0].toUpperCase();
+    }
+    if (typedUser?.email) {
+      return typedUser.email[0].toUpperCase();
+    }
+    return "U";
+  };
   
   // Clear any stale bake cache data on component mount
   useEffect(() => {
@@ -45,7 +87,7 @@ export default function Home() {
   
   const activeBakes = (allBakes || [])
     .filter((bake: Bake) => bake && bake.id && bake.status === 'active')
-    .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()); // Sort by newest first
+    .sort((a, b) => new Date(b.startTime || 0).getTime() - new Date(a.startTime || 0).getTime()); // Sort by newest first
 
   const { data: latestSensor } = useQuery<SensorReading | null>({
     queryKey: ["/api/sensors/latest"],
@@ -103,20 +145,43 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-sourdough-50">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-sourdough-100">
+      <header className="sticky top-0 z-50 bg-white dark:bg-gray-900 shadow-sm border-b border-sourdough-100 dark:border-gray-700">
         <div className="px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-sourdough-500 rounded-lg flex items-center justify-center">
               <Wheat className="text-white w-4 h-4" />
             </div>
-            <h1 className="font-display font-semibold text-lg text-sourdough-800">SourDough Pro</h1>
+            <h1 className="font-display font-semibold text-lg text-sourdough-800 dark:text-white">SourDough Pro</h1>
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-            <span className="text-sm text-sourdough-600">Live</span>
-            <button className="p-2 text-sourdough-600">
-              <Bell className="w-4 h-4" />
-            </button>
+            <span className="text-sm text-sourdough-600 dark:text-sourdough-400">Live</span>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={(user as User)?.profileImageUrl || ''} alt={getUserDisplayName()} />
+                    <AvatarFallback>{getUserInitials()}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <div className="flex items-center justify-start gap-2 p-2">
+                  <div className="flex flex-col space-y-1 leading-none">
+                    <p className="font-medium">{getUserDisplayName()}</p>
+                    {(user as User)?.email && (
+                      <p className="w-[200px] truncate text-sm text-muted-foreground">
+                        {(user as User).email}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
