@@ -14,7 +14,7 @@ export default function BottomNavigation({ currentPath }: BottomNavigationProps)
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-sourdough-100 safe-area-pb z-40">
-      <div className="grid grid-cols-5 py-3 px-2">
+      <div className="grid grid-cols-5 py-3 px-2 max-w-md mx-auto">
         <Link href="/">
           <button className={`flex flex-col items-center py-2 px-2 ${
             isActive('/') ? 'text-accent-orange-500' : 'text-sourdough-500'
