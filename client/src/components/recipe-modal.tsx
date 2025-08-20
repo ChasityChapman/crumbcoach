@@ -316,24 +316,36 @@ export default function RecipeModal({ isOpen, onClose }: RecipeModalProps) {
                     </Button>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    <Input
-                      value={step.name}
-                      onChange={(e) => updateStep(index, 'name', e.target.value)}
-                      placeholder="Step name"
-                    />
-                    <Input
-                      type="number"
-                      value={step.duration}
-                      onChange={(e) => updateStep(index, 'duration', parseInt(e.target.value) || 0)}
-                      placeholder="Duration (min)"
+                    <div className="space-y-1">
+                      <Label htmlFor={`step-name-${index}`} className="text-sm">Step Name</Label>
+                      <Input
+                        id={`step-name-${index}`}
+                        value={step.name}
+                        onChange={(e) => updateStep(index, 'name', e.target.value)}
+                        placeholder="Step name"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor={`step-duration-${index}`} className="text-sm">Duration (minutes)</Label>
+                      <Input
+                        id={`step-duration-${index}`}
+                        type="number"
+                        value={step.duration}
+                        onChange={(e) => updateStep(index, 'duration', parseInt(e.target.value) || 0)}
+                        placeholder="Duration (min)"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor={`step-description-${index}`} className="text-sm">Description</Label>
+                    <Textarea
+                      id={`step-description-${index}`}
+                      value={step.description}
+                      onChange={(e) => updateStep(index, 'description', e.target.value)}
+                      placeholder="Step description"
+                      rows={2}
                     />
                   </div>
-                  <Textarea
-                    value={step.description}
-                    onChange={(e) => updateStep(index, 'description', e.target.value)}
-                    placeholder="Step description"
-                    rows={2}
-                  />
                 </div>
               ))}
             </CardContent>
