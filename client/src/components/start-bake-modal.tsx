@@ -16,9 +16,10 @@ import { useSensors } from "@/hooks/use-sensors";
 interface StartBakeModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onBakeStarted?: () => void;
 }
 
-export default function StartBakeModal({ isOpen, onClose }: StartBakeModalProps) {
+export default function StartBakeModal({ isOpen, onClose, onBakeStarted }: StartBakeModalProps) {
   const [selectedRecipeId, setSelectedRecipeId] = useState("");
   const [bakeName, setBakeName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -122,6 +123,7 @@ export default function StartBakeModal({ isOpen, onClose }: StartBakeModalProps)
     }
     
     setIsSubmitting(true);
+    onBakeStarted?.(); // Notify parent that bake creation started
 
     const now = new Date();
     const estimatedEndTime = new Date(now.getTime() + (selectedRecipe?.totalTimeHours || 24) * 60 * 60 * 1000);

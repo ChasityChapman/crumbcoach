@@ -7,6 +7,7 @@ interface QuickActionsProps {
   onNewRecipe?: () => void;
   onAdjustTimeline?: () => void;
   hasActiveBake: boolean;
+  isCreatingBake?: boolean;
 }
 
 export default function QuickActions({ 
@@ -15,7 +16,8 @@ export default function QuickActions({
   onStartBake,
   onNewRecipe,
   onAdjustTimeline,
-  hasActiveBake
+  hasActiveBake,
+  isCreatingBake = false
 }: QuickActionsProps) {
   return (
     <div className="px-4 mb-6">
@@ -39,17 +41,18 @@ export default function QuickActions({
         
         <button 
           onClick={onStartBake}
+          disabled={isCreatingBake}
           className={`rounded-xl p-4 shadow-sm text-center transition-colors ${
             hasActiveBake 
               ? 'bg-white border border-sourdough-100 hover:bg-sourdough-50 text-sourdough-800'
               : 'bg-sourdough-500 hover:bg-sourdough-600 text-white'
-          }`}
+          } ${isCreatingBake ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           <Plus className={`w-6 h-6 mx-auto mb-2 ${
             hasActiveBake ? 'text-accent-orange-500' : 'text-white'
           }`} />
           <p className="text-sm font-medium">
-            {hasActiveBake ? 'New Bake' : 'Start Bake'}
+            {isCreatingBake ? 'Creating...' : (hasActiveBake ? 'New Bake' : 'Start Bake')}
           </p>
         </button>
         

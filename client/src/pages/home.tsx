@@ -22,6 +22,7 @@ export default function Home() {
   const [notesOpen, setNotesOpen] = useState(false);
   const [startBakeOpen, setStartBakeOpen] = useState(false);
   const [newRecipeOpen, setNewRecipeOpen] = useState(false);
+  const [isCreatingBake, setIsCreatingBake] = useState(false);
   
   // Clear any stale bake cache data on component mount
   useEffect(() => {
@@ -124,8 +125,10 @@ export default function Home() {
         {/* Active Bake Cards */}
         {activeBakes.length > 0 ? (
           <div className="space-y-4">
-            {/* Show only the newest active bake */}
-            <ActiveBakeCard key={activeBakes[0].id} bake={activeBakes[0]} />
+            {/* Show all active bakes */}
+            {activeBakes.map((bake) => (
+              <ActiveBakeCard key={bake.id} bake={bake} />
+            ))}
           </div>
         ) : (
           <div className="p-4">
@@ -147,9 +150,14 @@ export default function Home() {
         <QuickActions
           onOpenCamera={() => setCameraOpen(true)}
           onOpenNotes={() => setNotesOpen(true)}
-          onStartBake={() => setStartBakeOpen(true)}
+          onStartBake={() => {
+            if (!startBakeOpen && !isCreatingBake) {
+              setStartBakeOpen(true);
+            }
+          }}
           onNewRecipe={() => setNewRecipeOpen(true)}
           hasActiveBake={activeBakes.length > 0}
+          isCreatingBake={isCreatingBake}
         />
 
         {/* Note: Timeline view is now integrated into each ActiveBakeCard */}
@@ -177,7 +185,11 @@ export default function Home() {
       />
       <StartBakeModal
         isOpen={startBakeOpen}
-        onClose={() => setStartBakeOpen(false)}
+        onClose={() => {
+          setStartBakeOpen(false);
+          setIsCreatingBake(false);
+        }}
+        onBakeStarted={() => setIsCreatingBake(true)}
       />
       <NewRecipeModal
         isOpen={newRecipeOpen}
