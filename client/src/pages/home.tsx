@@ -154,8 +154,6 @@ export default function Home() {
             <h1 className="font-display font-semibold text-lg text-sourdough-800 dark:text-white">SourDough Pro</h1>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-            <span className="text-sm text-sourdough-600 dark:text-sourdough-400">Live</span>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
