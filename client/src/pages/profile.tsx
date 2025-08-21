@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { User, Bell, Thermometer, Camera, Share2, Settings, Wheat, FileText } from "lucide-react";
+import { User, Bell, Thermometer, Camera, Share2, Settings, Wheat, FileText, Mail } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -230,6 +230,17 @@ export default function Profile() {
           >
             <FileText className="w-5 h-5 mr-3" />
             Privacy Policy
+          </Button>
+          
+          <Button 
+            onClick={() => {
+              window.location.href = "mailto:support@crumbcoach.com";
+            }}
+            variant="outline" 
+            className="w-full justify-start border-sourdough-200 text-sourdough-800"
+          >
+            <Mail className="w-5 h-5 mr-3" />
+            Contact Us
           </Button>
         </div>
 
