@@ -260,6 +260,7 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label>Default Room Temperature</Label>
+                    <p className="text-xs text-muted-foreground">Your kitchen's typical temperature when not baking. Used to calculate initial timeline estimates.</p>
                     <div className="space-y-2">
                       <Slider
                         value={[defaultTemp]}
