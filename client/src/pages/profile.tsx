@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { User, Bell, Thermometer, Camera, Share2, Settings, Wheat, FileText, Mail } from "lucide-react";
+import { User, Bell, Thermometer, Camera, Share2, Settings, Wheat, FileText, Mail, LogOut } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -13,7 +13,7 @@ import AdvancedSettingsModal from "@/components/advanced-settings-modal";
 
 export default function Profile() {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, logout, isLoggingOut } = useAuth();
   const [notifications, setNotifications] = useState(true);
   const [autoSensors, setAutoSensors] = useState(true);
   const [photoBackup, setPhotoBackup] = useState(false);
@@ -241,6 +241,16 @@ export default function Profile() {
           >
             <Mail className="w-5 h-5 mr-3" />
             Contact Us
+          </Button>
+          
+          <Button 
+            onClick={logout}
+            variant="outline" 
+            className="w-full justify-start border-red-200 text-red-600 hover:bg-red-50"
+            disabled={isLoggingOut}
+          >
+            <LogOut className="w-5 h-5 mr-3" />
+            {isLoggingOut ? "Signing Out..." : "Sign Out"}
           </Button>
         </div>
 
