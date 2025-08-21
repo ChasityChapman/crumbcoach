@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +25,7 @@ import {
   Volume2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
 
 interface AdvancedSettingsModalProps {
   isOpen: boolean;
@@ -34,17 +35,29 @@ interface AdvancedSettingsModalProps {
 export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSettingsModalProps) {
   const { toast } = useToast();
   
+  // Load settings from localStorage on mount
+  const loadSettings = () => {
+    const saved = localStorage.getItem('crumbCoachSettings');
+    if (saved) {
+      const settings = JSON.parse(saved);
+      return settings;
+    }
+    return null;
+  };
+  
+  const savedSettings = loadSettings();
+  
   // Sensor Settings
-  const [tempUnit, setTempUnit] = useState<'celsius' | 'fahrenheit'>('celsius');
-  const [sensorPolling, setSensorPolling] = useState(30);
-  const [autoCalibrate, setAutoCalibrate] = useState(true);
-  const [sensorOverride, setSensorOverride] = useState(false);
+  const [tempUnit, setTempUnit] = useState<'celsius' | 'fahrenheit'>(savedSettings?.tempUnit || 'celsius');
+  const [sensorPolling, setSensorPolling] = useState(savedSettings?.sensorPolling || 30);
+  const [autoCalibrate, setAutoCalibrate] = useState(savedSettings?.autoCalibrate ?? true);
+  const [sensorOverride, setSensorOverride] = useState(savedSettings?.sensorOverride ?? false);
   
   // Timeline Settings
-  const [defaultTemp, setDefaultTemp] = useState(22);
-  const [recalibrationSensitivity, setRecalibrationSensitivity] = useState(2);
-  const [autoNotifications, setAutoNotifications] = useState(true);
-  const [timeAdjustment, setTimeAdjustment] = useState(0);
+  const [defaultTemp, setDefaultTemp] = useState(savedSettings?.defaultTemp || 22);
+  const [recalibrationSensitivity, setRecalibrationSensitivity] = useState(savedSettings?.recalibrationSensitivity || 2);
+  const [autoNotifications, setAutoNotifications] = useState(savedSettings?.autoNotifications ?? true);
+  const [timeAdjustment, setTimeAdjustment] = useState(savedSettings?.timeAdjustment || 0);
   
   // Baking Preferences
   const [defaultHydration, setDefaultHydration] = useState(75);
@@ -99,12 +112,26 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
     });
   };
   
+  // Auto-save settings when temperature values change
+  useEffect(() => {
+    // Save temperature settings to localStorage immediately
+    const settings = {
+      tempUnit,
+      defaultTemp,
+      sensorPolling,
+      autoCalibrate,
+      sensorOverride,
+      recalibrationSensitivity,
+      timeAdjustment,
+      autoNotifications
+    };
+    localStorage.setItem('crumbCoachSettings', JSON.stringify(settings));
+    
+    // Invalidate sensor queries to refresh with new settings
+    queryClient.invalidateQueries({ queryKey: ['/api/sensors/latest'] });
+  }, [tempUnit, defaultTemp, sensorPolling, autoCalibrate, sensorOverride, recalibrationSensitivity, timeAdjustment, autoNotifications]);
+
   const saveSettings = () => {
-    // In a real app, this would save to localStorage or API
-    toast({
-      title: "Settings Saved",
-      description: "Your advanced configuration has been updated",
-    });
     onClose();
   };
 
@@ -142,7 +169,13 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label>Temperature Unit</Label>
-                    <Select value={tempUnit} onValueChange={(value: 'celsius' | 'fahrenheit') => setTempUnit(value)}>
+                    <Select value={tempUnit} onValueChange={(value: 'celsius' | 'fahrenheit') => {
+                      setTempUnit(value);
+                      toast({
+                        title: "Temperature Unit Updated",
+                        description: `Now using ${value === 'celsius' ? 'Celsius' : 'Fahrenheit'}`,
+                      });
+                    }}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -159,7 +192,13 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                     <div className="space-y-2">
                       <Slider
                         value={[sensorPolling]}
-                        onValueChange={(value) => setSensorPolling(value[0])}
+                        onValueChange={(value) => {
+                          setSensorPolling(value[0]);
+                          toast({
+                            title: "Sensor Update Frequency Changed",
+                            description: `Now checking sensors every ${value[0]} seconds`,
+                          });
+                        }}
                         max={300}
                         min={5}
                         step={5}
@@ -224,7 +263,13 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                     <div className="space-y-2">
                       <Slider
                         value={[defaultTemp]}
-                        onValueChange={(value) => setDefaultTemp(value[0])}
+                        onValueChange={(value) => {
+                          setDefaultTemp(value[0]);
+                          toast({
+                            title: "Default Temperature Updated",
+                            description: `Set to ${tempUnit === 'celsius' ? value[0] : Math.round((value[0] * 9/5) + 32)}°${tempUnit === 'celsius' ? 'C' : 'F'}`,
+                          });
+                        }}
                         max={30}
                         min={15}
                         step={1}
@@ -531,7 +576,7 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
             Cancel
           </Button>
           <Button onClick={saveSettings}>
-            Save Settings
+            Close
           </Button>
         </div>
       </DialogContent>
