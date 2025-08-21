@@ -222,7 +222,7 @@ export default function Profile() {
         <Card className="shadow-sm border-sourdough-100">
           <CardContent className="p-4 text-center">
             <div className="text-sm text-sourdough-600">
-              SourDough Pro v1.0.0
+              Crumb Coach v1.0.0
             </div>
             <div className="text-xs text-sourdough-500 mt-1">
               Personal Baking Assistant
