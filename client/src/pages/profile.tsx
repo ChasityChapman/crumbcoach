@@ -21,10 +21,10 @@ export default function Profile() {
   const [photoBackup, setPhotoBackup] = useState(false);
   const [advancedSettingsOpen, setAdvancedSettingsOpen] = useState(false);
 
-  // Navigate to home page when user logs out (which will show auth page)
+  // Navigate to auth page when user logs out
   useEffect(() => {
     if (!user && !isLoggingOut) {
-      navigate("/");
+      navigate("/auth");
     }
   }, [user, isLoggingOut, navigate]);
 
