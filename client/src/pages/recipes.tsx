@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { Recipe } from "@shared/schema";
 import BottomNavigation from "@/components/bottom-navigation";
@@ -6,14 +6,31 @@ import RecipeModal from "@/components/recipe-modal";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, Users, Wheat, Plus } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Clock, Users, Wheat, Plus, Filter } from "lucide-react";
 
 export default function Recipes() {
   const [recipeModalOpen, setRecipeModalOpen] = useState(false);
+  const [sortOrder, setSortOrder] = useState<string>("a-z");
   
   const { data: recipes, isLoading } = useQuery<Recipe[]>({
     queryKey: ["/api/recipes"],
   });
+
+  // Sort recipes based on filter selection
+  const sortedRecipes = useMemo(() => {
+    if (!recipes) return [];
+    
+    return [...recipes].sort((a, b) => {
+      const nameA = a.name.toLowerCase();
+      const nameB = b.name.toLowerCase();
+      
+      if (sortOrder === "z-a") {
+        return nameB.localeCompare(nameA);
+      }
+      return nameA.localeCompare(nameB);
+    });
+  }, [recipes, sortOrder]);
 
   if (isLoading) {
     return (
@@ -58,12 +75,30 @@ export default function Recipes() {
             New
           </Button>
         </div>
+        
+        {/* Filter Section */}
+        {recipes && recipes.length > 0 && (
+          <div className="px-4 pb-3">
+            <div className="flex items-center space-x-2">
+              <Filter className="w-4 h-4 text-sourdough-500" />
+              <Select value={sortOrder} onValueChange={setSortOrder}>
+                <SelectTrigger className="w-32 h-8 border-sourdough-200">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="a-z">A-Z</SelectItem>
+                  <SelectItem value="z-a">Z-A</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
       </header>
 
       <div className="p-4 pb-20">
         {recipes && recipes.length > 0 ? (
           <div className="space-y-4">
-            {recipes.map((recipe) => (
+            {sortedRecipes.map((recipe) => (
               <Card key={recipe.id} className="shadow-sm border-sourdough-100">
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start mb-2">
