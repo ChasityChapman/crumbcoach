@@ -4,20 +4,29 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { User, Bell, Thermometer, Camera, Share2, Settings, Wheat, FileText, Mail, LogOut } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { useLocation } from "wouter";
 import type { Bake, Recipe, User as UserType } from "@shared/schema";
 import AdvancedSettingsModal from "@/components/advanced-settings-modal";
 
 export default function Profile() {
   const { toast } = useToast();
   const { user, logout, isLoggingOut } = useAuth();
+  const [, navigate] = useLocation();
   const [notifications, setNotifications] = useState(true);
   const [autoSensors, setAutoSensors] = useState(true);
   const [photoBackup, setPhotoBackup] = useState(false);
   const [advancedSettingsOpen, setAdvancedSettingsOpen] = useState(false);
+
+  // Navigate to auth page when user logs out
+  useEffect(() => {
+    if (!user && !isLoggingOut) {
+      navigate("/auth");
+    }
+  }, [user, isLoggingOut, navigate]);
 
   // Fetch real baking data
   const { data: bakes } = useQuery<Bake[]>({
