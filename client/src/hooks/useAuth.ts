@@ -1,10 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 export function useAuth() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, navigate] = useLocation();
 
   const { data: user, isLoading, error } = useQuery({
     queryKey: ["/api/user"],
@@ -21,6 +23,8 @@ export function useAuth() {
         title: "Logged out",
         description: "You've been successfully logged out.",
       });
+      // Immediately redirect to sign-in page
+      navigate("/auth");
     },
     onError: (error: Error) => {
       toast({
