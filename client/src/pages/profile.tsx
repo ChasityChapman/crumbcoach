@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { User, Bell, Thermometer, Camera, Share2, Settings, Wheat } from "lucide-react";
+import { User, Bell, Thermometer, Camera, Share2, Settings, Wheat, FileText } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -215,6 +215,21 @@ export default function Profile() {
           >
             <Settings className="w-5 h-5 mr-3" />
             Advanced Settings
+          </Button>
+          
+          <Button 
+            onClick={() => {
+              // Privacy policy URL will be added later
+              toast({
+                title: "Privacy Policy",
+                description: "Privacy policy link coming soon",
+              });
+            }}
+            variant="outline" 
+            className="w-full justify-start border-sourdough-200 text-sourdough-800"
+          >
+            <FileText className="w-5 h-5 mr-3" />
+            Privacy Policy
           </Button>
         </div>
 
