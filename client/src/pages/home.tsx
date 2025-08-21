@@ -151,7 +151,7 @@ export default function Home() {
             <div className="w-8 h-8 bg-sourdough-500 rounded-lg flex items-center justify-center">
               <Wheat className="text-white w-4 h-4" />
             </div>
-            <h1 className="font-display font-semibold text-lg text-sourdough-800 dark:text-white">SourDough Pro</h1>
+            <h1 className="font-display font-semibold text-lg text-sourdough-800 dark:text-white">Crumb Coach</h1>
           </div>
           <div className="flex items-center space-x-2">
             <DropdownMenu>
