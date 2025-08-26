@@ -83,6 +83,10 @@ export default function RecipeModal({ isOpen, onClose }: RecipeModalProps) {
 
   const extractRecipeMutation = useMutation({
     mutationFn: async (url: string) => {
+      if (url === "test") {
+        const response = await apiRequest("POST", "/api/recipes/extract-test", {});
+        return response;
+      }
       const response = await apiRequest("POST", "/api/recipes/extract-from-url", { url });
       return response;
     },
@@ -271,6 +275,15 @@ export default function RecipeModal({ isOpen, onClose }: RecipeModalProps) {
                   Paste a link to any sourdough recipe webpage. Our AI will extract the ingredients and steps for you.
                 </p>
               </div>
+              
+              <Button
+                onClick={() => extractRecipeMutation.mutate("test")}
+                disabled={extractRecipeMutation.isPending}
+                className="w-full mb-2 bg-green-600 hover:bg-green-700 text-white"
+                data-testid="button-test-extraction"
+              >
+                {extractRecipeMutation.isPending ? "Testing..." : "🧪 Test with Sample Recipe"}
+              </Button>
               
               <Button
                 onClick={handleExtractFromUrl}

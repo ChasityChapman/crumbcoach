@@ -52,6 +52,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test extraction endpoint
+  app.post("/api/recipes/extract-test", isAuthenticated, async (req: any, res) => {
+    // Return a test recipe to verify form population works
+    const testRecipe = {
+      name: "Classic Sourdough Bread",
+      description: "A traditional sourdough bread with perfect crust and open crumb structure",
+      difficulty: "intermediate",
+      totalTimeHours: 24,
+      ingredients: [
+        { name: "Active sourdough starter", amount: "100g" },
+        { name: "Bread flour", amount: "500g" },
+        { name: "Warm water", amount: "375ml" },
+        { name: "Sea salt", amount: "10g" }
+      ],
+      steps: [
+        { id: "1", name: "Autolyse", duration: 30, description: "Mix flour and water, let rest" },
+        { id: "2", name: "Mix dough", duration: 15, description: "Add starter and salt, mix thoroughly" },
+        { id: "3", name: "Bulk fermentation", duration: 480, description: "First rise with periodic folds" },
+        { id: "4", name: "Pre-shape", duration: 20, description: "Shape into round and rest" },
+        { id: "5", name: "Final shape", duration: 15, description: "Shape into boule or batard" },
+        { id: "6", name: "Final proof", duration: 720, description: "Cold proof in refrigerator overnight" },
+        { id: "7", name: "Bake", duration: 45, description: "Bake in preheated Dutch oven" }
+      ]
+    };
+    
+    res.json(testRecipe);
+  });
+
   // Extract recipe from URL using AI
   app.post("/api/recipes/extract-from-url", isAuthenticated, async (req: any, res) => {
     try {
