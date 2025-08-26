@@ -435,12 +435,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 // Timeline calculation logic
 function calculateTimelineSchedule(recipes: any[], targetEndTime: Date) {
+  console.log(`Backend calculation - Target end time: ${targetEndTime.toString()}, Local: ${targetEndTime.toLocaleString()}`);
+  
   const recipeSchedules = recipes.map(recipe => {
     // Calculate total duration in minutes
     const totalDurationMinutes = recipe.steps.reduce((sum: number, step: any) => sum + step.duration, 0);
     
     // Calculate start time by subtracting total duration from target end time
     const startTime = new Date(targetEndTime.getTime() - (totalDurationMinutes * 60 * 1000));
+    
+    console.log(`Recipe ${recipe.name}: Duration ${totalDurationMinutes}min, Start: ${startTime.toLocaleString()}, End: ${targetEndTime.toLocaleString()}`);
     
     return {
       recipeId: recipe.id,
