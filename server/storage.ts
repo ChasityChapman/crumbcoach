@@ -23,9 +23,12 @@ import {
   type InsertTutorial,
   type SensorReading,
   type InsertSensorReading,
+  passwordResetTokens,
+  type PasswordResetToken,
+  type InsertPasswordResetToken,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, isNull, lt } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 // Interface for storage operations
@@ -35,6 +38,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: string, userData: Partial<InsertUser>): Promise<User | undefined>;
 
   // Recipe operations
   getRecipes(userId?: string): Promise<Recipe[]>;
@@ -83,6 +87,12 @@ export interface IStorage {
   getSensorReadings(): Promise<SensorReading[]>;
   getLatestSensorReading(): Promise<SensorReading | undefined>;
   createSensorReading(reading: InsertSensorReading): Promise<SensorReading>;
+
+  // Password reset token operations
+  createPasswordResetToken(token: InsertPasswordResetToken): Promise<PasswordResetToken>;
+  getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined>;
+  markPasswordResetTokenAsUsed(tokenId: string): Promise<boolean>;
+  cleanupExpiredPasswordResetTokens(): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -105,6 +115,15 @@ export class DatabaseStorage implements IStorage {
   async createUser(userData: InsertUser): Promise<User> {
     const [user] = await db.insert(users).values(userData).returning();
     return user;
+  }
+
+  async updateUser(id: string, userData: Partial<InsertUser>): Promise<User | undefined> {
+    const [updatedUser] = await db
+      .update(users)
+      .set(userData)
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
   }
 
   // Recipe operations
@@ -331,6 +350,39 @@ export class DatabaseStorage implements IStorage {
   async createSensorReading(reading: InsertSensorReading): Promise<SensorReading> {
     const [newReading] = await db.insert(sensorReadings).values(reading).returning();
     return newReading;
+  }
+
+  // Password reset token operations
+  async createPasswordResetToken(tokenData: InsertPasswordResetToken): Promise<PasswordResetToken> {
+    const [token] = await db.insert(passwordResetTokens).values(tokenData).returning();
+    return token;
+  }
+
+  async getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined> {
+    const [resetToken] = await db
+      .select()
+      .from(passwordResetTokens)
+      .where(and(
+        eq(passwordResetTokens.token, token),
+        isNull(passwordResetTokens.usedAt)
+      ));
+    return resetToken;
+  }
+
+  async markPasswordResetTokenAsUsed(tokenId: string): Promise<boolean> {
+    const [updatedToken] = await db
+      .update(passwordResetTokens)
+      .set({ usedAt: new Date() })
+      .where(eq(passwordResetTokens.id, tokenId))
+      .returning();
+    return !!updatedToken;
+  }
+
+  async cleanupExpiredPasswordResetTokens(): Promise<number> {
+    const result = await db
+      .delete(passwordResetTokens)
+      .where(lt(passwordResetTokens.expiresAt, new Date()));
+    return result.rowCount || 0;
   }
 }
 

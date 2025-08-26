@@ -29,6 +29,16 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Password reset tokens table
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  token: varchar("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export type InsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 
@@ -120,6 +130,14 @@ export const sensorReadings = pgTable("sensor_readings", {
 export const userRelations = relations(users, ({ many }) => ({
   recipes: many(recipes),
   bakes: many(bakes),
+  passwordResetTokens: many(passwordResetTokens),
+}));
+
+export const passwordResetTokenRelations = relations(passwordResetTokens, ({ one }) => ({
+  user: one(users, {
+    fields: [passwordResetTokens.userId],
+    references: [users.id],
+  }),
 }));
 
 export const recipeRelations = relations(recipes, ({ one, many }) => ({
@@ -184,6 +202,7 @@ export const insertBakeNoteSchema = createInsertSchema(bakeNotes).omit({ id: tru
 export const insertBakePhotoSchema = createInsertSchema(bakePhotos).omit({ id: true, createdAt: true });
 export const insertTutorialSchema = createInsertSchema(tutorials).omit({ id: true, createdAt: true });
 export const insertSensorReadingSchema = createInsertSchema(sensorReadings).omit({ id: true, timestamp: true });
+export const insertPasswordResetTokenSchema = createInsertSchema(passwordResetTokens).omit({ id: true, createdAt: true });
 
 // Types
 export type Recipe = typeof recipes.$inferSelect;
@@ -200,3 +219,5 @@ export type Tutorial = typeof tutorials.$inferSelect;
 export type InsertTutorial = z.infer<typeof insertTutorialSchema>;
 export type SensorReading = typeof sensorReadings.$inferSelect;
 export type InsertSensorReading = z.infer<typeof insertSensorReadingSchema>;
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+export type InsertPasswordResetToken = z.infer<typeof insertPasswordResetTokenSchema>;

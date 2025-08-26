@@ -14,6 +14,8 @@ import Tutorials from "@/pages/tutorials";
 import Profile from "@/pages/profile";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import TermsOfService from "@/pages/terms-of-service";
+import ForgotPassword from "@/pages/forgot-password";
+import ResetPassword from "@/pages/reset-password";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -50,6 +52,11 @@ function Router() {
           <Route path="/terms-of-service" component={TermsOfService} />
         </>
       )}
+      
+      {/* Public routes - available regardless of auth status */}
+      <Route path="/auth" component={AuthPage} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/reset-password" component={ResetPassword} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -194,10 +194,22 @@ export default function AuthPage() {
                     type="submit"
                     className="w-full bg-sourdough-600 hover:bg-sourdough-700 text-white"
                     disabled={loginMutation.isPending}
+                    data-testid="button-login"
                   >
                     {loginMutation.isPending ? "Signing In..." : "Sign In"}
                   </Button>
                 </form>
+
+                <div className="text-center pt-4">
+                  <Button
+                    variant="ghost"
+                    onClick={() => setLocation("/forgot-password")}
+                    className="text-sourdough-600 hover:text-sourdough-800 text-sm"
+                    data-testid="link-forgot-password"
+                  >
+                    Forgot your password?
+                  </Button>
+                </div>
               </TabsContent>
 
               {/* Register Tab */}
@@ -301,6 +313,7 @@ export default function AuthPage() {
                     type="submit"
                     className="w-full bg-sourdough-600 hover:bg-sourdough-700 text-white"
                     disabled={registerMutation.isPending}
+                    data-testid="button-register"
                   >
                     {registerMutation.isPending ? "Creating Account..." : "Create Account"}
                   </Button>
