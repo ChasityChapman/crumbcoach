@@ -101,11 +101,16 @@ export function setupAuth(app: Express) {
 
   // Register endpoint
   app.post("/api/register", async (req, res, next) => {
+    console.log('=== REGISTRATION START ===');
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    console.log('Session ID:', req.sessionID);
+    
     try {
       const { username, email, password, firstName, lastName } = req.body;
       console.log('Registration attempt for:', username, email);
 
       if (!username || !email || !password) {
+        console.log('Missing required fields');
         return res.status(400).json({ message: "Username, email, and password are required" });
       }
 
@@ -152,9 +157,13 @@ export function setupAuth(app: Express) {
         });
       });
     } catch (error) {
-      console.error("Registration error:", error);
+      console.error("=== REGISTRATION ERROR ===");
+      console.error("Full error:", error);
+      console.error("Error message:", (error as Error).message);
+      console.error("Error stack:", (error as Error).stack);
       res.status(500).json({ message: "Failed to create user" });
     }
+    console.log('=== REGISTRATION END ===');
   });
 
   // Login endpoint
