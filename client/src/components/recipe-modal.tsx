@@ -318,7 +318,7 @@ export default function RecipeModal({ isOpen, onClose }: RecipeModalProps) {
             </div>
           </TabsContent>
 
-          <TabsContent value="manual" className="space-y-6 flex-1 overflow-y-auto">
+          <TabsContent value="manual" className="space-y-6 flex-1 overflow-y-auto max-h-[60vh]">
             {/* Basic Info */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
