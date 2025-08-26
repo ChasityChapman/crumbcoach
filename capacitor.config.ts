@@ -7,6 +7,16 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'https'
   },
+  android: {
+    buildOptions: {
+      keystorePath: undefined,
+      keystorePassword: undefined,
+      keystoreAlias: undefined,
+      keystoreAliasPassword: undefined,
+      releaseType: 'APK'
+    },
+    backgroundColor: '#fdf6f3'
+  },
   ios: {
     contentInset: 'automatic',
     scrollEnabled: true,
@@ -21,6 +31,13 @@ const config: CapacitorConfig = {
     StatusBar: {
       style: 'light',
       backgroundColor: '#d97706' // sourdough-600
+    },
+    SplashScreen: {
+      launchShowDuration: 2000,
+      backgroundColor: '#d97706',
+      androidSplashResourceName: 'splash',
+      androidScaleType: 'CENTER_CROP',
+      showSpinner: false
     }
   }
 };
