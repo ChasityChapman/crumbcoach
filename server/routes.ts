@@ -77,8 +77,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Fetching URL:', validUrl);
       const response = await fetch(validUrl, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; CrumbCoach/1.0; Recipe Extractor)'
-        }
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        },
+        redirect: 'follow'
       });
 
       if (!response.ok) {
