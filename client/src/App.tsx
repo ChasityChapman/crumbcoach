@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
+import { useFirebaseAnalytics } from "@/hooks/useFirebaseAnalytics";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import AuthPage from "@/pages/auth-page";
@@ -20,6 +21,9 @@ import TimelinePlanner from "@/pages/timeline-planner";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
+  
+  // Initialize Firebase Analytics
+  useFirebaseAnalytics();
 
   if (isLoading) {
     return (
