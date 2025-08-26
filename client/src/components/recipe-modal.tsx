@@ -41,6 +41,7 @@ const HYDRATION_PRESETS = [
 export default function RecipeModal({ isOpen, onClose, recipe }: RecipeModalProps) {
   const [activeTab, setActiveTab] = useState("manual");
   const [recipeUrl, setRecipeUrl] = useState("");
+  const [hasExtractedData, setHasExtractedData] = useState(false);
   const [recipeName, setRecipeName] = useState("");
   const [description, setDescription] = useState("");
   const [difficulty, setDifficulty] = useState("");
@@ -74,11 +75,12 @@ export default function RecipeModal({ isOpen, onClose, recipe }: RecipeModalProp
       setSteps(recipe.steps || []);
       setSelectedHydration(null);
       setRecipeUrl("");
-    } else {
-      // Reset form for new recipe
+      setHasExtractedData(false);
+    } else if (!hasExtractedData) {
+      // Only reset form for new recipe if we haven't extracted data
       resetForm();
     }
-  }, [recipe]);
+  }, [recipe, hasExtractedData]);
 
   const createRecipeMutation = useMutation({
     mutationFn: (recipeData: any) => {
@@ -121,6 +123,9 @@ export default function RecipeModal({ isOpen, onClose, recipe }: RecipeModalProp
     },
     onSuccess: (data: any) => {
       console.log('Extracted recipe data:', data);
+      
+      // Mark that we have extracted data to prevent form reset
+      setHasExtractedData(true);
       
       // Fill the form with extracted data
       setRecipeName(data.name || "");
@@ -166,6 +171,7 @@ export default function RecipeModal({ isOpen, onClose, recipe }: RecipeModalProp
     setDifficulty("");
     setTotalHours(24);
     setSelectedHydration(null);
+    setHasExtractedData(false);
     setIngredients([
       { name: "Sourdough starter", amount: "100g" },
       { name: "Bread flour", amount: "500g" },
