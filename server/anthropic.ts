@@ -58,39 +58,53 @@ Content: ${htmlContent.slice(0, 15000)}`
     }]
   });
 
+  console.log('AI Response received, processing...');
   const content = response.content[0];
   
+  if (!content || content.type !== 'text') {
+    console.error('Invalid AI response format:', content);
+    throw new Error('AI did not return text content');
+  }
+
+  console.log('Raw AI response length:', content.text.length);
+  console.log('Raw AI response (first 500 chars):', content.text.substring(0, 500));
+  
   try {
-    if (content.type === 'text') {
-      let jsonText = content.text.trim();
-      
-      // Remove any markdown code blocks if present
-      if (jsonText.startsWith('```json')) {
-        jsonText = jsonText.replace(/```json\s*/, '').replace(/\s*```$/, '');
-      } else if (jsonText.startsWith('```')) {
-        jsonText = jsonText.replace(/```\s*/, '').replace(/\s*```$/, '');
-      }
-      
-      // Try to find JSON in the response if it's wrapped in other text
-      const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        jsonText = jsonMatch[0];
-      }
-      
-      const parsedData = JSON.parse(jsonText);
-      
-      // Validate required fields
-      if (!parsedData.name || !parsedData.ingredients || !parsedData.steps) {
-        throw new Error('Missing required recipe fields');
-      }
-      
-      return parsedData;
-    } else {
-      throw new Error('Unexpected response format from AI');
+    let jsonText = content.text.trim();
+    
+    // Remove any markdown code blocks if present
+    if (jsonText.startsWith('```json')) {
+      jsonText = jsonText.replace(/```json\s*/, '').replace(/\s*```$/, '');
+    } else if (jsonText.startsWith('```')) {
+      jsonText = jsonText.replace(/```\s*/, '').replace(/\s*```$/, '');
     }
+    
+    // Try to find JSON in the response if it's wrapped in other text
+    const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      jsonText = jsonMatch[0];
+    }
+    
+    console.log('Cleaned JSON text (first 300 chars):', jsonText.substring(0, 300));
+    
+    const parsedData = JSON.parse(jsonText);
+    console.log('Successfully parsed JSON. Keys:', Object.keys(parsedData));
+    
+    // Validate required fields
+    if (!parsedData.name || !parsedData.ingredients || !parsedData.steps) {
+      console.error('Missing required fields. Found:', {
+        name: !!parsedData.name,
+        ingredients: !!parsedData.ingredients,
+        steps: !!parsedData.steps
+      });
+      throw new Error('Missing required recipe fields');
+    }
+    
+    console.log('Recipe extraction successful:', parsedData.name);
+    return parsedData;
   } catch (error) {
     console.error('JSON parsing error:', error);
-    console.error('Raw response:', content.type === 'text' ? content.text : 'Non-text response');
+    console.error('Full raw response:', content.text);
     throw new Error(`Failed to parse recipe data: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
