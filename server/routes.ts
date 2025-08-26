@@ -616,12 +616,15 @@ function calculateTimelineSchedule(recipes: any[], targetEndTime: Date) {
         const stepStartTime = new Date(startTime.getTime() + (previousStepsDuration * 60 * 1000));
         const stepEndTime = new Date(stepStartTime.getTime() + (step.duration * 60 * 1000));
         
+        const usesOven = step.usesOven || step.name?.toLowerCase().includes('bake') || step.name?.toLowerCase().includes('oven');
+        const ovenTemp = step.ovenTemp || (usesOven ? 450 : null); // Default temp if oven step
+        
         return {
           ...step,
           startTime: stepStartTime,
           endTime: stepEndTime,
-          usesOven: step.usesOven || step.name?.toLowerCase().includes('bake') || step.name?.toLowerCase().includes('oven'),
-          ovenTemp: step.ovenTemp || (step.usesOven ? 450 : null) // Default temp if oven step
+          usesOven,
+          ovenTemp
         };
       })
     };
