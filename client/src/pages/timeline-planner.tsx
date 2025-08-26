@@ -449,32 +449,50 @@ export default function TimelinePlanner() {
               <CardDescription>Your previously created timeline plans</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {timelinePlans.map(plan => (
-                <div key={plan.id} className="flex items-center justify-between p-3 border border-sourdough-200 rounded-lg">
-                  <div>
-                    <h4 className="font-medium text-sourdough-800">{plan.name}</h4>
-                    <p className="text-sm text-sourdough-600">
-                      Target: {format(new Date(plan.targetEndTime), "MMM d, yyyy 'at' h:mm a")} • 
-                      {Array.isArray(plan.recipeIds) ? plan.recipeIds.length : 0} recipes
-                    </p>
+              {timelinePlans.map(plan => {
+                // Parse the target end time correctly whether it's UTC or local format
+                const parseTargetTime = (dateStr: string) => {
+                  if (typeof dateStr === 'string' && dateStr.includes('T') && !dateStr.includes('Z') && !dateStr.includes('+')) {
+                    // Local datetime format: "2025-08-26T18:50:00"
+                    const [datePart, timePart] = dateStr.split('T');
+                    const [year, month, day] = datePart.split('-').map(Number);
+                    const [hours, minutes, seconds] = (timePart || '0:0:0').split(':').map(Number);
+                    return new Date(year, month - 1, day, hours || 0, minutes || 0, seconds || 0);
+                  } else {
+                    // UTC format or standard ISO string
+                    return new Date(dateStr);
+                  }
+                };
+
+                const targetTime = parseTargetTime(plan.targetEndTime);
+
+                return (
+                  <div key={plan.id} className="flex items-center justify-between p-3 border border-sourdough-200 rounded-lg">
+                    <div>
+                      <h4 className="font-medium text-sourdough-800">{plan.name}</h4>
+                      <p className="text-sm text-sourdough-600">
+                        Target: {format(targetTime, "MMM d, yyyy 'at' h:mm a")} • 
+                        {Array.isArray(plan.recipeIds) ? plan.recipeIds.length : 0} recipes
+                      </p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Badge variant="outline" className="text-xs">
+                        {plan.status}
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => deletePlanMutation.mutate(plan.id)}
+                        disabled={deletePlanMutation.isPending}
+                        className="text-red-600 hover:text-red-700"
+                        data-testid={`button-delete-plan-${plan.id}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge variant="outline" className="text-xs">
-                      {plan.status}
-                    </Badge>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => deletePlanMutation.mutate(plan.id)}
-                      disabled={deletePlanMutation.isPending}
-                      className="text-red-600 hover:text-red-700"
-                      data-testid={`button-delete-plan-${plan.id}`}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </CardContent>
           </Card>
         )}
