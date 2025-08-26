@@ -6,7 +6,7 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User as DatabaseUser } from "@shared/schema";
-import MemoryStore from "memorystore";
+import connectPg from "connect-pg-simple";
 
 declare global {
   namespace Express {
@@ -30,10 +30,13 @@ async function comparePasswords(supplied: string, stored: string): Promise<boole
 }
 
 export function setupAuth(app: Express) {
-  // Setup session store - using memory store for simplicity
-  const MemoryStoreSession = MemoryStore(session);
-  const sessionStore = new MemoryStoreSession({
-    checkPeriod: 86400000, // prune expired entries every 24h
+  // Setup session store - using PostgreSQL for deployment compatibility
+  const PostgresSessionStore = connectPg(session);
+  const sessionStore = new PostgresSessionStore({
+    conString: process.env.DATABASE_URL,
+    createTableIfMissing: true,
+    tableName: 'session',
+    ttl: 24 * 60 * 60, // 24 hours in seconds
   });
 
   const sessionSettings: session.SessionOptions = {
@@ -89,6 +92,7 @@ export function setupAuth(app: Express) {
   app.post("/api/register", async (req, res, next) => {
     try {
       const { username, email, password, firstName, lastName } = req.body;
+      console.log('Registration attempt for:', username, email);
 
       if (!username || !email || !password) {
         return res.status(400).json({ message: "Username, email, and password are required" });
@@ -97,11 +101,13 @@ export function setupAuth(app: Express) {
       // Check if user already exists
       const existingUser = await storage.getUserByUsername(username);
       if (existingUser) {
+        console.log('Username already exists:', username);
         return res.status(400).json({ message: "Username already exists" });
       }
 
       const existingEmail = await storage.getUserByEmail(email);
       if (existingEmail) {
+        console.log('Email already exists:', email);
         return res.status(400).json({ message: "Email already exists" });
       }
 
@@ -116,9 +122,15 @@ export function setupAuth(app: Express) {
         profileImageUrl: null,
       });
 
+      console.log('User created successfully:', user.username);
+
       // Log the user in
       req.login(user, (err) => {
-        if (err) return next(err);
+        if (err) {
+          console.error('Auto-login after registration failed:', err);
+          return next(err);
+        }
+        console.log('Auto-login successful for new user:', user.username);
         res.status(201).json({
           id: user.id,
           username: user.username,
