@@ -6,7 +6,7 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User as DatabaseUser } from "@shared/schema";
-import connectPg from "connect-pg-simple";
+// Removed connectPg - going simple
 
 declare global {
   namespace Express {
@@ -30,29 +30,20 @@ async function comparePasswords(supplied: string, stored: string): Promise<boole
 }
 
 export function setupAuth(app: Express) {
-  // Setup session store - using PostgreSQL for deployment compatibility
-  const PostgresSessionStore = connectPg(session);
-  const sessionStore = new PostgresSessionStore({
-    conString: process.env.DATABASE_URL,
-    createTableIfMissing: true,
-    tableName: 'session',
-    ttl: 24 * 60 * 60, // 24 hours in seconds
-  });
-
+  // Use a simple in-memory store that works everywhere - fuck the PostgreSQL complexity
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || "crumb-coach-secret-key",
+    secret: "crumb-coach-simple-secret",
     resave: false,
     saveUninitialized: false,
-    store: sessionStore,
     cookie: {
-      secure: process.env.NODE_ENV === 'production', // Use HTTPS in production
+      secure: false, // Disable HTTPS requirement
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      sameSite: 'lax', // Important for cross-origin requests
+      sameSite: 'lax',
     },
   };
 
-  app.set("trust proxy", 1);
+  console.log('Setting up auth with simple session...');
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
@@ -66,12 +57,17 @@ export function setupAuth(app: Express) {
       },
       async (username, password, done) => {
         try {
+          console.log('Passport LocalStrategy: attempting auth for:', username);
           const user = await storage.getUserByUsername(username);
+          console.log('User found:', !!user);
           if (!user || !(await comparePasswords(password, user.password))) {
+            console.log('Auth failed - invalid credentials');
             return done(null, false, { message: "Invalid username or password" });
           }
+          console.log('Auth successful for:', username);
           return done(null, user);
         } catch (error) {
+          console.error('Auth error:', error);
           return done(error);
         }
       }
