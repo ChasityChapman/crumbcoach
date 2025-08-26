@@ -116,7 +116,7 @@ export default function PrivacyPolicy() {
                 If you have questions about this Privacy Policy or wish to exercise your rights, please contact us at:
               </p>
               <p className="text-sourdough-700 mt-2">
-                Email: privacy@crumbcoach.com
+                Email: support@crumbcoach.com
               </p>
             </section>
 
