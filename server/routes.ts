@@ -386,24 +386,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Parse the target end time as local time to avoid timezone issues
-      // The datetime-local input sends ISO string like "2025-08-26T18:30"
+      // The datetime-local input sends ISO string like "2025-08-26T20:50"
       // We need to create a proper Date object from this without timezone conversion
       const [datePart, timePart] = targetEndTime.split('T');
       const [year, month, day] = datePart.split('-').map(Number);
       const [hours, minutes] = timePart.split(':').map(Number);
       const targetDate = new Date(year, month - 1, day, hours, minutes);
       
-      console.log(`Creating timeline plan - Target time: ${targetEndTime}, Parsed as: ${targetDate}`);
+      console.log(`Creating timeline plan - Input: "${targetEndTime}" -> Parsed as: "${targetDate.toLocaleString()}"`);
       
       // Calculate the timeline schedule
       const calculatedSchedule = calculateTimelineSchedule(validRecipes, targetDate);
+      
+      // Convert all dates to ISO strings for consistent storage/transmission
+      const normalizedSchedule = {
+        ...calculatedSchedule,
+        targetEndTime: targetDate.toISOString(),
+        earliestStartTime: calculatedSchedule.earliestStartTime.toISOString(),
+        recipes: calculatedSchedule.recipes.map(recipe => ({
+          ...recipe,
+          startTime: recipe.startTime.toISOString(),
+          endTime: recipe.endTime.toISOString(),
+          steps: recipe.steps.map((step: any) => ({
+            ...step,
+            startTime: step.startTime.toISOString(),
+            endTime: step.endTime.toISOString()
+          }))
+        }))
+      };
 
       const plan = await storage.createTimelinePlan({
         userId: req.user.id,
         name,
-        targetEndTime: new Date(targetEndTime),
+        targetEndTime: targetDate,
         recipeIds,
-        calculatedSchedule,
+        calculatedSchedule: normalizedSchedule,
         status: "planned"
       });
 
