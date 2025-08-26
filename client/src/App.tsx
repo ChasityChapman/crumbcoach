@@ -16,6 +16,7 @@ import PrivacyPolicy from "@/pages/privacy-policy";
 import TermsOfService from "@/pages/terms-of-service";
 import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
+import TimelinePlanner from "@/pages/timeline-planner";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -48,6 +49,7 @@ function Router() {
           <Route path="/recent-bakes" component={RecentBakes} />
           <Route path="/tutorials" component={Tutorials} />
           <Route path="/profile" component={Profile} />
+          <Route path="/timeline-planner" component={TimelinePlanner} />
           <Route path="/privacy-policy" component={PrivacyPolicy} />
           <Route path="/terms-of-service" component={TermsOfService} />
         </>

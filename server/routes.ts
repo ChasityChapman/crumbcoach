@@ -352,6 +352,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Timeline planning routes
+  app.get("/api/timeline-plans", isAuthenticated, async (req: any, res) => {
+    try {
+      const plans = await storage.getTimelinePlans(req.user.id);
+      res.json(plans);
+    } catch (error) {
+      console.error("Failed to fetch timeline plans:", error);
+      res.status(500).json({ message: "Failed to fetch timeline plans" });
+    }
+  });
+
+  app.post("/api/timeline-plans", isAuthenticated, async (req: any, res) => {
+    try {
+      const { name, targetEndTime, recipeIds } = req.body;
+      
+      if (!name || !targetEndTime || !recipeIds || recipeIds.length === 0) {
+        return res.status(400).json({ message: "Name, target end time, and recipes are required" });
+      }
+
+      // Get all selected recipes to calculate timeline
+      const recipes = await Promise.all(
+        recipeIds.map((id: string) => storage.getRecipe(id))
+      );
+
+      // Filter out any null recipes and verify they belong to the user
+      const validRecipes = recipes.filter(recipe => 
+        recipe && recipe.userId === req.user.id
+      );
+
+      if (validRecipes.length !== recipeIds.length) {
+        return res.status(400).json({ message: "Some recipes not found or not owned by user" });
+      }
+
+      // Calculate the timeline schedule
+      const calculatedSchedule = calculateTimelineSchedule(validRecipes, new Date(targetEndTime));
+
+      const plan = await storage.createTimelinePlan({
+        userId: req.user.id,
+        name,
+        targetEndTime: new Date(targetEndTime),
+        recipeIds,
+        calculatedSchedule,
+        status: "planned"
+      });
+
+      res.status(201).json(plan);
+    } catch (error) {
+      console.error("Failed to create timeline plan:", error);
+      res.status(500).json({ message: "Failed to create timeline plan" });
+    }
+  });
+
+  app.delete("/api/timeline-plans/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const plan = await storage.getTimelinePlan(req.params.id);
+      if (!plan || plan.userId !== req.user.id) {
+        return res.status(404).json({ message: "Timeline plan not found" });
+      }
+
+      await storage.deleteTimelinePlan(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Failed to delete timeline plan:", error);
+      res.status(500).json({ message: "Failed to delete timeline plan" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
+}
+
+// Timeline calculation logic
+function calculateTimelineSchedule(recipes: any[], targetEndTime: Date) {
+  const recipeSchedules = recipes.map(recipe => {
+    // Calculate total duration in minutes
+    const totalDurationMinutes = recipe.steps.reduce((sum: number, step: any) => sum + step.duration, 0);
+    
+    // Calculate start time by subtracting total duration from target end time
+    const startTime = new Date(targetEndTime.getTime() - (totalDurationMinutes * 60 * 1000));
+    
+    return {
+      recipeId: recipe.id,
+      recipeName: recipe.name,
+      startTime: startTime,
+      endTime: targetEndTime,
+      totalDurationMinutes,
+      steps: recipe.steps.map((step: any, index: number) => {
+        // Calculate step start/end times
+        const previousStepsDuration = recipe.steps.slice(0, index).reduce((sum: number, s: any) => sum + s.duration, 0);
+        const stepStartTime = new Date(startTime.getTime() + (previousStepsDuration * 60 * 1000));
+        const stepEndTime = new Date(stepStartTime.getTime() + (step.duration * 60 * 1000));
+        
+        return {
+          ...step,
+          startTime: stepStartTime,
+          endTime: stepEndTime
+        };
+      })
+    };
+  });
+
+  // Sort by start time so earliest recipes appear first
+  recipeSchedules.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+
+  return {
+    targetEndTime,
+    recipes: recipeSchedules,
+    earliestStartTime: recipeSchedules[0]?.startTime || targetEndTime
+  };
 }

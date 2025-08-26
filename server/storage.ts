@@ -26,6 +26,9 @@ import {
   passwordResetTokens,
   type PasswordResetToken,
   type InsertPasswordResetToken,
+  timelinePlans,
+  type TimelinePlan,
+  type InsertTimelinePlan,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, isNull, lt } from "drizzle-orm";
@@ -93,6 +96,13 @@ export interface IStorage {
   getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined>;
   markPasswordResetTokenAsUsed(tokenId: string): Promise<boolean>;
   cleanupExpiredPasswordResetTokens(): Promise<number>;
+
+  // Timeline plan operations
+  getTimelinePlans(userId?: string): Promise<TimelinePlan[]>;
+  getTimelinePlan(id: string): Promise<TimelinePlan | undefined>;
+  createTimelinePlan(plan: InsertTimelinePlan): Promise<TimelinePlan>;
+  updateTimelinePlan(id: string, planData: Partial<InsertTimelinePlan>): Promise<TimelinePlan | undefined>;
+  deleteTimelinePlan(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -383,6 +393,39 @@ export class DatabaseStorage implements IStorage {
       .delete(passwordResetTokens)
       .where(lt(passwordResetTokens.expiresAt, new Date()));
     return result.rowCount || 0;
+  }
+
+  // Timeline plan operations
+  async getTimelinePlans(userId?: string): Promise<TimelinePlan[]> {
+    if (userId) {
+      return await db.select().from(timelinePlans).where(eq(timelinePlans.userId, userId)).orderBy(desc(timelinePlans.createdAt));
+    }
+    // For backwards compatibility, return all plans if no userId provided
+    return await db.select().from(timelinePlans).orderBy(desc(timelinePlans.createdAt));
+  }
+
+  async getTimelinePlan(id: string): Promise<TimelinePlan | undefined> {
+    const [plan] = await db.select().from(timelinePlans).where(eq(timelinePlans.id, id));
+    return plan;
+  }
+
+  async createTimelinePlan(planData: InsertTimelinePlan): Promise<TimelinePlan> {
+    const [plan] = await db.insert(timelinePlans).values(planData).returning();
+    return plan;
+  }
+
+  async updateTimelinePlan(id: string, planData: Partial<InsertTimelinePlan>): Promise<TimelinePlan | undefined> {
+    const [updatedPlan] = await db
+      .update(timelinePlans)
+      .set({ ...planData, updatedAt: new Date() })
+      .where(eq(timelinePlans.id, id))
+      .returning();
+    return updatedPlan;
+  }
+
+  async deleteTimelinePlan(id: string): Promise<boolean> {
+    const result = await db.delete(timelinePlans).where(eq(timelinePlans.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
   }
 }
 

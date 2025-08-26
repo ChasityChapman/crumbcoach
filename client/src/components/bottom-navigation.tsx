@@ -42,12 +42,12 @@ export default function BottomNavigation({ currentPath }: BottomNavigationProps)
           </button>
         </Link>
         
-        <Link href="/tutorials">
+        <Link href="/timeline-planner">
           <button className={`flex flex-col items-center py-2 px-2 ${
-            isActive('/tutorials') ? 'text-accent-orange-500' : 'text-sourdough-500'
+            isActive('/timeline-planner') ? 'text-accent-orange-500' : 'text-sourdough-500'
           }`}>
-            <Play className="w-5 h-5 mb-1" />
-            <span className="text-xs">Tutorials</span>
+            <CalendarClock className="w-5 h-5 mb-1" />
+            <span className="text-xs">Timeline</span>
           </button>
         </Link>
         

@@ -126,11 +126,25 @@ export const sensorReadings = pgTable("sensor_readings", {
   timestamp: timestamp("timestamp").defaultNow(),
 });
 
+// Multi-recipe timeline plans
+export const timelinePlans = pgTable("timeline_plans", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  targetEndTime: timestamp("target_end_time").notNull(),
+  recipeIds: jsonb("recipe_ids").notNull(), // Array of recipe IDs
+  calculatedSchedule: jsonb("calculated_schedule"), // Timeline calculation results
+  status: text("status").default("planned").notNull(), // 'planned', 'active', 'completed'
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations
 export const userRelations = relations(users, ({ many }) => ({
   recipes: many(recipes),
   bakes: many(bakes),
   passwordResetTokens: many(passwordResetTokens),
+  timelinePlans: many(timelinePlans),
 }));
 
 export const passwordResetTokenRelations = relations(passwordResetTokens, ({ one }) => ({
@@ -183,6 +197,13 @@ export const bakePhotoRelations = relations(bakePhotos, ({ one }) => ({
   }),
 }));
 
+export const timelinePlanRelations = relations(timelinePlans, ({ one }) => ({
+  user: one(users, {
+    fields: [timelinePlans.userId],
+    references: [users.id],
+  }),
+}));
+
 // Insert schemas
 export const insertRecipeSchema = createInsertSchema(recipes).omit({ id: true, createdAt: true });
 export const insertBakeSchema = createInsertSchema(bakes)
@@ -203,6 +224,7 @@ export const insertBakePhotoSchema = createInsertSchema(bakePhotos).omit({ id: t
 export const insertTutorialSchema = createInsertSchema(tutorials).omit({ id: true, createdAt: true });
 export const insertSensorReadingSchema = createInsertSchema(sensorReadings).omit({ id: true, timestamp: true });
 export const insertPasswordResetTokenSchema = createInsertSchema(passwordResetTokens).omit({ id: true, createdAt: true });
+export const insertTimelinePlanSchema = createInsertSchema(timelinePlans).omit({ id: true, createdAt: true, updatedAt: true });
 
 // Types
 export type Recipe = typeof recipes.$inferSelect;
@@ -221,3 +243,5 @@ export type SensorReading = typeof sensorReadings.$inferSelect;
 export type InsertSensorReading = z.infer<typeof insertSensorReadingSchema>;
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 export type InsertPasswordResetToken = z.infer<typeof insertPasswordResetTokenSchema>;
+export type TimelinePlan = typeof timelinePlans.$inferSelect;
+export type InsertTimelinePlan = z.infer<typeof insertTimelinePlanSchema>;
