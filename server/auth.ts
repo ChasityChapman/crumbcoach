@@ -44,6 +44,14 @@ export function setupAuth(app: Express) {
   };
 
   console.log('Setting up auth with simple session...');
+  
+  // Debug middleware to log all requests
+  app.use((req, res, next) => {
+    console.log(`${req.method} ${req.path} - Session ID: ${req.sessionID || 'none'}`);
+    console.log('Headers:', JSON.stringify(req.headers, null, 2));
+    next();
+  });
+  
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
@@ -74,12 +82,19 @@ export function setupAuth(app: Express) {
     )
   );
 
-  passport.serializeUser((user, done) => done(null, user.id));
+  passport.serializeUser((user, done) => {
+    console.log('Serializing user:', user.id);
+    done(null, user.id);
+  });
+  
   passport.deserializeUser(async (id: string, done) => {
     try {
+      console.log('Deserializing user ID:', id);
       const user = await storage.getUser(id);
+      console.log('Deserialized user found:', !!user);
       done(null, user || null);
     } catch (error) {
+      console.error('Deserialize error:', error);
       done(error);
     }
   });
@@ -183,11 +198,19 @@ export function setupAuth(app: Express) {
 
   // Get current user endpoint
   app.get("/api/user", (req, res) => {
+    console.log('GET /api/user - Session ID:', req.sessionID);
+    console.log('Authenticated:', req.isAuthenticated());
+    console.log('User in session:', !!req.user);
+    console.log('Full session:', JSON.stringify(req.session, null, 2));
+    console.log('Cookie header:', req.headers.cookie);
+    
     if (!req.isAuthenticated() || !req.user) {
+      console.log('Authentication failed - returning 401');
       return res.status(401).json({ message: "Unauthorized" });
     }
     
     const user = req.user;
+    console.log('Returning user data for:', user.username);
     res.json({
       id: user.id,
       username: user.username,
