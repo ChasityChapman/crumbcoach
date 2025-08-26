@@ -3,9 +3,9 @@ import type { Bake, BakeNote, BakePhoto, TimelineStep } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
-import { Wheat, ArrowLeft, Clock, FileText, Camera, X, Brain } from "lucide-react";
+import { Wheat, ArrowLeft, Clock, FileText, Camera, X, Brain, RotateCcw } from "lucide-react";
 import BottomNavigation from "@/components/bottom-navigation";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -231,9 +231,39 @@ function BakeDetailModal({ bake, isOpen, onClose }: BakeDetailModalProps) {
 
 export default function RecentBakesPage() {
   const [selectedBake, setSelectedBake] = useState<Bake | null>(null);
+  const [showRestartOptions, setShowRestartOptions] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: bakes } = useQuery<Bake[]>({
     queryKey: ["/api/bakes"],
+  });
+
+  // Restart bake mutation
+  const restartBakeMutation = useMutation({
+    mutationFn: async (bake: Bake) => {
+      return apiRequest("POST", "/api/bakes", {
+        recipeId: bake.recipeId,
+        name: `${bake.name} (Restart)`,
+        status: "active",
+        startTime: new Date().toISOString(),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/bakes"] });
+      toast({
+        title: "Bake Restarted",
+        description: "Your bake has been restarted successfully!",
+      });
+      setShowRestartOptions(false);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to restart bake. Please try again.",
+        variant: "destructive",
+      });
+    }
   });
 
   const completedBakes = bakes?.filter(bake => bake.status === 'completed') || [];
@@ -307,6 +337,44 @@ export default function RecentBakesPage() {
           </div>
         )}
       </div>
+
+      {/* Restart Bake Button - Bottom Left */}
+      {completedBakes.length > 0 && (
+        <div className="fixed bottom-20 left-4 z-40">
+          {showRestartOptions ? (
+            <div className="bg-white rounded-lg shadow-lg border border-sourdough-200 p-2 mb-2 max-h-60 overflow-y-auto">
+              <div className="text-xs font-medium text-sourdough-700 p-2 border-b border-sourdough-100">
+                Choose a bake to restart:
+              </div>
+              {completedBakes.slice(0, 5).map((bake) => (
+                <button
+                  key={bake.id}
+                  onClick={() => restartBakeMutation.mutate(bake)}
+                  disabled={restartBakeMutation.isPending}
+                  className="w-full text-left p-2 text-sm hover:bg-sourdough-50 rounded transition-colors disabled:opacity-50"
+                  data-testid={`button-restart-bake-${bake.id}`}
+                >
+                  <div className="font-medium text-sourdough-800">{bake.name}</div>
+                  <div className="text-xs text-sourdough-500 truncate">
+                    {bake.actualEndTime 
+                      ? `Completed ${formatDistanceToNow(new Date(bake.actualEndTime), { addSuffix: true })}`
+                      : 'Completed recently'
+                    }
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : null}
+          
+          <Button
+            onClick={() => setShowRestartOptions(!showRestartOptions)}
+            className="bg-sourdough-600 hover:bg-sourdough-700 text-white rounded-full w-14 h-14 shadow-lg"
+            data-testid="button-restart-options"
+          >
+            <RotateCcw className="w-6 h-6" />
+          </Button>
+        </div>
+      )}
 
       {/* Bottom Navigation */}
       <BottomNavigation currentPath="/recent-bakes" />
