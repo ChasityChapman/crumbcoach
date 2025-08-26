@@ -276,6 +276,16 @@ export default function Profile() {
             <div className="text-xs text-sourdough-500 mt-1">
               Personal Baking Assistant
             </div>
+            <div className="text-xs text-sourdough-500 mt-2">
+              <a 
+                href="https://crumbcoach.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-sourdough-600 underline"
+              >
+                crumbcoach.com
+              </a>
+            </div>
           </CardContent>
         </Card>
       </div>
