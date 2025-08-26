@@ -12,6 +12,8 @@ import Recipes from "@/pages/recipes";
 import RecentBakes from "@/pages/recent-bakes";
 import Tutorials from "@/pages/tutorials";
 import Profile from "@/pages/profile";
+import PrivacyPolicy from "@/pages/privacy-policy";
+import TermsOfService from "@/pages/terms-of-service";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -44,6 +46,8 @@ function Router() {
           <Route path="/recent-bakes" component={RecentBakes} />
           <Route path="/tutorials" component={Tutorials} />
           <Route path="/profile" component={Profile} />
+          <Route path="/privacy-policy" component={PrivacyPolicy} />
+          <Route path="/terms-of-service" component={TermsOfService} />
         </>
       )}
       <Route component={NotFound} />

@@ -218,6 +218,15 @@ export default function Profile() {
           </Button>
           
           <Button 
+            onClick={() => navigate("/terms-of-service")}
+            variant="outline" 
+            className="w-full justify-start border-sourdough-200 text-sourdough-800"
+          >
+            <FileText className="w-5 h-5 mr-3" />
+            Terms of Service
+          </Button>
+          
+          <Button 
             onClick={handleAdvancedSettings}
             variant="outline" 
             className="w-full justify-start border-sourdough-200 text-sourdough-800"
@@ -227,13 +236,7 @@ export default function Profile() {
           </Button>
           
           <Button 
-            onClick={() => {
-              // Privacy policy URL will be added later
-              toast({
-                title: "Privacy Policy",
-                description: "Privacy policy link coming soon",
-              });
-            }}
+            onClick={() => navigate("/privacy-policy")}
             variant="outline" 
             className="w-full justify-start border-sourdough-200 text-sourdough-800"
           >
