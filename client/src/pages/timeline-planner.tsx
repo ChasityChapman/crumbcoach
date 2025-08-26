@@ -450,18 +450,24 @@ export default function TimelinePlanner() {
             </CardHeader>
             <CardContent className="space-y-3">
               {timelinePlans.map(plan => {
-                // Parse the target end time correctly whether it's UTC or local format
-                const parseTargetTime = (dateStr: string) => {
-                  // Create a date that interprets the stored timestamp as local time
-                  const utcDate = new Date(dateStr);
-                  
-                  // Convert UTC timestamp back to local representation
-                  // This compensates for the automatic UTC conversion during storage/retrieval
-                  const timezoneOffset = utcDate.getTimezoneOffset() * 60000;
-                  return new Date(utcDate.getTime() - timezoneOffset);
-                };
-
-                const targetTime = parseTargetTime(plan.targetEndTime);
+                // Get the target time from the calculatedSchedule if available (mirrors timeline schedule display)
+                let targetTime;
+                if (plan.calculatedSchedule && plan.calculatedSchedule.targetEndTime) {
+                  // Parse the same way as timeline schedule
+                  const targetStr = plan.calculatedSchedule.targetEndTime;
+                  if (typeof targetStr === 'string' && targetStr.includes('T') && !targetStr.includes('Z')) {
+                    // Local datetime format: "2025-08-27T14:00:00"
+                    const [datePart, timePart] = targetStr.split('T');
+                    const [year, month, day] = datePart.split('-').map(Number);
+                    const [hours, minutes, seconds] = (timePart || '0:0:0').split(':').map(Number);
+                    targetTime = new Date(year, month - 1, day, hours || 0, minutes || 0, seconds || 0);
+                  } else {
+                    targetTime = new Date(targetStr);
+                  }
+                } else {
+                  // Fallback to direct targetEndTime
+                  targetTime = new Date(plan.targetEndTime);
+                }
 
                 return (
                   <div key={plan.id} className="flex items-center justify-between p-3 border border-sourdough-200 rounded-lg">
