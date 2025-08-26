@@ -247,19 +247,20 @@ export default function RecipeModal({ isOpen, onClose }: RecipeModalProps) {
           </Button>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="url" className="flex items-center space-x-2" data-testid="tab-url-import">
-              <Link className="w-4 h-4" />
-              <span>Import from URL</span>
-            </TabsTrigger>
-            <TabsTrigger value="manual" className="flex items-center space-x-2" data-testid="tab-manual-entry">
-              <Plus className="w-4 h-4" />
-              <span>Manual Entry</span>
-            </TabsTrigger>
-          </TabsList>
+        <div className="flex-1 flex flex-col min-h-0 p-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+            <TabsList className="grid w-full grid-cols-2 mb-4 flex-shrink-0">
+              <TabsTrigger value="url" className="flex items-center space-x-2" data-testid="tab-url-import">
+                <Link className="w-4 h-4" />
+                <span>Import from URL</span>
+              </TabsTrigger>
+              <TabsTrigger value="manual" className="flex items-center space-x-2" data-testid="tab-manual-entry">
+                <Plus className="w-4 h-4" />
+                <span>Manual Entry</span>
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="url" className="space-y-4">
+            <TabsContent value="url" className="space-y-4 flex-shrink-0">
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="recipeUrl">Recipe URL</Label>
@@ -318,7 +319,7 @@ export default function RecipeModal({ isOpen, onClose }: RecipeModalProps) {
             </div>
           </TabsContent>
 
-          <TabsContent value="manual" className="space-y-6 flex-1 overflow-y-auto max-h-[60vh]">
+            <TabsContent value="manual" className="space-y-6 flex-1 overflow-y-auto min-h-0">
             {/* Basic Info */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -500,11 +501,12 @@ export default function RecipeModal({ isOpen, onClose }: RecipeModalProps) {
               ))}
             </CardContent>
           </Card>
-          </TabsContent>
-        </Tabs>
+            </TabsContent>
+          </Tabs>
+        </div>
 
         {/* Action Buttons */}
-        <div className="flex space-x-3 pt-4 border-t">
+        <div className="flex space-x-3 p-6 pt-4 border-t flex-shrink-0">
           <Button
             variant="outline"
             onClick={onClose}
