@@ -52,6 +52,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/recipes/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const recipeId = req.params.id;
+      const recipeData = { ...req.body, userId };
+      const recipe = await storage.updateRecipe(recipeId, recipeData);
+      res.json(recipe);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to update recipe" });
+    }
+  });
+
   // Test extraction endpoint
   app.post("/api/recipes/extract-test", isAuthenticated, async (req: any, res) => {
     // Return a test recipe to verify form population works

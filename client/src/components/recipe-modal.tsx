@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 interface RecipeModalProps {
   isOpen: boolean;
   onClose: () => void;
+  recipe?: any | null; // Recipe to edit, null for new recipe
 }
 
 interface Ingredient {
@@ -37,7 +38,7 @@ const HYDRATION_PRESETS = [
   { name: "Very High Hydration", percentage: 95, description: "Extremely wet, artisan style" },
 ];
 
-export default function RecipeModal({ isOpen, onClose }: RecipeModalProps) {
+export default function RecipeModal({ isOpen, onClose, recipe }: RecipeModalProps) {
   const [activeTab, setActiveTab] = useState("manual");
   const [recipeUrl, setRecipeUrl] = useState("");
   const [recipeName, setRecipeName] = useState("");
@@ -61,20 +62,48 @@ export default function RecipeModal({ isOpen, onClose }: RecipeModalProps) {
 
   const { toast } = useToast();
 
+  // Populate form when editing an existing recipe
+  useEffect(() => {
+    if (recipe) {
+      setActiveTab("manual");
+      setRecipeName(recipe.name || "");
+      setDescription(recipe.description || "");
+      setDifficulty(recipe.difficulty || "");
+      setTotalHours(recipe.totalTimeHours || 24);
+      setIngredients(recipe.ingredients || []);
+      setSteps(recipe.steps || []);
+      setSelectedHydration(null);
+      setRecipeUrl("");
+    } else {
+      // Reset form for new recipe
+      resetForm();
+    }
+  }, [recipe]);
+
   const createRecipeMutation = useMutation({
-    mutationFn: (recipeData: any) => apiRequest("POST", "/api/recipes", recipeData),
+    mutationFn: (recipeData: any) => {
+      if (recipe?.id) {
+        // Editing existing recipe
+        return apiRequest("PUT", `/api/recipes/${recipe.id}`, recipeData);
+      } else {
+        // Creating new recipe
+        return apiRequest("POST", "/api/recipes", recipeData);
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/recipes"] });
       toast({
-        title: "Recipe created!",
-        description: `${recipeName} has been added to your recipes.`,
+        title: recipe?.id ? "Recipe updated!" : "Recipe created!",
+        description: recipe?.id 
+          ? `${recipeName} has been updated.`
+          : `${recipeName} has been added to your recipes.`,
       });
       onClose();
       resetForm();
     },
     onError: () => {
       toast({
-        title: "Failed to create recipe",
+        title: recipe?.id ? "Failed to update recipe" : "Failed to create recipe",
         description: "Please try again.",
         variant: "destructive",
       });
@@ -241,7 +270,9 @@ export default function RecipeModal({ isOpen, onClose }: RecipeModalProps) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl mx-auto max-h-[90vh] flex flex-col">
         <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <DialogTitle className="font-display text-sourdough-800">Create New Recipe</DialogTitle>
+          <DialogTitle className="font-display text-sourdough-800">
+            {recipe?.id ? "Edit Recipe" : "Create New Recipe"}
+          </DialogTitle>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="w-4 h-4" />
           </Button>
@@ -520,7 +551,10 @@ export default function RecipeModal({ isOpen, onClose }: RecipeModalProps) {
             className="flex-1 bg-sourdough-500 hover:bg-sourdough-600 text-white"
             data-testid="button-create-recipe"
           >
-            {createRecipeMutation.isPending ? "Creating..." : "Create Recipe"}
+            {createRecipeMutation.isPending 
+              ? (recipe?.id ? "Updating..." : "Creating...")
+              : (recipe?.id ? "Update Recipe" : "Create Recipe")
+            }
           </Button>
         </div>
       </DialogContent>

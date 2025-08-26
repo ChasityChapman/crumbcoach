@@ -12,6 +12,7 @@ import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_175622489
 
 export default function Recipes() {
   const [recipeModalOpen, setRecipeModalOpen] = useState(false);
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [sortOrder, setSortOrder] = useState<string>("a-z");
   
   const { data: recipes, isLoading } = useQuery<Recipe[]>({
@@ -68,7 +69,10 @@ export default function Recipes() {
             <h1 className="font-display font-semibold text-lg text-sourdough-800">Recipes</h1>
           </div>
           <Button 
-            onClick={() => setRecipeModalOpen(true)}
+            onClick={() => {
+              setSelectedRecipe(null);
+              setRecipeModalOpen(true);
+            }}
             className="bg-sourdough-500 hover:bg-sourdough-600 text-white"
             size="sm"
           >
@@ -100,7 +104,15 @@ export default function Recipes() {
         {recipes && recipes.length > 0 ? (
           <div className="space-y-4">
             {sortedRecipes.map((recipe) => (
-              <Card key={recipe.id} className="shadow-sm border-sourdough-100">
+              <Card 
+                key={recipe.id} 
+                className="shadow-sm border-sourdough-100 cursor-pointer hover:shadow-md transition-shadow duration-200"
+                onClick={() => {
+                  setSelectedRecipe(recipe);
+                  setRecipeModalOpen(true);
+                }}
+                data-testid={`recipe-card-${recipe.id}`}
+              >
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-display font-semibold text-lg text-sourdough-800">
@@ -140,7 +152,10 @@ export default function Recipes() {
             </h3>
             <p className="text-sourdough-600 mb-4">Start by creating your first sourdough recipe.</p>
             <Button 
-              onClick={() => setRecipeModalOpen(true)}
+              onClick={() => {
+                setSelectedRecipe(null);
+                setRecipeModalOpen(true);
+              }}
               className="bg-sourdough-500 hover:bg-sourdough-600 text-white"
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -154,7 +169,11 @@ export default function Recipes() {
       
       <RecipeModal
         isOpen={recipeModalOpen}
-        onClose={() => setRecipeModalOpen(false)}
+        onClose={() => {
+          setRecipeModalOpen(false);
+          setSelectedRecipe(null);
+        }}
+        recipe={selectedRecipe}
       />
     </div>
   );
