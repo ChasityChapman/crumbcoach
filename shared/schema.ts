@@ -139,6 +139,40 @@ export const timelinePlans = pgTable("timeline_plans", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Analytics events table to track user actions
+export const analyticsEvents = pgTable("analytics_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }), // nullable for anonymous events
+  sessionId: varchar("session_id"), // Track user sessions
+  eventType: varchar("event_type").notNull(), // 'page_view', 'bake_started', 'recipe_created', etc.
+  eventCategory: varchar("event_category").notNull(), // 'navigation', 'baking', 'recipes', 'tutorials', etc.
+  eventData: jsonb("event_data"), // Additional event-specific data
+  userAgent: text("user_agent"), // Browser/device information
+  ipAddress: varchar("ip_address"), // User IP for geographic analytics
+  timestamp: timestamp("timestamp").defaultNow(),
+}, (table) => [
+  index("IDX_analytics_events_user_id").on(table.userId),
+  index("IDX_analytics_events_type").on(table.eventType),
+  index("IDX_analytics_events_timestamp").on(table.timestamp),
+]);
+
+// User sessions table to track engagement
+export const userSessions = pgTable("user_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
+  sessionStart: timestamp("session_start").defaultNow(),
+  sessionEnd: timestamp("session_end"),
+  duration: integer("duration_seconds"), // Session duration in seconds
+  pageViews: integer("page_views").default(0),
+  actionsCount: integer("actions_count").default(0), // Number of actions in session
+  deviceType: varchar("device_type"), // 'mobile', 'desktop', 'tablet'
+  browserName: varchar("browser_name"),
+  lastActivity: timestamp("last_activity").defaultNow(),
+}, (table) => [
+  index("IDX_user_sessions_user_id").on(table.userId),
+  index("IDX_user_sessions_start").on(table.sessionStart),
+]);
+
 // Relations
 export const userRelations = relations(users, ({ many }) => ({
   recipes: many(recipes),
@@ -204,6 +238,20 @@ export const timelinePlanRelations = relations(timelinePlans, ({ one }) => ({
   }),
 }));
 
+export const analyticsEventRelations = relations(analyticsEvents, ({ one }) => ({
+  user: one(users, {
+    fields: [analyticsEvents.userId],
+    references: [users.id],
+  }),
+}));
+
+export const userSessionRelations = relations(userSessions, ({ one }) => ({
+  user: one(users, {
+    fields: [userSessions.userId],
+    references: [users.id],
+  }),
+}));
+
 // Insert schemas
 export const insertRecipeSchema = createInsertSchema(recipes).omit({ id: true, createdAt: true });
 export const insertBakeSchema = createInsertSchema(bakes)
@@ -225,6 +273,8 @@ export const insertTutorialSchema = createInsertSchema(tutorials).omit({ id: tru
 export const insertSensorReadingSchema = createInsertSchema(sensorReadings).omit({ id: true, timestamp: true });
 export const insertPasswordResetTokenSchema = createInsertSchema(passwordResetTokens).omit({ id: true, createdAt: true });
 export const insertTimelinePlanSchema = createInsertSchema(timelinePlans).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents).omit({ id: true, timestamp: true });
+export const insertUserSessionSchema = createInsertSchema(userSessions).omit({ id: true, sessionStart: true, lastActivity: true });
 
 // Types
 export type Recipe = typeof recipes.$inferSelect;
@@ -245,3 +295,7 @@ export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 export type InsertPasswordResetToken = z.infer<typeof insertPasswordResetTokenSchema>;
 export type TimelinePlan = typeof timelinePlans.$inferSelect;
 export type InsertTimelinePlan = z.infer<typeof insertTimelinePlanSchema>;
+export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
+export type InsertAnalyticsEvent = z.infer<typeof insertAnalyticsEventSchema>;
+export type UserSession = typeof userSessions.$inferSelect;
+export type InsertUserSession = z.infer<typeof insertUserSessionSchema>;

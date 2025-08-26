@@ -7,6 +7,8 @@ import {
   bakePhotos,
   tutorials,
   sensorReadings,
+  analyticsEvents,
+  userSessions,
   type User,
   type InsertUser,
   type Recipe,
@@ -29,9 +31,13 @@ import {
   timelinePlans,
   type TimelinePlan,
   type InsertTimelinePlan,
+  type AnalyticsEvent,
+  type InsertAnalyticsEvent,
+  type UserSession,
+  type InsertUserSession,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, isNull, lt } from "drizzle-orm";
+import { eq, desc, and, isNull, lt, gte, count, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 // Interface for storage operations
