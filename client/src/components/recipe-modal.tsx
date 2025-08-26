@@ -116,10 +116,12 @@ export default function RecipeModal({ isOpen, onClose, recipe }: RecipeModalProp
     mutationFn: async (url: string) => {
       if (url === "test") {
         const response = await apiRequest("POST", "/api/recipes/extract-test", {});
-        return response;
+        const data = await response.json();
+        return data;
       }
       const response = await apiRequest("POST", "/api/recipes/extract-from-url", { url });
-      return response;
+      const data = await response.json();
+      return data;
     },
     onSuccess: (data: any) => {
       console.log('Extracted recipe data:', data);
