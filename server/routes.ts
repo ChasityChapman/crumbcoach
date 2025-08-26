@@ -74,6 +74,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Fetch webpage content
+      console.log('Fetching URL:', validUrl);
       const response = await fetch(validUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (compatible; CrumbCoach/1.0; Recipe Extractor)'
@@ -81,10 +82,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       if (!response.ok) {
-        return res.status(400).json({ message: "Failed to fetch webpage" });
+        console.error('Failed to fetch webpage:', response.status, response.statusText);
+        return res.status(400).json({ message: `Failed to fetch webpage: ${response.status}` });
       }
 
       const htmlContent = await response.text();
+      console.log('Fetched HTML content length:', htmlContent.length);
       
       // Extract recipe using AI
       const recipeData = await extractRecipeFromWebpage(validUrl, htmlContent);
