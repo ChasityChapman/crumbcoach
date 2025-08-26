@@ -452,16 +452,13 @@ export default function TimelinePlanner() {
               {timelinePlans.map(plan => {
                 // Parse the target end time correctly whether it's UTC or local format
                 const parseTargetTime = (dateStr: string) => {
-                  if (typeof dateStr === 'string' && dateStr.includes('T') && !dateStr.includes('Z') && !dateStr.includes('+')) {
-                    // Local datetime format: "2025-08-26T18:50:00"
-                    const [datePart, timePart] = dateStr.split('T');
-                    const [year, month, day] = datePart.split('-').map(Number);
-                    const [hours, minutes, seconds] = (timePart || '0:0:0').split(':').map(Number);
-                    return new Date(year, month - 1, day, hours || 0, minutes || 0, seconds || 0);
-                  } else {
-                    // UTC format or standard ISO string
-                    return new Date(dateStr);
-                  }
+                  // Create a date that interprets the stored timestamp as local time
+                  const utcDate = new Date(dateStr);
+                  
+                  // Convert UTC timestamp back to local representation
+                  // This compensates for the automatic UTC conversion during storage/retrieval
+                  const timezoneOffset = utcDate.getTimezoneOffset() * 60000;
+                  return new Date(utcDate.getTime() - timezoneOffset);
                 };
 
                 const targetTime = parseTargetTime(plan.targetEndTime);

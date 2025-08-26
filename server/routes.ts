@@ -429,7 +429,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const plan = await storage.createTimelinePlan({
         userId: req.user.id,
         name,
-        targetEndTime: targetDate,
+        targetEndTime: targetDate, // This is already a proper local Date object
         recipeIds,
         calculatedSchedule: normalizedSchedule,
         status: "planned"
