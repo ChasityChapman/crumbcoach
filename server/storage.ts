@@ -73,8 +73,8 @@ export interface IStorage {
   deleteBakeNote(id: string): Promise<boolean>;
 
   // Bake photo operations
-  getBakePhotos(bakeId: string): Promise<BakePhoto[]>;
   getBakePhoto(id: string): Promise<BakePhoto | undefined>;
+  getBakePhotos(bakeId: string): Promise<BakePhoto[]>;
   createBakePhoto(photo: InsertBakePhoto): Promise<BakePhoto>;
   updateBakePhoto(id: string, photo: Partial<InsertBakePhoto>): Promise<BakePhoto | undefined>;
   deleteBakePhoto(id: string): Promise<boolean>;
@@ -282,17 +282,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Bake photo operations
+  async getBakePhoto(id: string): Promise<BakePhoto | undefined> {
+    const [photo] = await db.select().from(bakePhotos).where(eq(bakePhotos.id, id));
+    return photo || undefined;
+  }
+
   async getBakePhotos(bakeId: string): Promise<BakePhoto[]> {
     return await db
       .select()
       .from(bakePhotos)
       .where(eq(bakePhotos.bakeId, bakeId))
       .orderBy(desc(bakePhotos.createdAt));
-  }
-
-  async getBakePhoto(id: string): Promise<BakePhoto | undefined> {
-    const [photo] = await db.select().from(bakePhotos).where(eq(bakePhotos.id, id));
-    return photo;
   }
 
   async createBakePhoto(photo: InsertBakePhoto): Promise<BakePhoto> {

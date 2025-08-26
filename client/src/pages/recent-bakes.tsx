@@ -3,8 +3,11 @@ import type { Bake, BakeNote, BakePhoto, TimelineStep } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
-import { Wheat, ArrowLeft, Clock, FileText, Camera, X } from "lucide-react";
+import { Wheat, ArrowLeft, Clock, FileText, Camera, X, Brain } from "lucide-react";
 import BottomNavigation from "@/components/bottom-navigation";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface BakeDetailModalProps {
   bake: Bake;
@@ -13,6 +16,10 @@ interface BakeDetailModalProps {
 }
 
 function BakeDetailModal({ bake, isOpen, onClose }: BakeDetailModalProps) {
+  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+  const [analysis, setAnalysis] = useState<string>('');
+  const { toast } = useToast();
+
   const { data: notes } = useQuery<BakeNote[]>({
     queryKey: [`/api/bakes/${bake?.id}/notes`],
     enabled: isOpen && !!bake?.id,
@@ -27,6 +34,47 @@ function BakeDetailModal({ bake, isOpen, onClose }: BakeDetailModalProps) {
     queryKey: [`/api/bakes/${bake?.id}/timeline`],
     enabled: isOpen && !!bake?.id,
   });
+
+  const analyzeMutation = useMutation({
+    mutationFn: async ({ photoId, imageData }: { photoId: string; imageData: string }) => {
+      const response = await apiRequest('POST', `/api/photos/${photoId}/analyze`, { imageData });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setAnalysis(data.analysis);
+    },
+    onError: (error) => {
+      console.error('Analysis error:', error);
+      toast({
+        title: "Analysis Failed",
+        description: "Unable to analyze the photo. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleAnalyzePhoto = async (photo: BakePhoto) => {
+    if (!photo.filePath) return;
+    
+    try {
+      // Convert file to base64 for analysis
+      const response = await fetch(photo.filePath);
+      const blob = await response.blob();
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64Data = reader.result as string;
+        analyzeMutation.mutate({ photoId: photo.id, imageData: base64Data });
+      };
+      reader.readAsDataURL(blob);
+      setSelectedPhoto(photo.id);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Unable to process the photo for analysis.",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (!isOpen || !bake) return null;
 
@@ -126,10 +174,48 @@ function BakeDetailModal({ bake, isOpen, onClose }: BakeDetailModalProps) {
               <h3 className="font-medium text-sourdough-800">Photos</h3>
             </div>
             {photos && photos.length > 0 ? (
-              <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-3">
                 {photos.map((photo) => (
-                  <div key={photo.id} className="aspect-square bg-sourdough-100 rounded-lg flex items-center justify-center">
-                    <Camera className="w-6 h-6 text-sourdough-400" />
+                  <div key={photo.id} className="space-y-2">
+                    <div className="aspect-video bg-sourdough-100 rounded-lg flex items-center justify-center relative">
+                      {photo.filePath ? (
+                        <img 
+                          src={photo.filePath} 
+                          alt={photo.description || 'Bake photo'} 
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                      ) : (
+                        <Camera className="w-8 h-8 text-sourdough-400" />
+                      )}
+                    </div>
+                    
+                    {photo.description && (
+                      <p className="text-xs text-sourdough-600">{photo.description}</p>
+                    )}
+                    
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleAnalyzePhoto(photo)}
+                        disabled={analyzeMutation.isPending || !photo.filePath}
+                        className="text-xs"
+                        data-testid={`button-analyze-photo-${photo.id}`}
+                      >
+                        <Brain className="w-3 h-3 mr-1" />
+                        {analyzeMutation.isPending && selectedPhoto === photo.id 
+                          ? "Analyzing..." 
+                          : "AI Analysis"
+                        }
+                      </Button>
+                    </div>
+                    
+                    {selectedPhoto === photo.id && analysis && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">
+                        <h4 className="text-sm font-medium text-blue-900 mb-2">AI Analysis Results</h4>
+                        <div className="text-sm text-blue-800 whitespace-pre-wrap">{analysis}</div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

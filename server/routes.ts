@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { analyzeSourdoughImage } from "./anthropic";
 import { setupAuth, isAuthenticated } from "./auth";
 import { 
   insertRecipeSchema, 
@@ -199,6 +200,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(note);
     } catch (error) {
       res.status(400).json({ message: "Invalid note data" });
+    }
+  });
+
+  // AI Analysis for photos
+  app.post("/api/photos/:id/analyze", isAuthenticated, async (req: any, res) => {
+    try {
+      const photoId = req.params.id;
+      const { imageData } = req.body;
+      
+      if (!imageData) {
+        return res.status(400).json({ message: "Image data is required" });
+      }
+      
+      // Get the photo to verify ownership
+      const photo = await storage.getBakePhoto(photoId);
+      if (!photo) {
+        return res.status(404).json({ message: "Photo not found" });
+      }
+      
+      // Verify the photo belongs to a bake owned by the user
+      const bake = await storage.getBake(photo.bakeId);
+      if (!bake || bake.userId !== req.user.id) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      
+      // Convert data URL to base64 if needed
+      let base64Data = imageData;
+      if (imageData.startsWith('data:image/')) {
+        base64Data = imageData.split(',')[1];
+      }
+      
+      const analysis = await analyzeSourdoughImage(base64Data);
+      
+      res.json({ analysis });
+    } catch (error) {
+      console.error("Failed to analyze photo:", error);
+      res.status(500).json({ message: "Failed to analyze photo" });
     }
   });
 
