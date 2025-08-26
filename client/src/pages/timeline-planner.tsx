@@ -122,16 +122,17 @@ export default function TimelinePlanner() {
     if (!targetEndTime || selectedRecipeIds.length === 0) return null;
     
     const selectedRecipes = recipes.filter(r => selectedRecipeIds.includes(r.id));
-    const targetDate = new Date(targetEndTime);
     
-    console.log("Target End Time:", targetEndTime, "Parsed Date:", targetDate);
+    // Parse the datetime-local input as a local time, not UTC
+    const [datePart, timePart] = targetEndTime.split('T');
+    const [year, month, day] = datePart.split('-').map(Number);
+    const [hours, minutes] = timePart.split(':').map(Number);
+    const targetDate = new Date(year, month - 1, day, hours, minutes);
     
     return selectedRecipes.map(recipe => {
       const steps = Array.isArray(recipe.steps) ? recipe.steps : [];
       const totalMinutes = steps.reduce((sum: number, step: any) => sum + (step.duration || 0), 0);
       const startTime = new Date(targetDate.getTime() - (totalMinutes * 60 * 1000));
-      
-      console.log(`Recipe ${recipe.name}: Total ${totalMinutes}min, Start: ${format(startTime, "h:mm a")}`);
       
       return {
         recipeName: recipe.name,

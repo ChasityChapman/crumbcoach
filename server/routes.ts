@@ -385,8 +385,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Some recipes not found or not owned by user" });
       }
 
+      // Parse the target end time as local time to avoid timezone issues
+      const targetDate = new Date(targetEndTime);
       // Calculate the timeline schedule
-      const calculatedSchedule = calculateTimelineSchedule(validRecipes, new Date(targetEndTime));
+      const calculatedSchedule = calculateTimelineSchedule(validRecipes, targetDate);
 
       const plan = await storage.createTimelinePlan({
         userId: req.user.id,
