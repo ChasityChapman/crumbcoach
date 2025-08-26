@@ -22,12 +22,15 @@ export async function extractRecipeFromWebpage(url: string, htmlContent: string)
     // "claude-sonnet-4-20250514"
     model: DEFAULT_MODEL_STR,
     max_tokens: 2000,
-    system: `You are an expert recipe extraction AI. Extract sourdough bread recipe information from the provided webpage content and return it in this exact JSON format:
+    system: `You are an expert recipe extraction AI. Extract sourdough bread recipe information from the provided webpage content and return it as a valid JSON object.
 
+IMPORTANT: Your response must be ONLY valid JSON, nothing else. No markdown, no explanations, no additional text.
+
+JSON format required:
 {
   "name": "Recipe name",
-  "description": "Brief description of the recipe",
-  "difficulty": "beginner|intermediate|advanced",
+  "description": "Brief description",
+  "difficulty": "beginner",
   "totalTimeHours": 24,
   "ingredients": [
     {"name": "Sourdough starter", "amount": "100g"},
@@ -38,15 +41,14 @@ export async function extractRecipeFromWebpage(url: string, htmlContent: string)
   ]
 }
 
-Guidelines:
-- Identify the main sourdough bread recipe on the page
-- Extract ALL ingredients with precise amounts 
-- Convert all steps to minutes for duration
-- Estimate difficulty based on techniques (beginner: basic mixing/rising, intermediate: folds/shaping, advanced: complex timing/multiple doughs)
-- Calculate total time from start to finish including all rises and waits
-- If multiple recipes exist, choose the main sourdough bread recipe
-- Use clear, concise step names and descriptions
-- Return ONLY the JSON object, no additional text`,
+Rules:
+- Find the main sourdough recipe on the page
+- Extract ALL ingredients with amounts
+- Convert step durations to minutes (60 min = 60, 2 hours = 120, etc)
+- Difficulty: "beginner" (basic), "intermediate" (folds/shaping), "advanced" (complex timing)
+- Total time: start to finish in hours (include all rises/waits)
+- Steps: clear names and descriptions
+- Valid JSON only - no extra text`,
     messages: [{
       role: "user",
       content: `Extract the sourdough recipe from this webpage:
@@ -56,15 +58,40 @@ Content: ${htmlContent.slice(0, 15000)}`
     }]
   });
 
+  const content = response.content[0];
+  
   try {
-    const content = response.content[0];
     if (content.type === 'text') {
-      return JSON.parse(content.text);
+      let jsonText = content.text.trim();
+      
+      // Remove any markdown code blocks if present
+      if (jsonText.startsWith('```json')) {
+        jsonText = jsonText.replace(/```json\s*/, '').replace(/\s*```$/, '');
+      } else if (jsonText.startsWith('```')) {
+        jsonText = jsonText.replace(/```\s*/, '').replace(/\s*```$/, '');
+      }
+      
+      // Try to find JSON in the response if it's wrapped in other text
+      const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        jsonText = jsonMatch[0];
+      }
+      
+      const parsedData = JSON.parse(jsonText);
+      
+      // Validate required fields
+      if (!parsedData.name || !parsedData.ingredients || !parsedData.steps) {
+        throw new Error('Missing required recipe fields');
+      }
+      
+      return parsedData;
     } else {
       throw new Error('Unexpected response format from AI');
     }
   } catch (error) {
-    throw new Error('Failed to parse recipe data from webpage');
+    console.error('JSON parsing error:', error);
+    console.error('Raw response:', content.type === 'text' ? content.text : 'Non-text response');
+    throw new Error(`Failed to parse recipe data: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 

@@ -61,15 +61,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "URL is required" });
       }
 
-      // Validate URL format
+      // Validate URL format - be more lenient
+      let validUrl = url;
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        validUrl = 'https://' + url;
+      }
+      
       try {
-        new URL(url);
+        new URL(validUrl);
       } catch (error) {
         return res.status(400).json({ message: "Invalid URL format" });
       }
 
       // Fetch webpage content
-      const response = await fetch(url, {
+      const response = await fetch(validUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (compatible; CrumbCoach/1.0; Recipe Extractor)'
         }
@@ -82,7 +87,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const htmlContent = await response.text();
       
       // Extract recipe using AI
-      const recipeData = await extractRecipeFromWebpage(url, htmlContent);
+      const recipeData = await extractRecipeFromWebpage(validUrl, htmlContent);
       
       res.json(recipeData);
     } catch (error) {
