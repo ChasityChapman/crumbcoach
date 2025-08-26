@@ -82,15 +82,29 @@ export default function RecipeModal({ isOpen, onClose }: RecipeModalProps) {
   });
 
   const extractRecipeMutation = useMutation({
-    mutationFn: (url: string) => apiRequest("POST", "/api/recipes/extract-from-url", { url }),
+    mutationFn: async (url: string) => {
+      const response = await apiRequest("POST", "/api/recipes/extract-from-url", { url });
+      return response;
+    },
     onSuccess: (data: any) => {
+      console.log('Extracted recipe data:', data);
+      
       // Fill the form with extracted data
       setRecipeName(data.name || "");
       setDescription(data.description || "");
       setDifficulty(data.difficulty || "");
       setTotalHours(data.totalTimeHours || 24);
-      setIngredients(data.ingredients || []);
-      setSteps(data.steps || []);
+      
+      // Set ingredients with proper structure
+      if (data.ingredients && Array.isArray(data.ingredients)) {
+        setIngredients(data.ingredients);
+      }
+      
+      // Set steps with proper structure
+      if (data.steps && Array.isArray(data.steps)) {
+        setSteps(data.steps);
+      }
+      
       setSelectedHydration(null);
       
       // Switch to manual tab to show the extracted data
@@ -98,10 +112,11 @@ export default function RecipeModal({ isOpen, onClose }: RecipeModalProps) {
       
       toast({
         title: "Recipe extracted!",
-        description: "Review the extracted recipe data and make any needed adjustments.",
+        description: `Successfully imported "${data.name || 'recipe'}". Review and edit as needed.`,
       });
     },
     onError: (error: any) => {
+      console.error('Recipe extraction error:', error);
       toast({
         title: "Failed to extract recipe",
         description: error.message || "Please check the URL and try again.",
