@@ -42,9 +42,10 @@ export function setupAuth(app: Express) {
     saveUninitialized: false,
     store: sessionStore,
     cookie: {
-      secure: false, // Set to true in production with HTTPS
+      secure: process.env.NODE_ENV === 'production', // Use HTTPS in production
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: 'lax', // Important for cross-origin requests
     },
   };
 
@@ -135,18 +136,23 @@ export function setupAuth(app: Express) {
 
   // Login endpoint
   app.post("/api/login", (req, res, next) => {
+    console.log('Login attempt for:', req.body?.username);
     passport.authenticate("local", (err: any, user: DatabaseUser | false, info: any) => {
       if (err) {
+        console.error('Login error:', err);
         return res.status(500).json({ message: "Login failed" });
       }
       if (!user) {
+        console.log('Login failed - user not found or invalid credentials');
         return res.status(401).json({ message: info?.message || "Invalid credentials" });
       }
       
       req.login(user, (loginErr) => {
         if (loginErr) {
+          console.error('Session login error:', loginErr);
           return res.status(500).json({ message: "Login failed" });
         }
+        console.log('Login successful for user:', user.username);
         res.status(200).json({
           id: user.id,
           username: user.username,
