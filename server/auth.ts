@@ -30,6 +30,10 @@ async function comparePasswords(supplied: string, stored: string): Promise<boole
 }
 
 export function setupAuth(app: Express) {
+  console.log('=== SETTING UP AUTH ===');
+  console.log('NODE_ENV:', process.env.NODE_ENV);
+  console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
+  
   // Use a simple in-memory store that works everywhere - fuck the PostgreSQL complexity
   const sessionSettings: session.SessionOptions = {
     secret: "crumb-coach-simple-secret",
