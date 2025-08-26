@@ -386,7 +386,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Parse the target end time as local time to avoid timezone issues
-      const targetDate = new Date(targetEndTime);
+      // The datetime-local input sends ISO string like "2025-08-26T18:30"
+      // We need to create a proper Date object from this without timezone conversion
+      const [datePart, timePart] = targetEndTime.split('T');
+      const [year, month, day] = datePart.split('-').map(Number);
+      const [hours, minutes] = timePart.split(':').map(Number);
+      const targetDate = new Date(year, month - 1, day, hours, minutes);
+      
+      console.log(`Creating timeline plan - Target time: ${targetEndTime}, Parsed as: ${targetDate}`);
+      
       // Calculate the timeline schedule
       const calculatedSchedule = calculateTimelineSchedule(validRecipes, targetDate);
 

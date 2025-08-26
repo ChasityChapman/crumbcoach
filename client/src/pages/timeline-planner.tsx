@@ -72,6 +72,7 @@ export default function TimelinePlanner() {
       
       // Show the calculated schedule
       if (newPlan.calculatedSchedule) {
+        console.log("Displaying calculated schedule:", newPlan.calculatedSchedule);
         setCalculatedSchedule({
           ...newPlan.calculatedSchedule,
           targetEndTime: new Date(newPlan.calculatedSchedule.targetEndTime),
