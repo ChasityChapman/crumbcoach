@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Clock, Calendar, ChefHat, Plus, Trash2, ArrowRight, CalendarClock } from "lucide-react";
+import { Clock, Calendar, ChefHat, Plus, Trash2, ArrowRight, CalendarClock, X } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -394,13 +394,27 @@ export default function TimelinePlanner() {
         {calculatedSchedule && (
           <Card className="shadow-sm border-sourdough-100">
             <CardHeader>
-              <CardTitle className="font-display text-sourdough-800 flex items-center space-x-2">
-                <Calendar className="w-5 h-5" />
-                <span>Your Timeline Schedule</span>
-              </CardTitle>
-              <CardDescription>
-                Start times calculated for {format(calculatedSchedule.targetEndTime, "MMMM d, yyyy 'at' h:mm a")}
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="font-display text-sourdough-800 flex items-center space-x-2">
+                    <Calendar className="w-5 h-5" />
+                    <span>Your Timeline Schedule</span>
+                  </CardTitle>
+                  <CardDescription>
+                    Start times calculated for {format(calculatedSchedule.targetEndTime, "MMMM d, yyyy 'at' h:mm a")}
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCalculatedSchedule(null)}
+                  className="text-sourdough-600 hover:text-sourdough-700"
+                  data-testid="button-clear-schedule"
+                >
+                  <X className="w-4 h-4 mr-1" />
+                  Clear
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <Alert className="border-sourdough-200 bg-sourdough-25">
