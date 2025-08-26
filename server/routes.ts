@@ -2,7 +2,12 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { analyzeSourdoughImage, extractRecipeFromWebpage } from "./anthropic";
-import { setupAuth, isAuthenticated } from "./auth";
+import { setupAuth } from "./auth";
+
+// Temporary middleware since we simplified auth
+const isAuthenticated = (req: any, res: any, next: any) => {
+  res.status(401).json({ message: "Authentication temporarily disabled" });
+};
 import { 
   insertRecipeSchema, 
   insertBakeSchema, 
@@ -13,8 +18,19 @@ import {
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  setupAuth(app);
+  console.log('=== REGISTERING ROUTES ===');
+  
+  // Test endpoint first
+  app.get('/test', (req, res) => {
+    res.json({ message: 'Routes working', timestamp: new Date().toISOString() });
+  });
+  
+  try {
+    setupAuth(app);
+    console.log('Auth setup completed successfully');
+  } catch (error) {
+    console.error('Auth setup failed:', error);
+  }
 
   // Auth routes are now handled in auth.ts
 
