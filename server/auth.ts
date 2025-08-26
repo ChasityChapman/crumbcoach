@@ -30,35 +30,39 @@ async function comparePasswords(supplied: string, stored: string): Promise<boole
 }
 
 export function setupAuth(app: Express) {
-  console.log('=== SETTING UP AUTH ===');
-  console.log('NODE_ENV:', process.env.NODE_ENV);
-  console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
+  console.log('=== SETTING UP ULTRA-SIMPLE AUTH ===');
   
-  // Use a simple in-memory store that works everywhere - fuck the PostgreSQL complexity
-  const sessionSettings: session.SessionOptions = {
-    secret: "crumb-coach-simple-secret",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: false, // Disable HTTPS requirement
-      httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      sameSite: 'lax',
-    },
-  };
-
-  console.log('Setting up auth with simple session...');
-  
-  // Debug middleware to log all requests
-  app.use((req, res, next) => {
-    console.log(`${req.method} ${req.path} - Session ID: ${req.sessionID || 'none'}`);
-    console.log('Headers:', JSON.stringify(req.headers, null, 2));
-    next();
+  // FUCK SESSIONS - Just test basic endpoint
+  app.post("/api/register", async (req, res) => {
+    try {
+      console.log('SIMPLE REGISTRATION ATTEMPT');
+      console.log('Body:', req.body);
+      
+      const { username, email, password } = req.body;
+      
+      if (!username || !email || !password) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      // Try basic database operation
+      const existingUser = await storage.getUserByUsername(username);
+      console.log('User lookup successful:', !!existingUser);
+      
+      if (existingUser) {
+        return res.status(400).json({ message: "Username exists" });
+      }
+      
+      res.status(200).json({ message: "Registration would work", username, email });
+      
+    } catch (error) {
+      console.error('SIMPLE REGISTRATION ERROR:', error);
+      res.status(500).json({ message: "Registration failed", error: (error as Error).message });
+    }
   });
   
-  app.use(session(sessionSettings));
-  app.use(passport.initialize());
-  app.use(passport.session());
+  app.get("/api/user", (req, res) => {
+    res.status(401).json({ message: "Not implemented yet" });
+  });
 
   // Configure Passport Local Strategy
   passport.use(
