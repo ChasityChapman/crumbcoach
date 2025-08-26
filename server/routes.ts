@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { analyzeSourdoughImage } from "./anthropic";
+import { analyzeSourdoughImage, extractRecipeFromWebpage } from "./anthropic";
 import { setupAuth, isAuthenticated } from "./auth";
 import { 
   insertRecipeSchema, 
@@ -49,6 +49,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(recipe);
     } catch (error) {
       res.status(400).json({ message: "Invalid recipe data" });
+    }
+  });
+
+  // Extract recipe from URL using AI
+  app.post("/api/recipes/extract-from-url", isAuthenticated, async (req: any, res) => {
+    try {
+      const { url } = req.body;
+      
+      if (!url || typeof url !== 'string') {
+        return res.status(400).json({ message: "URL is required" });
+      }
+
+      // Validate URL format
+      try {
+        new URL(url);
+      } catch (error) {
+        return res.status(400).json({ message: "Invalid URL format" });
+      }
+
+      // Fetch webpage content
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; CrumbCoach/1.0; Recipe Extractor)'
+        }
+      });
+
+      if (!response.ok) {
+        return res.status(400).json({ message: "Failed to fetch webpage" });
+      }
+
+      const htmlContent = await response.text();
+      
+      // Extract recipe using AI
+      const recipeData = await extractRecipeFromWebpage(url, htmlContent);
+      
+      res.json(recipeData);
+    } catch (error) {
+      console.error('Recipe extraction error:', error);
+      res.status(500).json({ 
+        message: "Failed to extract recipe from URL", 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
     }
   });
 

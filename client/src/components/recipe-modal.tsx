@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus, Trash2, Droplets } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { X, Plus, Trash2, Droplets, Link, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface RecipeModalProps {
@@ -37,6 +38,8 @@ const HYDRATION_PRESETS = [
 ];
 
 export default function RecipeModal({ isOpen, onClose }: RecipeModalProps) {
+  const [activeTab, setActiveTab] = useState("manual");
+  const [recipeUrl, setRecipeUrl] = useState("");
   const [recipeName, setRecipeName] = useState("");
   const [description, setDescription] = useState("");
   const [difficulty, setDifficulty] = useState("");
@@ -78,12 +81,69 @@ export default function RecipeModal({ isOpen, onClose }: RecipeModalProps) {
     },
   });
 
+  const extractRecipeMutation = useMutation({
+    mutationFn: (url: string) => apiRequest("POST", "/api/recipes/extract-from-url", { url }),
+    onSuccess: (data: any) => {
+      // Fill the form with extracted data
+      setRecipeName(data.name || "");
+      setDescription(data.description || "");
+      setDifficulty(data.difficulty || "");
+      setTotalHours(data.totalTimeHours || 24);
+      setIngredients(data.ingredients || []);
+      setSteps(data.steps || []);
+      setSelectedHydration(null);
+      
+      // Switch to manual tab to show the extracted data
+      setActiveTab("manual");
+      
+      toast({
+        title: "Recipe extracted!",
+        description: "Review the extracted recipe data and make any needed adjustments.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to extract recipe",
+        description: error.message || "Please check the URL and try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const resetForm = () => {
+    setActiveTab("manual");
+    setRecipeUrl("");
     setRecipeName("");
     setDescription("");
     setDifficulty("");
     setTotalHours(24);
     setSelectedHydration(null);
+    setIngredients([
+      { name: "Sourdough starter", amount: "100g" },
+      { name: "Bread flour", amount: "500g" },
+      { name: "Water", amount: "375ml" },
+      { name: "Salt", amount: "10g" }
+    ]);
+    setSteps([
+      { id: "1", name: "Mix Ingredients", duration: 30, description: "Combine starter, flour, water, and salt" },
+      { id: "2", name: "Bulk Fermentation", duration: 480, description: "Let dough rise with periodic folds" },
+      { id: "3", name: "Shape Loaves", duration: 30, description: "Pre-shape and final shape" },
+      { id: "4", name: "Final Rise", duration: 240, description: "Cold proof in refrigerator" },
+      { id: "5", name: "Bake", duration: 45, description: "Bake in Dutch oven" }
+    ]);
+  };
+
+  const handleExtractFromUrl = () => {
+    if (!recipeUrl.trim()) {
+      toast({
+        title: "URL required",
+        description: "Please enter a recipe URL.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    extractRecipeMutation.mutate(recipeUrl.trim());
   };
 
   const addIngredient = () => {
@@ -168,8 +228,70 @@ export default function RecipeModal({ isOpen, onClose }: RecipeModalProps) {
           </Button>
         </DialogHeader>
 
-        <div className="space-y-6 flex-1 overflow-y-auto">
-          {/* Basic Info */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="url" className="flex items-center space-x-2" data-testid="tab-url-import">
+              <Link className="w-4 h-4" />
+              <span>Import from URL</span>
+            </TabsTrigger>
+            <TabsTrigger value="manual" className="flex items-center space-x-2" data-testid="tab-manual-entry">
+              <Plus className="w-4 h-4" />
+              <span>Manual Entry</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="url" className="space-y-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="recipeUrl">Recipe URL</Label>
+                <Input
+                  id="recipeUrl"
+                  value={recipeUrl}
+                  onChange={(e) => setRecipeUrl(e.target.value)}
+                  placeholder="https://example.com/sourdough-recipe"
+                  className="border-sourdough-200"
+                  data-testid="input-recipe-url"
+                />
+                <p className="text-sm text-muted-foreground">
+                  Paste a link to any sourdough recipe webpage. Our AI will extract the ingredients and steps for you.
+                </p>
+              </div>
+              
+              <Button
+                onClick={handleExtractFromUrl}
+                disabled={!recipeUrl.trim() || extractRecipeMutation.isPending}
+                className="w-full bg-sourdough-500 hover:bg-sourdough-600 text-white"
+                data-testid="button-extract-recipe"
+              >
+                {extractRecipeMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Extracting Recipe...
+                  </>
+                ) : (
+                  <>
+                    <Link className="w-4 h-4 mr-2" />
+                    Extract Recipe
+                  </>
+                )}
+              </Button>
+              
+              {extractRecipeMutation.isPending && (
+                <div className="bg-sourdough-50 border border-sourdough-200 rounded-lg p-4">
+                  <div className="flex items-center space-x-3">
+                    <Loader2 className="w-5 h-5 animate-spin text-sourdough-500" />
+                    <div>
+                      <p className="font-medium text-sourdough-800">Analyzing Recipe...</p>
+                      <p className="text-sm text-sourdough-600">This may take a few moments while we read the webpage and extract the recipe details.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="manual" className="space-y-6 flex-1 overflow-y-auto">
+            {/* Basic Info */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="recipeName">Recipe Name</Label>
@@ -350,7 +472,8 @@ export default function RecipeModal({ isOpen, onClose }: RecipeModalProps) {
               ))}
             </CardContent>
           </Card>
-        </div>
+          </TabsContent>
+        </Tabs>
 
         {/* Action Buttons */}
         <div className="flex space-x-3 pt-4 border-t">
@@ -365,6 +488,7 @@ export default function RecipeModal({ isOpen, onClose }: RecipeModalProps) {
             onClick={handleCreateRecipe}
             disabled={!recipeName.trim() || !difficulty || createRecipeMutation.isPending}
             className="flex-1 bg-sourdough-500 hover:bg-sourdough-600 text-white"
+            data-testid="button-create-recipe"
           >
             {createRecipeMutation.isPending ? "Creating..." : "Create Recipe"}
           </Button>

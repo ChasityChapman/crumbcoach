@@ -16,6 +16,58 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
+// Extract recipe data from webpage content using AI
+export async function extractRecipeFromWebpage(url: string, htmlContent: string): Promise<any> {
+  const response = await anthropic.messages.create({
+    // "claude-sonnet-4-20250514"
+    model: DEFAULT_MODEL_STR,
+    max_tokens: 2000,
+    system: `You are an expert recipe extraction AI. Extract sourdough bread recipe information from the provided webpage content and return it in this exact JSON format:
+
+{
+  "name": "Recipe name",
+  "description": "Brief description of the recipe",
+  "difficulty": "beginner|intermediate|advanced",
+  "totalTimeHours": 24,
+  "ingredients": [
+    {"name": "Sourdough starter", "amount": "100g"},
+    {"name": "Bread flour", "amount": "500g"}
+  ],
+  "steps": [
+    {"id": "1", "name": "Mix", "duration": 30, "description": "Combine ingredients"}
+  ]
+}
+
+Guidelines:
+- Identify the main sourdough bread recipe on the page
+- Extract ALL ingredients with precise amounts 
+- Convert all steps to minutes for duration
+- Estimate difficulty based on techniques (beginner: basic mixing/rising, intermediate: folds/shaping, advanced: complex timing/multiple doughs)
+- Calculate total time from start to finish including all rises and waits
+- If multiple recipes exist, choose the main sourdough bread recipe
+- Use clear, concise step names and descriptions
+- Return ONLY the JSON object, no additional text`,
+    messages: [{
+      role: "user",
+      content: `Extract the sourdough recipe from this webpage:
+URL: ${url}
+
+Content: ${htmlContent.slice(0, 15000)}`
+    }]
+  });
+
+  try {
+    const content = response.content[0];
+    if (content.type === 'text') {
+      return JSON.parse(content.text);
+    } else {
+      throw new Error('Unexpected response format from AI');
+    }
+  } catch (error) {
+    throw new Error('Failed to parse recipe data from webpage');
+  }
+}
+
 // Analyze sourdough bread image for issues and improvements
 export async function analyzeSourdoughImage(base64Image: string): Promise<string> {
   const response = await anthropic.messages.create({
@@ -50,5 +102,10 @@ Be constructive and educational. Focus on actionable advice that will help the b
     }]
   });
 
-  return response.content[0].text;
+  const content = response.content[0];
+  if (content.type === 'text') {
+    return content.text;
+  } else {
+    throw new Error('Unexpected response format from AI');
+  }
 }
