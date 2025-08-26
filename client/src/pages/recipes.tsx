@@ -7,7 +7,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Clock, Users, Wheat, Plus, Filter } from "lucide-react";
+import { Clock, Users, Plus, Filter } from "lucide-react";
+import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_1756224893332.png";
 
 export default function Recipes() {
   const [recipeModalOpen, setRecipeModalOpen] = useState(false);
@@ -62,7 +63,7 @@ export default function Recipes() {
         <div className="px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-sourdough-500 rounded-lg flex items-center justify-center">
-              <Wheat className="text-white w-4 h-4" />
+              <img src={crumbCoachLogo} alt="Crumb Coach" className="w-4 h-4 object-contain" />
             </div>
             <h1 className="font-display font-semibold text-lg text-sourdough-800">Recipes</h1>
           </div>
@@ -133,7 +134,7 @@ export default function Recipes() {
           </div>
         ) : (
           <div className="text-center py-12">
-            <Wheat className="w-12 h-12 text-sourdough-300 mx-auto mb-4" />
+            <img src={crumbCoachLogo} alt="Crumb Coach" className="w-12 h-12 object-contain mx-auto mb-4 opacity-30" />
             <h3 className="font-display font-semibold text-lg text-sourdough-800 mb-2">
               No Recipes Yet
             </h3>

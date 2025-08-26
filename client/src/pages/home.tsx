@@ -13,7 +13,8 @@ import NotesModal from "@/components/notes-modal";
 import StartBakeModal from "@/components/start-bake-modal";
 import NewRecipeModal from "@/components/new-recipe-modal";
 import { useState, useEffect } from "react";
-import { Wheat, Bell, LogOut, User as UserIcon } from "lucide-react";
+import { Bell, LogOut, User as UserIcon } from "lucide-react";
+import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_1756224893332.png";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -148,9 +149,11 @@ export default function Home() {
       <header className="sticky top-0 z-50 bg-white dark:bg-gray-900 shadow-sm border-b border-sourdough-100 dark:border-gray-700">
         <div className="px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-sourdough-500 rounded-lg flex items-center justify-center">
-              <Wheat className="text-white w-4 h-4" />
-            </div>
+            <img 
+              src={crumbCoachLogo} 
+              alt="Crumb Coach" 
+              className="w-8 h-8 object-contain"
+            />
             <h1 className="font-display font-semibold text-lg text-sourdough-800 dark:text-white">Crumb Coach</h1>
           </div>
           <div className="flex items-center space-x-2">

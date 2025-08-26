@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Wheat, Key, Lock, ArrowLeft, CheckCircle } from "lucide-react";
+import { Key, Lock, ArrowLeft, CheckCircle } from "lucide-react";
+import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_1756224893332.png";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -84,7 +85,7 @@ export default function ResetPasswordPage() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
             <div className="bg-sourdough-600 text-white p-3 rounded-full">
-              <Wheat className="w-8 h-8" />
+              <img src={crumbCoachLogo} alt="Crumb Coach" className="w-8 h-8 object-contain" />
             </div>
           </div>
           <h1 className="text-3xl font-bold text-sourdough-900">Crumb Coach</h1>

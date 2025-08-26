@@ -3,7 +3,8 @@ import type { Bake, BakeNote, BakePhoto, TimelineStep } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
-import { Wheat, ArrowLeft, Clock, FileText, Camera, X, Brain, RotateCcw } from "lucide-react";
+import { ArrowLeft, Clock, FileText, Camera, X, Brain, RotateCcw } from "lucide-react";
+import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_1756224893332.png";
 import BottomNavigation from "@/components/bottom-navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -282,9 +283,11 @@ export default function RecentBakesPage() {
       <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-sourdough-100">
         <div className="px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-sourdough-500 rounded-lg flex items-center justify-center">
-              <Wheat className="text-white w-4 h-4" />
-            </div>
+            <img 
+              src={crumbCoachLogo} 
+              alt="Crumb Coach" 
+              className="w-8 h-8 object-contain"
+            />
             <h1 className="font-display font-semibold text-lg text-sourdough-800">Recent Bakes</h1>
           </div>
         </div>

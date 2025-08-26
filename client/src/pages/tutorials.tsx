@@ -4,7 +4,8 @@ import BottomNavigation from "@/components/bottom-navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, Play, Wheat } from "lucide-react";
+import { Clock, Play } from "lucide-react";
+import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_1756224893332.png";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -58,7 +59,7 @@ export default function Tutorials() {
         <div className="px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-sourdough-500 rounded-lg flex items-center justify-center">
-              <Wheat className="text-white w-4 h-4" />
+              <img src={crumbCoachLogo} alt="Crumb Coach" className="w-4 h-4 object-contain" />
             </div>
             <h1 className="font-display font-semibold text-lg text-sourdough-800">Tutorials</h1>
           </div>

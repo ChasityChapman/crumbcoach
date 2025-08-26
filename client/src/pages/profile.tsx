@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { User, Bell, Thermometer, Camera, Share2, Settings, Wheat, FileText, Mail, LogOut } from "lucide-react";
+import { User, Bell, Thermometer, Camera, Share2, Settings, FileText, Mail, LogOut } from "lucide-react";
+import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_1756224893332.png";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -96,7 +97,7 @@ export default function Profile() {
         <div className="px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-sourdough-500 rounded-lg flex items-center justify-center">
-              <Wheat className="text-white w-4 h-4" />
+              <img src={crumbCoachLogo} alt="Crumb Coach" className="w-4 h-4 object-contain" />
             </div>
             <h1 className="font-display font-semibold text-lg text-sourdough-800">Profile</h1>
           </div>

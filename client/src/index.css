@@ -52,22 +52,29 @@
   --tracking-normal: 0em;
   --spacing: 0.25rem;
   
-  /* Brand color scheme */
-  --sourdough-50: hsl(60 12% 98%);
-  --sourdough-100: hsl(60 12% 95%);
-  --sourdough-200: hsl(93 23% 81%);
-  --sourdough-300: hsl(93 23% 71%);
-  --sourdough-400: hsl(176 31% 43%);
-  --sourdough-500: hsl(176 31% 33%);
-  --sourdough-600: hsl(176 31% 28%);
-  --sourdough-700: hsl(176 31% 23%);
+  /* Brand color scheme inspired by Crumb Coach logo */
+  --sourdough-50: hsl(38 35% 96%);
+  --sourdough-100: hsl(35 30% 92%);
+  --sourdough-200: hsl(32 25% 85%);
+  --sourdough-300: hsl(28 20% 75%);
+  --sourdough-400: hsl(25 30% 65%);
+  --sourdough-500: hsl(20 40% 55%);
+  --sourdough-600: hsl(15 45% 45%);
+  --sourdough-700: hsl(12 50% 35%);
   --sourdough-800: hsl(0 0% 18%);
   --sourdough-900: hsl(0 0% 12%);
   
+  /* Brand colors from Crumb Coach logo */
+  --brand-orange-300: hsl(28 85% 75%);
+  --brand-orange-400: hsl(25 82% 68%);
+  --brand-orange-500: hsl(20 78% 62%);
+  --brand-orange-600: hsl(15 75% 55%);
+  --brand-orange-700: hsl(12 70% 48%);
+  
   /* Accent colors */
-  --accent-orange-400: hsl(33 87% 76%);
-  --accent-orange-500: hsl(33 87% 66%);
-  --accent-orange-600: hsl(33 87% 56%);
+  --accent-orange-400: hsl(28 85% 75%);
+  --accent-orange-500: hsl(20 78% 62%);
+  --accent-orange-600: hsl(15 75% 55%);
 }
 
 .dark {

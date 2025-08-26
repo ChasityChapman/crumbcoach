@@ -1,7 +1,8 @@
 import BottomNavigation from "@/components/bottom-navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Wheat } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_1756224893332.png";
 import { useLocation } from "wouter";
 
 export default function TermsOfService() {
@@ -23,7 +24,7 @@ export default function TermsOfService() {
           </Button>
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-sourdough-500 rounded-lg flex items-center justify-center">
-              <Wheat className="text-white w-4 h-4" />
+              <img src={crumbCoachLogo} alt="Crumb Coach" className="w-4 h-4 object-contain" />
             </div>
             <h1 className="font-display font-semibold text-lg text-sourdough-800">Terms of Service</h1>
           </div>
