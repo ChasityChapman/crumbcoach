@@ -11,7 +11,7 @@ import BottomNavigation from "@/components/bottom-navigation";
 import CameraModal from "@/components/camera-modal";
 import NotesModal from "@/components/notes-modal";
 import StartBakeModal from "@/components/start-bake-modal";
-import NewRecipeModal from "@/components/new-recipe-modal";
+import RecipeModal from "@/components/recipe-modal";
 import { useState, useEffect } from "react";
 import { Bell, LogOut, User as UserIcon } from "lucide-react";
 import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_1756224893332.png";
@@ -257,7 +257,7 @@ export default function Home() {
         }}
         onBakeStarted={() => setIsCreatingBake(true)}
       />
-      <NewRecipeModal
+      <RecipeModal
         isOpen={newRecipeOpen}
         onClose={() => setNewRecipeOpen(false)}
       />
