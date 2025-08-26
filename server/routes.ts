@@ -398,19 +398,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate the timeline schedule
       const calculatedSchedule = calculateTimelineSchedule(validRecipes, targetDate);
       
-      // Convert all dates to ISO strings for consistent storage/transmission
+      // Store dates as local datetime strings to preserve timezone intent
+      // Format: "2025-08-26T18:50:00" (without Z suffix)
+      const formatLocalDateTime = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+      };
+
       const normalizedSchedule = {
         ...calculatedSchedule,
-        targetEndTime: targetDate.toISOString(),
-        earliestStartTime: calculatedSchedule.earliestStartTime.toISOString(),
+        targetEndTime: formatLocalDateTime(targetDate),
+        earliestStartTime: formatLocalDateTime(calculatedSchedule.earliestStartTime),
         recipes: calculatedSchedule.recipes.map(recipe => ({
           ...recipe,
-          startTime: recipe.startTime.toISOString(),
-          endTime: recipe.endTime.toISOString(),
+          startTime: formatLocalDateTime(recipe.startTime),
+          endTime: formatLocalDateTime(recipe.endTime),
           steps: recipe.steps.map((step: any) => ({
             ...step,
-            startTime: step.startTime.toISOString(),
-            endTime: step.endTime.toISOString()
+            startTime: formatLocalDateTime(step.startTime),
+            endTime: formatLocalDateTime(step.endTime)
           }))
         }))
       };

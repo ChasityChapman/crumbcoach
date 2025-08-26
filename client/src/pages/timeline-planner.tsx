@@ -74,22 +74,29 @@ export default function TimelinePlanner() {
       if (newPlan.calculatedSchedule) {
         console.log("Displaying calculated schedule:", newPlan.calculatedSchedule);
         
-        // Parse the ISO strings back to local Date objects
-        // Since they were stored as local time ISO strings, we parse them directly
+        // Parse local datetime strings back to Date objects
+        // These are stored as "2025-08-26T18:50:00" format (local time, no Z)
+        const parseLocalDateTime = (dateStr: string) => {
+          const [datePart, timePart] = dateStr.split('T');
+          const [year, month, day] = datePart.split('-').map(Number);
+          const [hours, minutes, seconds] = timePart.split(':').map(Number);
+          return new Date(year, month - 1, day, hours, minutes, seconds || 0);
+        };
+
         setCalculatedSchedule({
           ...newPlan.calculatedSchedule,
-          targetEndTime: new Date(newPlan.calculatedSchedule.targetEndTime),
+          targetEndTime: parseLocalDateTime(newPlan.calculatedSchedule.targetEndTime),
           recipes: newPlan.calculatedSchedule.recipes.map((r: any) => ({
             ...r,
-            startTime: new Date(r.startTime),
-            endTime: new Date(r.endTime),
+            startTime: parseLocalDateTime(r.startTime),
+            endTime: parseLocalDateTime(r.endTime),
             steps: r.steps.map((s: any) => ({
               ...s,
-              startTime: new Date(s.startTime),
-              endTime: new Date(s.endTime)
+              startTime: parseLocalDateTime(s.startTime),
+              endTime: parseLocalDateTime(s.endTime)
             }))
           })),
-          earliestStartTime: new Date(newPlan.calculatedSchedule.earliestStartTime)
+          earliestStartTime: parseLocalDateTime(newPlan.calculatedSchedule.earliestStartTime)
         });
       }
       
