@@ -6,18 +6,38 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Clock, Calendar, ChefHat, Plus, Trash2, ArrowRight, CalendarClock, X } from "lucide-react";
+import { Clock, Calendar, ChefHat, Plus, Trash2, ArrowRight, CalendarClock, X, Thermometer } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { format, formatDistanceToNow, addHours } from "date-fns";
 import type { Recipe, TimelinePlan } from "@shared/schema";
 import BottomNavigation from "@/components/bottom-navigation";
+import OvenScheduleView from "@/components/oven-schedule-view";
 
 interface TimelineSchedule {
   targetEndTime: Date;
   recipes: RecipeSchedule[];
   earliestStartTime: Date;
+  ovenSchedule?: OvenEvent[];
+  conflicts?: OvenConflict[];
+}
+
+interface OvenEvent {
+  time: Date;
+  type: 'preheat' | 'start' | 'end' | 'temp_change';
+  temperature: number;
+  recipeName: string;
+  stepName: string;
+  recipeId: string;
+}
+
+interface OvenConflict {
+  time: Date;
+  recipes: string[];
+  temperatures: number[];
+  severity: 'high' | 'medium' | 'low';
+  suggestion: string;
 }
 
 interface RecipeSchedule {
@@ -35,6 +55,8 @@ interface StepSchedule {
   duration: number;
   startTime: Date;
   endTime: Date;
+  usesOven?: boolean;
+  ovenTemp?: number;
 }
 
 export default function TimelinePlanner() {
@@ -83,7 +105,7 @@ export default function TimelinePlanner() {
           return new Date(year, month - 1, day, hours, minutes, seconds || 0);
         };
 
-        setCalculatedSchedule({
+        const schedule = {
           ...newPlan.calculatedSchedule,
           targetEndTime: parseLocalDateTime(newPlan.calculatedSchedule.targetEndTime),
           recipes: newPlan.calculatedSchedule.recipes.map((r: any) => ({
@@ -96,8 +118,18 @@ export default function TimelinePlanner() {
               endTime: parseLocalDateTime(s.endTime)
             }))
           })),
-          earliestStartTime: parseLocalDateTime(newPlan.calculatedSchedule.earliestStartTime)
-        });
+          earliestStartTime: parseLocalDateTime(newPlan.calculatedSchedule.earliestStartTime),
+          ovenSchedule: newPlan.calculatedSchedule.ovenSchedule?.map((event: any) => ({
+            ...event,
+            time: parseLocalDateTime(event.time)
+          })) || [],
+          conflicts: newPlan.calculatedSchedule.conflicts?.map((conflict: any) => ({
+            ...conflict,
+            time: parseLocalDateTime(conflict.time)
+          })) || []
+        };
+        
+        setCalculatedSchedule(schedule);
       }
       
       // Reset form
@@ -427,30 +459,55 @@ export default function TimelinePlanner() {
                 </AlertDescription>
               </Alert>
 
-              {calculatedSchedule.recipes.map((recipe, index) => (
-                <div key={recipe.recipeId} className="border border-sourdough-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-medium text-sourdough-800">{recipe.recipeName}</h4>
-                    <div className="text-sm text-sourdough-600">
-                      {format(recipe.startTime, "h:mm a")} → {format(recipe.endTime, "h:mm a")}
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    {recipe.steps.map((step, stepIndex) => (
-                      <div key={step.id} className="flex items-center justify-between text-sm bg-sourdough-25 rounded px-3 py-2">
-                        <span className="text-sourdough-700">{stepIndex + 1}. {step.name}</span>
-                        <div className="flex items-center space-x-2 text-sourdough-600">
-                          <span>{format(step.startTime, "h:mm a")}</span>
-                          <ArrowRight className="w-3 h-3" />
-                          <span>{format(step.endTime, "h:mm a")}</span>
-                          <span className="text-xs">({step.duration}min)</span>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-medium text-sourdough-800 mb-3 flex items-center space-x-2">
+                    <ChefHat className="w-4 h-4" />
+                    <span>Recipe Timeline</span>
+                  </h3>
+                  <div className="space-y-4">
+                    {calculatedSchedule.recipes.map((recipe, index) => (
+                      <div key={recipe.recipeId} className="border border-sourdough-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-medium text-sourdough-800">{recipe.recipeName}</h4>
+                          <div className="text-sm text-sourdough-600">
+                            {format(recipe.startTime, "h:mm a")} → {format(recipe.endTime, "h:mm a")}
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          {recipe.steps.map((step, stepIndex) => (
+                            <div key={step.id} className="flex items-center justify-between text-sm bg-sourdough-25 rounded px-3 py-2">
+                              <div className="flex items-center space-x-2">
+                                <span className="text-sourdough-700">{stepIndex + 1}. {step.name}</span>
+                                {step.usesOven && (
+                                  <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200">
+                                    <Thermometer className="w-3 h-3 mr-1" />
+                                    {step.ovenTemp}°F
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="flex items-center space-x-2 text-sourdough-600">
+                                <span>{format(step.startTime, "h:mm a")}</span>
+                                <ArrowRight className="w-3 h-3" />
+                                <span>{format(step.endTime, "h:mm a")}</span>
+                                <span className="text-xs">({step.duration}min)</span>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
-              ))}
+
+                {/* Oven Schedule */}
+                <OvenScheduleView 
+                  ovenSchedule={calculatedSchedule.ovenSchedule || []} 
+                  conflicts={calculatedSchedule.conflicts || []}
+                  className="mt-6"
+                />
+              </div>
             </CardContent>
           </Card>
         )}
@@ -466,9 +523,9 @@ export default function TimelinePlanner() {
               {timelinePlans.map(plan => {
                 // Get the target time from the calculatedSchedule if available (mirrors timeline schedule display)
                 let targetTime;
-                if (plan.calculatedSchedule && plan.calculatedSchedule.targetEndTime) {
+                if (plan.calculatedSchedule && (plan.calculatedSchedule as any).targetEndTime) {
                   // Parse the same way as timeline schedule
-                  const targetStr = plan.calculatedSchedule.targetEndTime;
+                  const targetStr = (plan.calculatedSchedule as any).targetEndTime;
                   if (typeof targetStr === 'string' && targetStr.includes('T') && !targetStr.includes('Z')) {
                     // Local datetime format: "2025-08-27T14:00:00"
                     const [datePart, timePart] = targetStr.split('T');

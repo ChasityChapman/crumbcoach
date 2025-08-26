@@ -590,10 +590,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   return httpServer;
 }
 
-// Timeline calculation logic
+// Enhanced timeline calculation logic with oven temperature coordination
 function calculateTimelineSchedule(recipes: any[], targetEndTime: Date) {
   console.log(`Backend calculation - Target end time: ${targetEndTime.toString()}, Local: ${targetEndTime.toLocaleString()}`);
   
+  // First, calculate basic timeline for each recipe
   const recipeSchedules = recipes.map(recipe => {
     // Calculate total duration in minutes
     const totalDurationMinutes = recipe.steps.reduce((sum: number, step: any) => sum + step.duration, 0);
@@ -618,7 +619,9 @@ function calculateTimelineSchedule(recipes: any[], targetEndTime: Date) {
         return {
           ...step,
           startTime: stepStartTime,
-          endTime: stepEndTime
+          endTime: stepEndTime,
+          usesOven: step.usesOven || step.name?.toLowerCase().includes('bake') || step.name?.toLowerCase().includes('oven'),
+          ovenTemp: step.ovenTemp || (step.usesOven ? 450 : null) // Default temp if oven step
         };
       })
     };
@@ -627,9 +630,117 @@ function calculateTimelineSchedule(recipes: any[], targetEndTime: Date) {
   // Sort by start time so earliest recipes appear first
   recipeSchedules.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
 
+  // Calculate oven schedule and detect conflicts
+  const ovenSchedule = calculateOvenSchedule(recipeSchedules);
+  
   return {
     targetEndTime,
     recipes: recipeSchedules,
-    earliestStartTime: recipeSchedules[0]?.startTime || targetEndTime
+    earliestStartTime: recipeSchedules[0]?.startTime || targetEndTime,
+    ovenSchedule,
+    conflicts: detectOvenConflicts(ovenSchedule)
   };
+}
+
+// Calculate oven utilization schedule across all recipes
+function calculateOvenSchedule(recipeSchedules: any[]) {
+  const ovenEvents: Array<{
+    time: Date;
+    type: 'preheat' | 'start' | 'end' | 'temp_change';
+    temperature: number;
+    recipeName: string;
+    stepName: string;
+    recipeId: string;
+  }> = [];
+
+  recipeSchedules.forEach(recipe => {
+    recipe.steps.forEach((step: any) => {
+      if (step.usesOven && step.ovenTemp) {
+        // Add preheat event 15 minutes before step starts
+        const preheatTime = new Date(step.startTime.getTime() - 15 * 60 * 1000);
+        ovenEvents.push({
+          time: preheatTime,
+          type: 'preheat',
+          temperature: step.ovenTemp,
+          recipeName: recipe.recipeName,
+          stepName: step.name,
+          recipeId: recipe.recipeId
+        });
+
+        // Add start event
+        ovenEvents.push({
+          time: step.startTime,
+          type: 'start',
+          temperature: step.ovenTemp,
+          recipeName: recipe.recipeName,
+          stepName: step.name,
+          recipeId: recipe.recipeId
+        });
+
+        // Add end event
+        ovenEvents.push({
+          time: step.endTime,
+          type: 'end',
+          temperature: step.ovenTemp,
+          recipeName: recipe.recipeName,
+          stepName: step.name,
+          recipeId: recipe.recipeId
+        });
+      }
+    });
+  });
+
+  // Sort events by time
+  ovenEvents.sort((a, b) => a.time.getTime() - b.time.getTime());
+
+  return ovenEvents;
+}
+
+// Detect conflicts where oven is needed at different temperatures simultaneously
+function detectOvenConflicts(ovenSchedule: any[]) {
+  const conflicts: Array<{
+    time: Date;
+    recipes: string[];
+    temperatures: number[];
+    severity: 'high' | 'medium' | 'low';
+    suggestion: string;
+  }> = [];
+
+  const activeOvenUse: Map<string, { temp: number; recipeName: string; stepName: string }> = new Map();
+
+  ovenSchedule.forEach(event => {
+    const key = `${event.recipeId}-${event.stepName}`;
+    
+    if (event.type === 'start') {
+      activeOvenUse.set(key, {
+        temp: event.temperature,
+        recipeName: event.recipeName,
+        stepName: event.stepName
+      });
+    } else if (event.type === 'end') {
+      activeOvenUse.delete(key);
+    }
+
+    // Check for conflicts after each event
+    const activeTemps = Array.from(activeOvenUse.values());
+    const tempSet = new Set(activeTemps.map(use => use.temp));
+    const uniqueTemps = Array.from(tempSet);
+    
+    if (uniqueTemps.length > 1) {
+      const recipes = activeTemps.map(use => `${use.recipeName} (${use.stepName})`);
+      const tempDiff = Math.max(...uniqueTemps) - Math.min(...uniqueTemps);
+      
+      conflicts.push({
+        time: event.time,
+        recipes,
+        temperatures: uniqueTemps,
+        severity: tempDiff > 50 ? 'high' : tempDiff > 25 ? 'medium' : 'low',
+        suggestion: tempDiff > 50 
+          ? 'Consider adjusting timing to avoid this conflict'
+          : 'Use average temperature or prioritize one recipe'
+      });
+    }
+  });
+
+  return conflicts;
 }

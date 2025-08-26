@@ -57,7 +57,8 @@ export const recipes = pgTable("recipes", {
   totalTimeHours: integer("total_time_hours").notNull(),
   difficulty: text("difficulty").notNull(), // 'beginner', 'intermediate', 'advanced'
   ingredients: jsonb("ingredients").notNull(), // Array of {name: string, amount: string}
-  steps: jsonb("steps").notNull(), // Array of {id: string, name: string, duration: number, description: string}
+  steps: jsonb("steps").notNull(), // Array of {id: string, name: string, duration: number, description: string, ovenTemp?: number, usesOven?: boolean}
+  ovenTempProfile: jsonb("oven_temp_profile"), // Array of {stepIndex: number, temperature: number, duration: number} for oven coordination
   createdAt: timestamp("created_at").defaultNow(),
 });
 
