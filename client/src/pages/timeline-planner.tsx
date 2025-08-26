@@ -124,10 +124,14 @@ export default function TimelinePlanner() {
     const selectedRecipes = recipes.filter(r => selectedRecipeIds.includes(r.id));
     const targetDate = new Date(targetEndTime);
     
+    console.log("Target End Time:", targetEndTime, "Parsed Date:", targetDate);
+    
     return selectedRecipes.map(recipe => {
       const steps = Array.isArray(recipe.steps) ? recipe.steps : [];
       const totalMinutes = steps.reduce((sum: number, step: any) => sum + (step.duration || 0), 0);
       const startTime = new Date(targetDate.getTime() - (totalMinutes * 60 * 1000));
+      
+      console.log(`Recipe ${recipe.name}: Total ${totalMinutes}min, Start: ${format(startTime, "h:mm a")}`);
       
       return {
         recipeName: recipe.name,
@@ -348,7 +352,7 @@ export default function TimelinePlanner() {
                     <div key={index} className="flex items-center justify-between py-2 border-b border-sourdough-200 last:border-0">
                       <div>
                         <span className="font-medium text-sourdough-800">{item.recipeName}</span>
-                        <Badge variant="outline" className={`ml-2 ${getDifficultyColor(item.difficulty)}`} size="sm">
+                        <Badge variant="outline" className={`ml-2 ${getDifficultyColor(item.difficulty)}`}>
                           {item.difficulty}
                         </Badge>
                       </div>
