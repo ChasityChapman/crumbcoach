@@ -32,36 +32,30 @@ async function comparePasswords(supplied: string, stored: string): Promise<boole
 export function setupAuth(app: Express) {
   console.log('=== SETTING UP ULTRA-SIMPLE AUTH ===');
   
-  // FUCK SESSIONS - Just test basic endpoint
-  app.post("/api/register", async (req, res) => {
-    try {
-      console.log('SIMPLE REGISTRATION ATTEMPT');
-      console.log('Body:', req.body);
-      
-      const { username, email, password } = req.body;
-      
-      if (!username || !email || !password) {
-        return res.status(400).json({ message: "Missing required fields" });
-      }
-      
-      // Try basic database operation
-      const existingUser = await storage.getUserByUsername(username);
-      console.log('User lookup successful:', !!existingUser);
-      
-      if (existingUser) {
-        return res.status(400).json({ message: "Username exists" });
-      }
-      
-      res.status(200).json({ message: "Registration would work", username, email });
-      
-    } catch (error) {
-      console.error('SIMPLE REGISTRATION ERROR:', error);
-      res.status(500).json({ message: "Registration failed", error: (error as Error).message });
+  // Log ALL requests first
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api/')) {
+      console.log(`🚀 API REQUEST: ${req.method} ${req.path}`);
+      console.log(`🚀 Body:`, req.body);
+      console.log(`🚀 Headers:`, req.headers['content-type']);
     }
+    next();
+  });
+  
+  // SUPER SIMPLE endpoints
+  app.post("/api/register", (req, res) => {
+    console.log('🔥 REGISTRATION HIT!');
+    res.json({ message: "Registration endpoint works!", body: req.body });
+  });
+  
+  app.post("/api/login", (req, res) => {
+    console.log('🔥 LOGIN HIT!');
+    res.json({ message: "Login endpoint works!", body: req.body });
   });
   
   app.get("/api/user", (req, res) => {
-    res.status(401).json({ message: "Not implemented yet" });
+    console.log('🔥 USER HIT!');
+    res.status(401).json({ message: "User endpoint works!" });
   });
 
   // Configure Passport Local Strategy
