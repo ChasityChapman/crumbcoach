@@ -83,17 +83,21 @@ export function setupAuth(app: Express) {
       
       if (existingUser || existingEmail) {
         const userToUpdate = existingUser || existingEmail;
-        console.log('User already exists, updating existing record:', userToUpdate.email);
-        user = await storage.updateUser(userToUpdate.id, userData);
-        if (!user) {
-          throw new Error('Failed to update existing user');
+        if (userToUpdate) {
+          console.log('User already exists, updating existing record:', userToUpdate.email);
+          user = await storage.updateUser(userToUpdate.id, userData);
+          if (!user) {
+            throw new Error('Failed to update existing user');
+          }
+        } else {
+          throw new Error('Unexpected error finding user to update');
         }
       } else {
         console.log('Creating new user:', username);
         user = await storage.createUser(userData);
       }
       
-      console.log('User created successfully:', { id: user.id, username: user.username, firstName: user.firstName });
+      console.log('User created/updated successfully:', { id: user.id, username: user.username, firstName: user.firstName });
       
       // Auto-login the user
       req.login(user, (err) => {
