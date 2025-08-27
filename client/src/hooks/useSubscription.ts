@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { CustomerInfo } from '@revenuecat/purchases-capacitor'
-import { revenueCat } from '@/lib/revenuecat'
+import { entitlementService } from '@/lib/entitlements'
 import { SUBSCRIPTION_TIERS, hasFeatureAccess, isWithinLimit } from '@/lib/subscriptions'
 
 export function useSubscription() {
@@ -9,19 +9,16 @@ export function useSubscription() {
   const [userTier, setUserTier] = useState<'free' | 'hobby_pro'>('free')
 
   useEffect(() => {
-    loadCustomerInfo()
+    loadSubscriptionData()
   }, [])
 
-  const loadCustomerInfo = async () => {
+  const loadSubscriptionData = async () => {
     try {
-      const info = await revenueCat.getCustomerInfo()
-      setCustomerInfo(info)
-      if (info) {
-        const tier = revenueCat.getUserTier(info)
-        setUserTier(tier)
-      }
+      // Load subscription tier from Supabase entitlements
+      const tier = await entitlementService.getUserTier()
+      setUserTier(tier)
     } catch (error) {
-      console.error('Failed to load customer info:', error)
+      console.error('Failed to load subscription data:', error)
     } finally {
       setLoading(false)
     }
@@ -29,10 +26,9 @@ export function useSubscription() {
 
   const purchaseHobbyPro = async (): Promise<boolean> => {
     try {
-      const result = await revenueCat.purchasePackage('hobby_pro_monthly')
-      if (result) {
-        setCustomerInfo(result)
-        setUserTier(revenueCat.getUserTier(result))
+      const result = await entitlementService.purchaseAndSync('hobby_pro_monthly')
+      if (result.success && result.tier) {
+        setUserTier(result.tier)
         return true
       }
       return false
@@ -44,10 +40,9 @@ export function useSubscription() {
 
   const restorePurchases = async (): Promise<boolean> => {
     try {
-      const result = await revenueCat.restorePurchases()
-      if (result) {
-        setCustomerInfo(result)
-        setUserTier(revenueCat.getUserTier(result))
+      const result = await entitlementService.restoreAndSync()
+      if (result.success && result.tier) {
+        setUserTier(result.tier)
         return true
       }
       return false
@@ -78,6 +73,6 @@ export function useSubscription() {
     checkFeatureAccess,
     checkUsageLimit,
     getCurrentTier,
-    refresh: loadCustomerInfo
+    refresh: loadSubscriptionData
   }
 }
