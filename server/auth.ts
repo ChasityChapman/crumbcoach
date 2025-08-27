@@ -196,6 +196,89 @@ export function setupAuth(app: Express) {
     });
   });
 
+  // Forgot password endpoint
+  app.post("/api/forgot-password", async (req, res) => {
+    try {
+      console.log('🔥 FORGOT PASSWORD request');
+      
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+      
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        // Don't reveal if email exists for security
+        return res.json({ 
+          message: "If an account with that email exists, a reset token has been generated.",
+          resetToken: null 
+        });
+      }
+      
+      // Generate reset token
+      const resetToken = randomBytes(32).toString('hex');
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+      
+      await storage.createPasswordResetToken({
+        userId: user.id,
+        token: resetToken,
+        expiresAt,
+      });
+      
+      console.log('Reset token generated for user:', user.email);
+      
+      res.json({ 
+        message: "Password reset token generated. Copy the token below and use it on the reset password page.",
+        resetToken: resetToken
+      });
+      
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      res.status(500).json({ message: "Failed to process forgot password request" });
+    }
+  });
+
+  // Reset password endpoint
+  app.post("/api/reset-password", async (req, res) => {
+    try {
+      console.log('🔥 RESET PASSWORD request');
+      
+      const { token, newPassword } = req.body;
+      
+      if (!token || !newPassword) {
+        return res.status(400).json({ message: "Token and new password are required" });
+      }
+      
+      // Find valid reset token
+      const resetToken = await storage.getPasswordResetToken(token);
+      if (!resetToken || resetToken.usedAt || resetToken.expiresAt < new Date()) {
+        return res.status(400).json({ message: "Invalid or expired reset token" });
+      }
+      
+      // Get user
+      const user = await storage.getUser(resetToken.userId);
+      if (!user) {
+        return res.status(400).json({ message: "User not found" });
+      }
+      
+      // Update password
+      const hashedPassword = await hashPassword(newPassword);
+      await storage.updateUser(user.id, { password: hashedPassword });
+      
+      // Mark token as used
+      await storage.markPasswordResetTokenAsUsed(resetToken.id);
+      
+      console.log('Password reset successful for user:', user.email);
+      
+      res.json({ message: "Password reset successful. You can now log in with your new password." });
+      
+    } catch (error) {
+      console.error('Reset password error:', error);
+      res.status(500).json({ message: "Failed to reset password" });
+    }
+  });
+
   // Configure Passport serialization
   passport.serializeUser((user: any, done) => {
     done(null, user.id);
