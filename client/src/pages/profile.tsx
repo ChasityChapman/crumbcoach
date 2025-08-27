@@ -8,14 +8,15 @@ import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_175622489
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useLocation } from "wouter";
 import type { Bake, Recipe, User as UserType } from "@shared/schema";
 import AdvancedSettingsModal from "@/components/advanced-settings-modal";
 
 export default function Profile() {
   const { toast } = useToast();
-  const { user, logout, isLoggingOut } = useAuth();
+  const { user, signOut, loading } = useSupabaseAuth();
+  const isLoggingOut = loading;
   const [, navigate] = useLocation();
   const [notifications, setNotifications] = useState(true);
   const [autoSensors, setAutoSensors] = useState(true);
@@ -49,23 +50,21 @@ export default function Profile() {
   const activeRecipes = recipes?.length || 0;
 
   const getUserDisplayName = () => {
-    const typedUser = user as UserType;
-    if (typedUser?.firstName && typedUser?.lastName) {
-      return `${typedUser.firstName} ${typedUser.lastName}`;
+    if (user?.user_metadata?.firstName && user?.user_metadata?.lastName) {
+      return `${user.user_metadata.firstName} ${user.user_metadata.lastName}`;
     }
-    if (typedUser?.firstName) {
-      return typedUser.firstName;
+    if (user?.user_metadata?.firstName) {
+      return user.user_metadata.firstName;
     }
-    if (typedUser?.email) {
-      return typedUser.email;
+    if (user?.email) {
+      return user.email;
     }
     return "Sourdough Baker";
   };
 
   const getUserJoinDate = () => {
-    const typedUser = user as UserType;
-    if (typedUser?.createdAt) {
-      return new Date(typedUser.createdAt).getFullYear();
+    if (user?.created_at) {
+      return new Date(user.created_at).getFullYear();
     }
     return new Date().getFullYear();
   };
@@ -110,9 +109,9 @@ export default function Profile() {
           <CardContent className="p-6">
             <div className="flex items-center space-x-4">
               <div className="w-16 h-16 bg-sourdough-500 rounded-full flex items-center justify-center">
-                {(user as UserType)?.profileImageUrl ? (
+                {user?.user_metadata?.avatar_url ? (
                   <img 
-                    src={(user as UserType).profileImageUrl || ''} 
+                    src={user.user_metadata.avatar_url} 
                     alt={getUserDisplayName()} 
                     className="w-16 h-16 rounded-full object-cover"
                   />
@@ -257,7 +256,10 @@ export default function Profile() {
           </Button>
           
           <Button 
-            onClick={logout}
+            onClick={async () => {
+              await signOut();
+              navigate("/auth");
+            }}
             variant="outline" 
             className="w-full justify-start border-red-200 text-red-600 hover:bg-red-50"
             disabled={isLoggingOut}

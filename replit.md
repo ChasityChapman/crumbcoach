@@ -1,8 +1,8 @@
-# Crumb Coach - Smart Sourdough Baking Assistant
+# Crumb Coach - Mobile Sourdough Baking Assistant
 
 ## Overview
 
-Crumb Coach is a smart sourdough baking application that provides real-time environmental monitoring, automated timeline adjustments, and comprehensive baking guidance. The app uses sensor data to optimize baking schedules based on temperature and humidity conditions, while providing features for recipe management, progress tracking, photo documentation, and note-taking throughout the baking process.
+Crumb Coach is a comprehensive mobile-first sourdough baking application built with Capacitor for native iOS and Android deployment. The app provides real-time environmental monitoring, automated timeline adjustments, subscription-based feature access, and comprehensive baking guidance. Features include sensor data optimization for baking schedules, recipe management, progress tracking, photo documentation, push notifications for reminders, and tiered subscription access (Free vs Hobby Pro).
 
 ## User Preferences
 
@@ -10,27 +10,25 @@ Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
-### Frontend Architecture
+### Mobile App Architecture
 - **Framework**: React 18 with TypeScript and Vite as the build tool
+- **Mobile Platform**: Capacitor for native iOS and Android deployment with app store distribution
+- **App Configuration**: Configured for com.crumbcoach.app with native splash screen, status bar, and camera permissions
 - **Routing**: Wouter for lightweight client-side routing
-- **UI Components**: Radix UI primitives with shadcn/ui components for consistent design
+- **UI Components**: Radix UI primitives with shadcn/ui components optimized for mobile interfaces
 - **State Management**: TanStack React Query for server state management and caching
-- **Styling**: Tailwind CSS with custom design system using CSS variables
-- **Mobile-First Design**: Responsive layout optimized for mobile devices with bottom navigation
+- **Styling**: Tailwind CSS with custom sourdough color palette and mobile-first responsive design
 
-### Backend Architecture
-- **Runtime**: Node.js with Express.js server
-- **API Pattern**: RESTful API with structured route handlers in `/server/routes.ts`
-- **Data Layer**: Storage abstraction pattern with interface-based design allowing for multiple storage implementations
-- **Request Handling**: Express middleware for JSON parsing, URL encoding, and comprehensive request/response logging
-- **Error Handling**: Centralized error handling middleware with structured error responses
+### Backend Services
+- **Database**: Supabase PostgreSQL with Row Level Security (RLS) policies for user data isolation
+- **Authentication**: Supabase Auth for email/password authentication with user metadata support
+- **API Layer**: Supabase client-side integration replacing Express.js server architecture
+- **Real-time Features**: Supabase real-time subscriptions for live data updates
 
-### Database & Data Storage
-- **ORM**: Drizzle ORM with PostgreSQL dialect
-- **Database**: Configured for PostgreSQL with Neon Database serverless connection
-- **Schema Design**: Comprehensive schema for recipes, bakes, timeline steps, notes, photos, tutorials, and sensor readings
-- **Migrations**: Drizzle Kit for database schema management and migrations
-- **Data Validation**: Zod schema validation integrated with Drizzle for type-safe data operations
+### Subscription & Monetization
+- **In-App Purchases**: RevenueCat for subscription management through Apple App Store and Google Play Store
+- **Subscription Tiers**: Free (limited features) and Hobby Pro (unlimited access) with feature gating
+- **Payment Processing**: Native platform payment systems (Apple Pay, Google Pay) managed by RevenueCat
 
 ### Core Features Architecture
 - **Real-time Sensor Integration**: Browser-based sensor APIs with fallback simulation for temperature and humidity monitoring
@@ -40,16 +38,20 @@ Preferred communication style: Simple, everyday language.
 - **Bake Tracking**: Complete baking session management with status tracking and timeline steps
 - **Note System**: Contextual note-taking linked to specific baking steps or general bake sessions
 
-### Authentication & Security
-- **Session Management**: Express sessions with PostgreSQL session store using connect-pg-simple
-- **Environment Variables**: Secure configuration management for database connections and API keys
-- **CORS & Security**: Standard Express security practices for API endpoint protection
+### Mobile Services & Security
+- **Push Notifications**: Capacitor Push Notifications for timeline reminders and baking alerts
+- **Error Tracking**: Sentry integration for crash reporting and performance monitoring
+- **Authentication**: Supabase Auth with secure JWT tokens and user session management
+- **Data Security**: Row Level Security (RLS) policies ensuring users only access their own data
+- **Environment Variables**: Secure configuration for API keys including Supabase, RevenueCat, and Sentry credentials
 
 ## External Dependencies
 
-### Database Services
-- **Neon Database**: Serverless PostgreSQL hosting for production database
-- **connect-pg-simple**: PostgreSQL session store for Express sessions
+### Mobile Platform Services
+- **Supabase**: Backend-as-a-Service providing PostgreSQL database, authentication, and real-time features
+- **RevenueCat**: In-app purchase and subscription management platform
+- **Sentry**: Error tracking and performance monitoring for mobile applications
+- **Capacitor**: Native mobile app framework for iOS and Android deployment
 
 ### UI & Styling Libraries
 - **Radix UI**: Comprehensive set of unstyled, accessible UI primitives
@@ -57,11 +59,12 @@ Preferred communication style: Simple, everyday language.
 - **Lucide React**: Icon library for consistent iconography
 - **shadcn/ui**: Pre-built component library built on Radix UI primitives
 
-### Development & Build Tools
-- **Vite**: Fast build tool and development server with HMR
-- **TypeScript**: Type safety across frontend and backend
-- **ESBuild**: Fast JavaScript bundler for production builds
-- **PostCSS & Autoprefixer**: CSS processing and vendor prefixing
+### Mobile Development & Build Tools
+- **Capacitor CLI**: Native mobile app building and deployment tools
+- **Vite**: Fast build tool and development server optimized for mobile web views
+- **TypeScript**: Type safety across client-side application and service integrations
+- **ESBuild**: Fast JavaScript bundler for mobile app production builds
+- **PostCSS & Autoprefixer**: CSS processing for cross-platform mobile compatibility
 
 ### Data Management
 - **TanStack React Query**: Server state management, caching, and synchronization
@@ -72,7 +75,10 @@ Preferred communication style: Simple, everyday language.
 - **@replit/vite-plugin-runtime-error-modal**: Development error overlay
 - **@replit/vite-plugin-cartographer**: Development environment enhancements
 
-### Sensor & Hardware Integration
-- **MediaDevices API**: Camera access for photo capture
-- **Generic Sensor API**: Environmental sensor readings (with simulation fallback)
-- **Device Motion Events**: Alternative sensor data access on mobile devices
+### Mobile Device Integration
+- **Capacitor Camera**: Native camera access for photo capture and gallery storage
+- **Capacitor Device**: Device information and platform detection
+- **Capacitor Push Notifications**: Native push notification system for timeline reminders
+- **Capacitor Status Bar**: Native status bar styling and configuration
+- **MediaDevices API**: Environmental sensor readings with mobile device fallback
+- **Native Storage**: Device storage for user preferences and offline capability

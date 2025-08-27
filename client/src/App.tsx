@@ -3,8 +3,10 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useAuth } from "@/hooks/useAuth";
-import { useFirebaseAnalytics } from "@/hooks/useFirebaseAnalytics";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { initSentry } from "@/lib/sentry";
+import { initializeCapacitor } from "@/lib/capacitor";
+import { useEffect } from "react";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import AuthPage from "@/pages/auth-page";
@@ -20,10 +22,15 @@ import ResetPassword from "@/pages/reset-password";
 import TimelinePlanner from "@/pages/timeline-planner";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, loading } = useSupabaseAuth();
+  const isAuthenticated = !!user;
+  const isLoading = loading;
   
-  // Initialize Firebase Analytics
-  useFirebaseAnalytics();
+  // Initialize mobile features
+  useEffect(() => {
+    initSentry();
+    initializeCapacitor();
+  }, []);
 
   if (isLoading) {
     return (

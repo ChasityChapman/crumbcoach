@@ -5,19 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Mail, Lock, User } from "lucide-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Mail, Lock } from "lucide-react";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 
 interface LoginData {
-  username: string;
+  email: string;
   password: string;
 }
 
 interface RegisterData {
-  username: string;
   email: string;
   password: string;
   firstName?: string;
@@ -27,87 +25,71 @@ interface RegisterData {
 export default function AuthPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { signIn, signUp, user } = useSupabaseAuth();
+
+  // Redirect if already authenticated
+  if (user) {
+    setLocation("/");
+    return null;
+  }
 
   // Login form state
   const [loginData, setLoginData] = useState<LoginData>({
-    username: "",
+    email: "",
     password: "",
   });
 
   // Register form state  
   const [registerData, setRegisterData] = useState<RegisterData>({
-    username: "",
     email: "",
     password: "",
     firstName: "",
     lastName: "",
   });
 
-  // Login mutation
-  const loginMutation = useMutation({
-    mutationFn: async (credentials: LoginData) => {
-      const res = await apiRequest("POST", "/api/login", credentials);
-      return await res.json();
-    },
-    onSuccess: (user) => {
-      queryClient.setQueryData(["/api/auth/user"], user);
-      queryClient.setQueryData(["/api/user"], user);
-      toast({
-        title: "Welcome back!",
-        description: "You've successfully logged in.",
-      });
-      setLocation("/");
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Login failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Register mutation
-  const registerMutation = useMutation({
-    mutationFn: async (credentials: RegisterData) => {
-      const res = await apiRequest("POST", "/api/register", credentials);
-      return await res.json();
-    },
-    onSuccess: (user) => {
-      queryClient.setQueryData(["/api/auth/user"], user);
-      queryClient.setQueryData(["/api/user"], user);
-      toast({
-        title: "Welcome to Crumb Coach!",
-        description: "Your account has been created successfully.",
-      });
-      setLocation("/");
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Registration failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!loginData.username || !loginData.password) {
+    if (!loginData.email || !loginData.password) {
       toast({
         title: "Missing information",
-        description: "Please enter both username and password.",
+        description: "Please enter both email and password.",
         variant: "destructive",
       });
       return;
     }
-    loginMutation.mutate(loginData);
+
+    setIsLoading(true);
+    try {
+      const { error } = await signIn(loginData.email, loginData.password);
+      if (error) {
+        toast({
+          title: "Login failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Welcome back!",
+          description: "You've successfully logged in.",
+        });
+        setLocation("/");
+      }
+    } catch (error) {
+      toast({
+        title: "Login failed",
+        description: "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!registerData.username || !registerData.email || !registerData.password) {
+    if (!registerData.email || !registerData.password) {
       toast({
         title: "Missing information",
         description: "Please fill in all required fields.",
@@ -115,8 +97,39 @@ export default function AuthPage() {
       });
       return;
     }
-    registerMutation.mutate(registerData);
+
+    setIsLoading(true);
+    try {
+      const metadata = {
+        firstName: registerData.firstName,
+        lastName: registerData.lastName,
+      };
+      
+      const { error } = await signUp(registerData.email, registerData.password, metadata);
+      if (error) {
+        toast({
+          title: "Registration failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Welcome to Crumb Coach!",
+          description: "Your account has been created successfully.",
+        });
+        setLocation("/");
+      }
+    } catch (error) {
+      toast({
+        title: "Registration failed",
+        description: "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sourdough-50 to-sourdough-100 flex items-center justify-center p-4">
@@ -154,18 +167,18 @@ export default function AuthPage() {
               <TabsContent value="login">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="login-username" className="text-sm sm:text-base text-sourdough-800">
-                      Username
+                    <Label htmlFor="login-email" className="text-sm sm:text-base text-sourdough-800">
+                      Email
                     </Label>
                     <div className="relative">
-                      <User className="absolute left-3 top-3 h-4 w-4 text-sourdough-400" />
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-sourdough-400" />
                       <Input
-                        id="login-username"
-                        type="text"
-                        placeholder="Enter your username"
-                        value={loginData.username}
+                        id="login-email"
+                        type="email"
+                        placeholder="Enter your email"
+                        value={loginData.email}
                         onChange={(e) =>
-                          setLoginData({ ...loginData, username: e.target.value })
+                          setLoginData({ ...loginData, email: e.target.value })
                         }
                         className="pl-10 border-sourdough-200 focus:border-sourdough-500"
                         required
@@ -196,10 +209,10 @@ export default function AuthPage() {
                   <Button
                     type="submit"
                     className="w-full bg-sourdough-600 hover:bg-sourdough-700 text-white"
-                    disabled={loginMutation.isPending}
+                    disabled={isLoading}
                     data-testid="button-login"
                   >
-                    {loginMutation.isPending ? "Signing In..." : "Sign In"}
+                    {isLoading ? "Signing In..." : "Sign In"}
                   </Button>
                 </form>
 
@@ -218,26 +231,6 @@ export default function AuthPage() {
               {/* Register Tab */}
               <TabsContent value="register">
                 <form onSubmit={handleRegister} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="register-username" className="text-sm sm:text-base text-sourdough-800">
-                      Username *
-                    </Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-3 h-4 w-4 text-sourdough-400" />
-                      <Input
-                        id="register-username"
-                        type="text"
-                        placeholder="Choose a username"
-                        value={registerData.username}
-                        onChange={(e) =>
-                          setRegisterData({ ...registerData, username: e.target.value })
-                        }
-                        className="pl-10 border-sourdough-200 focus:border-sourdough-500"
-                        required
-                      />
-                    </div>
-                  </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="register-email" className="text-sm sm:text-base text-sourdough-800">
                       Email *
@@ -315,10 +308,10 @@ export default function AuthPage() {
                   <Button
                     type="submit"
                     className="w-full bg-sourdough-600 hover:bg-sourdough-700 text-white"
-                    disabled={registerMutation.isPending}
+                    disabled={isLoading}
                     data-testid="button-register"
                   >
-                    {registerMutation.isPending ? "Creating Account..." : "Create Account"}
+                    {isLoading ? "Creating Account..." : "Create Account"}
                   </Button>
                 </form>
               </TabsContent>
