@@ -130,16 +130,16 @@ export default function AuthPage() {
               className="w-16 h-16 object-contain"
             />
           </div>
-          <h1 className="text-3xl font-bold text-sourdough-900">Crumb Coach</h1>
-          <p className="text-sourdough-600 mt-2">Your sourdough baking companion</p>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-sourdough-900">Crumb Coach</h1>
+          <p className="text-sm sm:text-base text-sourdough-600 mt-2">Your sourdough baking companion</p>
         </div>
 
         <Card className="shadow-lg border-sourdough-200">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl text-sourdough-900">
+            <CardTitle className="text-xl sm:text-2xl text-sourdough-900">
               Get Started
             </CardTitle>
-            <CardDescription className="text-sourdough-600">
+            <CardDescription className="text-sm sm:text-base text-sourdough-600">
               Sign in to your account or create a new one
             </CardDescription>
           </CardHeader>
@@ -154,7 +154,7 @@ export default function AuthPage() {
               <TabsContent value="login">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="login-username" className="text-sourdough-800">
+                    <Label htmlFor="login-username" className="text-sm sm:text-base text-sourdough-800">
                       Username
                     </Label>
                     <div className="relative">
@@ -174,7 +174,7 @@ export default function AuthPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="login-password" className="text-sourdough-800">
+                    <Label htmlFor="login-password" className="text-sm sm:text-base text-sourdough-800">
                       Password
                     </Label>
                     <div className="relative">
@@ -219,7 +219,7 @@ export default function AuthPage() {
               <TabsContent value="register">
                 <form onSubmit={handleRegister} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="register-username" className="text-sourdough-800">
+                    <Label htmlFor="register-username" className="text-sm sm:text-base text-sourdough-800">
                       Username *
                     </Label>
                     <div className="relative">
@@ -239,7 +239,7 @@ export default function AuthPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="register-email" className="text-sourdough-800">
+                    <Label htmlFor="register-email" className="text-sm sm:text-base text-sourdough-800">
                       Email *
                     </Label>
                     <div className="relative">
@@ -259,7 +259,7 @@ export default function AuthPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="register-password" className="text-sourdough-800">
+                    <Label htmlFor="register-password" className="text-sm sm:text-base text-sourdough-800">
                       Password *
                     </Label>
                     <div className="relative">
@@ -280,7 +280,7 @@ export default function AuthPage() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <Label htmlFor="register-firstname" className="text-sourdough-800">
+                      <Label htmlFor="register-firstname" className="text-sm sm:text-base text-sourdough-800">
                         First Name
                       </Label>
                       <Input
@@ -296,7 +296,7 @@ export default function AuthPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="register-lastname" className="text-sourdough-800">
+                      <Label htmlFor="register-lastname" className="text-sm sm:text-base text-sourdough-800">
                         Last Name
                       </Label>
                       <Input
@@ -326,7 +326,7 @@ export default function AuthPage() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-sm text-sourdough-500 mt-6">
+        <p className="text-center text-xs sm:text-sm text-sourdough-500 mt-6">
           Start your sourdough journey with expert guidance every step of the way
         </p>
       </div>

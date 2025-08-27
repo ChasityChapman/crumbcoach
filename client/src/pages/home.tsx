@@ -154,7 +154,7 @@ export default function Home() {
               alt="Crumb Coach" 
               className="w-8 h-8 object-contain"
             />
-            <h1 className="font-display font-semibold text-lg text-sourdough-800 dark:text-white">Crumb Coach</h1>
+            <h1 className="font-display font-semibold text-lg sm:text-xl md:text-2xl text-sourdough-800 dark:text-white">Crumb Coach</h1>
           </div>
           <div className="flex items-center space-x-2">
             <DropdownMenu>
@@ -169,9 +169,9 @@ export default function Home() {
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <div className="flex items-center justify-start gap-2 p-2">
                   <div className="flex flex-col space-y-1 leading-none">
-                    <p className="font-medium">{getUserDisplayName()}</p>
+                    <p className="font-medium text-sm sm:text-base">{getUserDisplayName()}</p>
                     {(user as User)?.email && (
-                      <p className="w-[200px] truncate text-sm text-muted-foreground">
+                      <p className="w-[200px] truncate text-xs sm:text-sm text-muted-foreground">
                         {(user as User).email}
                       </p>
                     )}
@@ -202,8 +202,8 @@ export default function Home() {
               <div className="w-16 h-16 bg-sourdough-200 rounded-full mx-auto mb-3 flex items-center justify-center">
                 <span className="text-2xl">🍞</span>
               </div>
-              <p className="text-sourdough-600 mb-2">No active bakes</p>
-              <p className="text-sm text-sourdough-500">Start a new bake to begin your sourdough journey</p>
+              <p className="text-sm sm:text-base text-sourdough-600 mb-2">No active bakes</p>
+              <p className="text-xs sm:text-sm text-sourdough-500">Start a new bake to begin your sourdough journey</p>
             </div>
           </div>
         )}

@@ -79,16 +79,16 @@ export default function ForgotPasswordPage() {
               <img src={crumbCoachLogo} alt="Crumb Coach" className="w-8 h-8 object-contain" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-sourdough-900">Crumb Coach</h1>
-          <p className="text-sourdough-600 mt-2">Reset your password</p>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-sourdough-900">Crumb Coach</h1>
+          <p className="text-sm sm:text-base text-sourdough-600 mt-2">Reset your password</p>
         </div>
 
         <Card className="shadow-lg border-sourdough-200">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl text-sourdough-900">
+            <CardTitle className="text-xl sm:text-2xl text-sourdough-900">
               Forgot Password
             </CardTitle>
-            <CardDescription className="text-sourdough-600">
+            <CardDescription className="text-sm sm:text-base text-sourdough-600">
               Enter your email to receive a password reset link
             </CardDescription>
           </CardHeader>
@@ -97,7 +97,7 @@ export default function ForgotPasswordPage() {
               <>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-sourdough-800">
+                    <Label htmlFor="email" className="text-sm sm:text-base text-sourdough-800">
                       Email Address
                     </Label>
                     <div className="relative">
@@ -141,13 +141,13 @@ export default function ForgotPasswordPage() {
               <>
                 <Alert className="border-sourdough-200 bg-sourdough-50">
                   <Mail className="h-4 w-4 text-sourdough-600" />
-                  <AlertDescription className="text-sourdough-800">
+                  <AlertDescription className="text-sm sm:text-base text-sourdough-800">
                     A password reset link has been sent to your email address.
                   </AlertDescription>
                 </Alert>
 
                 <div className="bg-sourdough-50 border border-sourdough-200 rounded-lg p-4 space-y-3">
-                  <p className="text-sm text-sourdough-700 font-medium">
+                  <p className="text-xs sm:text-sm text-sourdough-700 font-medium">
                     Development Mode - Reset Token:
                   </p>
                   <div className="flex items-center space-x-2">
@@ -167,7 +167,7 @@ export default function ForgotPasswordPage() {
                       {tokenCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                     </Button>
                   </div>
-                  <p className="text-xs text-sourdough-600">
+                  <p className="text-xs sm:text-sm text-sourdough-600">
                     Copy this token to reset your password. In production, this would be sent via email.
                   </p>
                 </div>
