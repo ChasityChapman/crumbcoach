@@ -130,11 +130,18 @@ export function setupAuth(app: Express) {
       
       const user = await storage.getUserByUsername(username);
       if (!user) {
+        console.log('User not found:', username);
         return res.status(401).json({ message: "Invalid credentials" });
       }
       
+      console.log('Found user:', user.email, 'stored password hash length:', user.password.length);
+      console.log('Attempting to compare with password:', password);
+      
       const validPassword = await comparePasswords(password, user.password);
+      console.log('Password comparison result:', validPassword);
+      
       if (!validPassword) {
+        console.log('Password validation failed for user:', username);
         return res.status(401).json({ message: "Invalid credentials" });
       }
       
@@ -264,7 +271,9 @@ export function setupAuth(app: Express) {
       
       // Update password
       const hashedPassword = await hashPassword(newPassword);
-      await storage.updateUser(user.id, { password: hashedPassword });
+      console.log('Updating password for user:', user.email, 'hash length:', hashedPassword.length);
+      const updateResult = await storage.updateUser(user.id, { password: hashedPassword });
+      console.log('Password update result:', !!updateResult);
       
       // Mark token as used
       await storage.markPasswordResetTokenAsUsed(resetToken.id);
