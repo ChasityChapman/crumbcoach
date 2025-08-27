@@ -67,18 +67,11 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: "Missing required fields" });
       }
       
-      // Check for existing user
+      // Check for existing user - allow re-registration by updating existing record
       const existingUser = await storage.getUserByUsername(username);
-      if (existingUser) {
-        return res.status(400).json({ message: "Username already exists" });
-      }
-      
       const existingEmail = await storage.getUserByEmail(email);
-      if (existingEmail) {
-        return res.status(400).json({ message: "Email already exists" });
-      }
       
-      // Hash password and create user
+      let user;
       const hashedPassword = await hashPassword(password);
       const userData = {
         username,
@@ -88,7 +81,18 @@ export function setupAuth(app: Express) {
         lastName: lastName || null,
       };
       
-      const user = await storage.createUser(userData);
+      if (existingUser || existingEmail) {
+        const userToUpdate = existingUser || existingEmail;
+        console.log('User already exists, updating existing record:', userToUpdate.email);
+        user = await storage.updateUser(userToUpdate.id, userData);
+        if (!user) {
+          throw new Error('Failed to update existing user');
+        }
+      } else {
+        console.log('Creating new user:', username);
+        user = await storage.createUser(userData);
+      }
+      
       console.log('User created successfully:', { id: user.id, username: user.username, firstName: user.firstName });
       
       // Auto-login the user
