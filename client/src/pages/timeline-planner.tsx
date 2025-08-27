@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Clock, Calendar, ChefHat, Plus, Trash2, ArrowRight, CalendarClock, X, Thermometer } from "lucide-react";
+import { Clock, Calendar, ChefHat, Plus, Trash2, ArrowRight, CalendarClock, X, Thermometer, Crown, Sparkles } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -14,6 +14,8 @@ import { format, formatDistanceToNow, addHours } from "date-fns";
 import type { Recipe, TimelinePlan } from "@shared/schema";
 import BottomNavigation from "@/components/bottom-navigation";
 import OvenScheduleView from "@/components/oven-schedule-view";
+import { useSubscription } from "@/hooks/useSubscription";
+import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_1756224893332.png";
 
 interface TimelineSchedule {
   targetEndTime: Date;
@@ -62,6 +64,11 @@ interface StepSchedule {
 export default function TimelinePlanner() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { userTier, purchaseHobbyPro, loading: subscriptionLoading, checkFeatureAccess } = useSubscription();
+  
+  // Check if user has timeline access
+  const hasTimelineAccess = checkFeatureAccess('timelines');
+  const [isPurchasing, setIsPurchasing] = useState(false);
 
   // Form state
   const [planName, setPlanName] = useState("");
@@ -69,9 +76,37 @@ export default function TimelinePlanner() {
   const [selectedRecipeIds, setSelectedRecipeIds] = useState<string[]>([]);
   const [calculatedSchedule, setCalculatedSchedule] = useState<TimelineSchedule | null>(null);
 
-  // Fetch user's recipes
+  const handleUpgrade = async () => {
+    setIsPurchasing(true);
+    try {
+      const success = await purchaseHobbyPro();
+      if (success) {
+        toast({
+          title: "Upgrade successful!",
+          description: "You now have access to timeline planning and all premium features.",
+        });
+      } else {
+        toast({
+          title: "Upgrade failed",
+          description: "Please try again or contact support if the issue persists.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Upgrade error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPurchasing(false);
+    }
+  };
+
+  // Fetch user's recipes - only if user has timeline access
   const { data: recipes = [], isLoading: recipesLoading } = useQuery<Recipe[]>({
     queryKey: ["/api/recipes"],
+    enabled: hasTimelineAccess,
   });
 
   // Fetch existing timeline plans
@@ -224,6 +259,146 @@ export default function TimelinePlanner() {
       default: return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
+
+  // Show paywall for free users
+  if (subscriptionLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-sourdough-50 to-white flex items-center justify-center pb-20">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sourdough-600"></div>
+      </div>
+    );
+  }
+
+  if (!hasTimelineAccess) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-sourdough-50 to-white pb-20">
+        <div className="container mx-auto px-4 py-6">
+          <div className="max-w-2xl mx-auto">
+            {/* Premium Feature Header */}
+            <div className="text-center space-y-4 mb-8">
+              <div className="relative">
+                <img 
+                  src={crumbCoachLogo}
+                  alt="Crumb Coach"
+                  className="w-20 h-20 mx-auto rounded-2xl shadow-lg"
+                />
+                <Crown className="w-6 h-6 text-yellow-500 absolute -top-1 -right-1" />
+              </div>
+              <h1 className="font-display text-3xl font-bold text-sourdough-800">
+                Timeline Planner
+              </h1>
+              <p className="text-sourdough-600 text-lg">
+                Coordinate multiple sourdough projects with perfect timing
+              </p>
+            </div>
+
+            {/* Feature Preview Card */}
+            <Card className="shadow-xl border-2 border-gradient-to-r from-yellow-200 to-amber-200 mb-8">
+              <CardHeader className="text-center pb-4">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <Sparkles className="w-5 h-5 text-yellow-600" />
+                  <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                    Premium Feature
+                  </Badge>
+                </div>
+                <CardTitle className="text-2xl font-bold text-sourdough-800">
+                  Master Multi-Recipe Timing
+                </CardTitle>
+                <CardDescription className="text-lg text-sourdough-600">
+                  Plan complex baking schedules with intelligent oven coordination
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Feature List */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <Clock className="w-5 h-5 text-sourdough-600 mt-0.5" />
+                      <div>
+                        <h4 className="font-semibold text-sourdough-800">Smart Scheduling</h4>
+                        <p className="text-sm text-sourdough-600">Calculate optimal start times for multiple recipes</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Thermometer className="w-5 h-5 text-sourdough-600 mt-0.5" />
+                      <div>
+                        <h4 className="font-semibold text-sourdough-800">Oven Coordination</h4>
+                        <p className="text-sm text-sourdough-600">Automatically detect and resolve temperature conflicts</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <Calendar className="w-5 h-5 text-sourdough-600 mt-0.5" />
+                      <div>
+                        <h4 className="font-semibold text-sourdough-800">Timeline Visualization</h4>
+                        <p className="text-sm text-sourdough-600">See your entire baking schedule at a glance</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <ChefHat className="w-5 h-5 text-sourdough-600 mt-0.5" />
+                      <div>
+                        <h4 className="font-semibold text-sourdough-800">Recipe Integration</h4>
+                        <p className="text-sm text-sourdough-600">Works seamlessly with your saved recipes</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Upgrade CTA */}
+                <div className="bg-gradient-to-r from-amber-50 to-yellow-50 p-6 rounded-xl border border-yellow-200">
+                  <div className="text-center space-y-4">
+                    <h3 className="text-xl font-bold text-sourdough-800">
+                      Upgrade to Hobby Pro
+                    </h3>
+                    <p className="text-sourdough-600">
+                      Get access to timeline planning, push notifications, hydration calculator, and unlimited recipes
+                    </p>
+                    <div className="space-y-3">
+                      <Button
+                        size="lg"
+                        onClick={handleUpgrade}
+                        disabled={isPurchasing}
+                        className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white font-semibold py-3 px-8 rounded-xl shadow-lg"
+                        data-testid="button-upgrade-hobby-pro"
+                      >
+                        {isPurchasing ? (
+                          <div className="flex items-center gap-2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            Processing...
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <Crown className="w-5 h-5" />
+                            Upgrade to Hobby Pro
+                          </div>
+                        )}
+                      </Button>
+                      <p className="text-xs text-sourdough-500">
+                        Subscription managed through your app store. Cancel anytime.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Current Tier Info */}
+            <Card className="bg-sourdough-50/50 border-sourdough-200">
+              <CardContent className="p-4">
+                <div className="text-center">
+                  <p className="text-sm text-sourdough-600">
+                    You're currently on the <strong>Free</strong> plan
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+        <BottomNavigation />
+      </div>
+    );
+  }
 
   if (recipesLoading) {
     return (

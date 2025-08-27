@@ -14,10 +14,10 @@ export const SUBSCRIPTION_TIERS: Record<string, SubscriptionTier> = {
   free: {
     id: 'free',
     name: 'Free',
-    features: ['Basic timeline generator', 'Limited recipes'],
+    features: ['Limited recipes', 'Basic baking tracking'],
     limits: {
       recipes: 2,
-      timelines: 1,
+      timelines: 0, // Timeline feature requires paid subscription
       reminders: false,
       hydrationCalc: false,
     }
@@ -25,7 +25,7 @@ export const SUBSCRIPTION_TIERS: Record<string, SubscriptionTier> = {
   hobby_pro: {
     id: 'hobby_pro',
     name: 'Hobby Pro',
-    features: ['Unlimited timelines', 'Push reminders', 'Hydration calculator', 'Unlimited recipes'],
+    features: ['Timeline planner', 'Push reminders', 'Hydration calculator', 'Unlimited recipes'],
     limits: {
       recipes: -1, // unlimited
       timelines: -1, // unlimited
