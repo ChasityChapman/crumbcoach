@@ -5,24 +5,23 @@ import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
-import { User as DatabaseUser } from "@shared/schema";
-// Removed connectPg - going simple
+import { User as SelectUser } from "@shared/schema";
 
 declare global {
   namespace Express {
-    interface User extends DatabaseUser {}
+    interface User extends SelectUser {}
   }
 }
 
 const scryptAsync = promisify(scrypt);
 
-async function hashPassword(password: string): Promise<string> {
+async function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
   const buf = (await scryptAsync(password, salt, 64)) as Buffer;
   return `${buf.toString("hex")}.${salt}`;
 }
 
-async function comparePasswords(supplied: string, stored: string): Promise<boolean> {
+async function comparePasswords(supplied: string, stored: string) {
   const [hashed, salt] = stored.split(".");
   const hashedBuf = Buffer.from(hashed, "hex");
   const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
@@ -30,336 +29,194 @@ async function comparePasswords(supplied: string, stored: string): Promise<boole
 }
 
 export function setupAuth(app: Express) {
-  console.log('=== SETTING UP ULTRA-SIMPLE AUTH ===');
+  console.log('=== SETTING UP PROPER AUTH WITH NAMES ===');
   
-  // Log ALL requests first
+  // Log ALL requests 
   app.use((req, res, next) => {
     if (req.path.startsWith('/api/')) {
       console.log(`🚀 API REQUEST: ${req.method} ${req.path}`);
       console.log(`🚀 Body:`, req.body);
-      console.log(`🚀 Headers:`, req.headers['content-type']);
     }
     next();
   });
-  
-  // SUPER SIMPLE endpoints
-  app.post("/api/register", (req, res) => {
-    console.log('🔥 REGISTRATION HIT!');
-    res.json({ message: "Registration endpoint works!", body: req.body });
-  });
-  
-  app.post("/api/login", (req, res) => {
-    console.log('🔥 LOGIN HIT!');
-    res.json({ message: "Login endpoint works!", body: req.body });
-  });
-  
-  app.get("/api/user", (req, res) => {
-    console.log('🔥 USER HIT!');
-    res.status(401).json({ message: "User endpoint works!" });
-  });
 
-  // Configure Passport Local Strategy
-  passport.use(
-    new LocalStrategy(
-      {
-        usernameField: "username", // Can be username or email
-        passwordField: "password",
-      },
-      async (username, password, done) => {
-        try {
-          console.log('Passport LocalStrategy: attempting auth for:', username);
-          const user = await storage.getUserByUsername(username);
-          console.log('User found:', !!user);
-          if (!user || !(await comparePasswords(password, user.password))) {
-            console.log('Auth failed - invalid credentials');
-            return done(null, false, { message: "Invalid username or password" });
-          }
-          console.log('Auth successful for:', username);
-          return done(null, user);
-        } catch (error) {
-          console.error('Auth error:', error);
-          return done(error);
-        }
-      }
-    )
-  );
+  // Configure sessions
+  const sessionSettings: session.SessionOptions = {
+    secret: process.env.SESSION_SECRET || 'dev-secret-change-this',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false, // Set to true in production with HTTPS
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    },
+  };
 
-  passport.serializeUser((user, done) => {
-    console.log('Serializing user:', user.id);
-    done(null, user.id);
-  });
-  
-  passport.deserializeUser(async (id: string, done) => {
+  app.use(session(sessionSettings));
+  app.use(passport.initialize());
+  app.use(passport.session());
+
+  // Register endpoint with name capture
+  app.post("/api/register", async (req, res) => {
     try {
-      console.log('Deserializing user ID:', id);
-      const user = await storage.getUser(id);
-      console.log('Deserialized user found:', !!user);
-      done(null, user || null);
-    } catch (error) {
-      console.error('Deserialize error:', error);
-      done(error);
-    }
-  });
-
-  // Register endpoint
-  app.post("/api/register", async (req, res, next) => {
-    console.log('=== REGISTRATION START ===');
-    console.log('Request body:', JSON.stringify(req.body, null, 2));
-    console.log('Session ID:', req.sessionID);
-    
-    try {
+      console.log('🔥 REGISTRATION with name capture');
+      console.log('Registration data:', req.body);
+      
       const { username, email, password, firstName, lastName } = req.body;
-      console.log('Registration attempt for:', username, email);
-
+      
       if (!username || !email || !password) {
-        console.log('Missing required fields');
-        return res.status(400).json({ message: "Username, email, and password are required" });
+        return res.status(400).json({ message: "Missing required fields" });
       }
-
-      // Check if user already exists
+      
+      // Check for existing user
       const existingUser = await storage.getUserByUsername(username);
       if (existingUser) {
-        console.log('Username already exists:', username);
         return res.status(400).json({ message: "Username already exists" });
       }
-
+      
       const existingEmail = await storage.getUserByEmail(email);
       if (existingEmail) {
-        console.log('Email already exists:', email);
         return res.status(400).json({ message: "Email already exists" });
       }
-
-      // Create new user
+      
+      // Hash password and create user
       const hashedPassword = await hashPassword(password);
-      const user = await storage.createUser({
+      const userData = {
         username,
         email,
         password: hashedPassword,
         firstName: firstName || null,
         lastName: lastName || null,
-        profileImageUrl: null,
-      });
-
-      console.log('User created successfully:', user.username);
-
-      // Log the user in
+      };
+      
+      const user = await storage.createUser(userData);
+      console.log('User created successfully:', { id: user.id, username: user.username, firstName: user.firstName });
+      
+      // Auto-login the user
       req.login(user, (err) => {
         if (err) {
-          console.error('Auto-login after registration failed:', err);
-          return next(err);
+          console.error('Auto-login failed:', err);
+          return res.status(500).json({ message: "Registration succeeded but login failed" });
         }
-        console.log('Auto-login successful for new user:', user.username);
-        res.status(201).json({
+        
+        // Return user data including name
+        const userResponse = {
           id: user.id,
           username: user.username,
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
-          profileImageUrl: user.profileImageUrl,
-        });
+        };
+        
+        console.log('Registration complete - returning user:', userResponse);
+        res.status(201).json(userResponse);
       });
+      
     } catch (error) {
-      console.error("=== REGISTRATION ERROR ===");
-      console.error("Full error:", error);
-      console.error("Error message:", (error as Error).message);
-      console.error("Error stack:", (error as Error).stack);
-      res.status(500).json({ message: "Failed to create user" });
+      console.error('Registration error:', error);
+      res.status(500).json({ message: "Registration failed", error: (error as Error).message });
     }
-    console.log('=== REGISTRATION END ===');
   });
-
-  // Login endpoint
-  app.post("/api/login", (req, res, next) => {
-    console.log('Login attempt for:', req.body?.username);
-    passport.authenticate("local", (err: any, user: DatabaseUser | false, info: any) => {
-      if (err) {
-        console.error('Login error:', err);
-        return res.status(500).json({ message: "Login failed" });
-      }
-      if (!user) {
-        console.log('Login failed - user not found or invalid credentials');
-        return res.status(401).json({ message: info?.message || "Invalid credentials" });
+  
+  // Login endpoint 
+  app.post("/api/login", async (req, res) => {
+    try {
+      console.log('🔥 LOGIN attempt');
+      
+      const { username, password } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ message: "Missing username or password" });
       }
       
-      req.login(user, (loginErr) => {
-        if (loginErr) {
-          console.error('Session login error:', loginErr);
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      const validPassword = await comparePasswords(password, user.password);
+      if (!validPassword) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      req.login(user, (err) => {
+        if (err) {
+          console.error('Login session error:', err);
           return res.status(500).json({ message: "Login failed" });
         }
-        console.log('Login successful for user:', user.username);
-        res.status(200).json({
+        
+        // Return user data including name
+        const userResponse = {
           id: user.id,
           username: user.username,
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
-          profileImageUrl: user.profileImageUrl,
-        });
+        };
+        
+        console.log('Login successful - returning user:', userResponse);
+        res.json(userResponse);
       });
-    })(req, res, next);
+      
+    } catch (error) {
+      console.error('Login error:', error);
+      res.status(500).json({ message: "Login failed", error: (error as Error).message });
+    }
   });
-
-  // Logout endpoint
-  app.post("/api/logout", (req, res, next) => {
-    req.logout((err) => {
-      if (err) return next(err);
-      res.sendStatus(200);
-    });
-  });
-
-  // Get current user endpoint
+  
+  // User info endpoint
   app.get("/api/user", (req, res) => {
-    console.log('GET /api/user - Session ID:', req.sessionID);
-    console.log('Authenticated:', req.isAuthenticated());
-    console.log('User in session:', !!req.user);
-    console.log('Full session:', JSON.stringify(req.session, null, 2));
-    console.log('Cookie header:', req.headers.cookie);
+    console.log('🔥 USER info request, authenticated:', req.isAuthenticated());
     
     if (!req.isAuthenticated() || !req.user) {
-      console.log('Authentication failed - returning 401');
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ message: "Not authenticated" });
     }
     
-    const user = req.user;
-    console.log('Returning user data for:', user.username);
-    res.json({
+    const user = req.user as any;
+    const userResponse = {
       id: user.id,
       username: user.username,
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
-      profileImageUrl: user.profileImageUrl,
+    };
+    
+    console.log('Returning current user:', userResponse);
+    res.json(userResponse);
+  });
+  
+  // Logout endpoint
+  app.post("/api/logout", (req, res) => {
+    console.log('🔥 LOGOUT request');
+    req.logout((err) => {
+      if (err) {
+        console.error('Logout error:', err);
+        return res.status(500).json({ message: "Logout failed" });
+      }
+      res.json({ message: "Logged out successfully" });
     });
   });
 
-  // Request password reset endpoint
-  app.post("/api/forgot-password", async (req, res) => {
-    try {
-      const { email } = req.body;
-
-      if (!email) {
-        return res.status(400).json({ message: "Email is required" });
-      }
-
-      // Find user by email
-      const user = await storage.getUserByEmail(email);
-      if (!user) {
-        // For security, don't reveal if email exists or not
-        return res.status(200).json({ 
-          message: "If an account with that email exists, we've sent a password reset link.",
-          resetToken: null 
-        });
-      }
-
-      // Generate secure reset token
-      const resetToken = randomBytes(32).toString("hex");
-      const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
-
-      // Save reset token to database
-      await storage.createPasswordResetToken({
-        userId: user.id,
-        token: resetToken,
-        expiresAt,
-        usedAt: null,
-      });
-
-      // In development, return the token for testing
-      // In production, you would send this via email instead
-      res.status(200).json({
-        message: "If an account with that email exists, we've sent a password reset link.",
-        resetToken: resetToken, // Only for development - remove in production
-      });
-    } catch (error) {
-      console.error("Password reset request error:", error);
-      res.status(500).json({ message: "Failed to process password reset request" });
-    }
+  // Configure Passport serialization
+  passport.serializeUser((user: any, done) => {
+    done(null, user.id);
   });
-
-  // Check reset token validity endpoint
-  app.post("/api/check-reset-token", async (req, res) => {
+  
+  passport.deserializeUser(async (id: string, done) => {
     try {
-      const { token } = req.body;
-
-      if (!token) {
-        return res.status(400).json({ message: "Reset token is required" });
-      }
-
-      const resetToken = await storage.getPasswordResetToken(token);
-      if (!resetToken) {
-        return res.status(400).json({ message: "Invalid or expired reset token" });
-      }
-
-      // Check if token is expired
-      if (new Date() > new Date(resetToken.expiresAt)) {
-        return res.status(400).json({ message: "Reset token has expired" });
-      }
-
-      res.status(200).json({ 
-        message: "Reset token is valid",
-        userId: resetToken.userId 
-      });
+      const user = await storage.getUser(id);
+      done(null, user);
     } catch (error) {
-      console.error("Token validation error:", error);
-      res.status(500).json({ message: "Failed to validate reset token" });
-    }
-  });
-
-  // Reset password endpoint
-  app.post("/api/reset-password", async (req, res) => {
-    try {
-      const { token, newPassword } = req.body;
-
-      if (!token || !newPassword) {
-        return res.status(400).json({ message: "Reset token and new password are required" });
-      }
-
-      if (newPassword.length < 6) {
-        return res.status(400).json({ message: "Password must be at least 6 characters long" });
-      }
-
-      const resetToken = await storage.getPasswordResetToken(token);
-      if (!resetToken) {
-        return res.status(400).json({ message: "Invalid or expired reset token" });
-      }
-
-      // Check if token is expired
-      if (new Date() > new Date(resetToken.expiresAt)) {
-        return res.status(400).json({ message: "Reset token has expired" });
-      }
-
-      // Get the user
-      const user = await storage.getUser(resetToken.userId);
-      if (!user) {
-        return res.status(400).json({ message: "User not found" });
-      }
-
-      // Update user password
-      const hashedPassword = await hashPassword(newPassword);
-      const updatedUser = await storage.updateUser(user.id, { password: hashedPassword });
-      
-      if (!updatedUser) {
-        return res.status(500).json({ message: "Failed to update password" });
-      }
-
-      // Mark token as used
-      await storage.markPasswordResetTokenAsUsed(resetToken.id);
-
-      res.status(200).json({ 
-        message: "Password has been reset successfully"
-      });
-    } catch (error) {
-      console.error("Password reset error:", error);
-      res.status(500).json({ message: "Failed to reset password" });
+      done(error);
     }
   });
 }
 
-// Middleware to protect routes
-export function isAuthenticated(req: any, res: any, next: any) {
-  if (!req.isAuthenticated() || !req.user) {
-    return res.status(401).json({ message: "Unauthorized" });
+// Middleware to check if user is authenticated
+export const isAuthenticated = (req: any, res: any, next: any) => {
+  if (req.isAuthenticated() && req.user) {
+    return next();
   }
-  next();
-}
+  res.status(401).json({ message: "Authentication required" });
+};
 
 export { hashPassword, comparePasswords };
