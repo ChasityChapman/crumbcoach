@@ -130,8 +130,41 @@ export function setupAuth(app: Express) {
       
       const user = await storage.getUserByUsername(username);
       if (!user) {
-        console.log('User not found:', username);
-        return res.status(401).json({ message: "Invalid credentials" });
+        console.log('User not found by username:', username);
+        // Also try to find by email in case they're using email to login
+        const userByEmail = await storage.getUserByEmail(username);
+        if (!userByEmail) {
+          console.log('User not found by email either:', username);
+          return res.status(401).json({ message: "Invalid credentials" });
+        }
+        console.log('Found user by email instead:', userByEmail.email);
+        // Use the user found by email
+        const validPassword = await comparePasswords(password, userByEmail.password);
+        console.log('Password comparison result (email login):', validPassword);
+        
+        if (!validPassword) {
+          console.log('Password validation failed for email login:', username);
+          return res.status(401).json({ message: "Invalid credentials" });
+        }
+        
+        req.login(userByEmail, (err) => {
+          if (err) {
+            console.error('Login session error:', err);
+            return res.status(500).json({ message: "Login failed" });
+          }
+          
+          const userResponse = {
+            id: userByEmail.id,
+            username: userByEmail.username,
+            email: userByEmail.email,
+            firstName: userByEmail.firstName,
+            lastName: userByEmail.lastName,
+          };
+          
+          console.log('Login successful via email - returning user:', userResponse);
+          res.json(userResponse);
+        });
+        return;
       }
       
       console.log('Found user:', user.email, 'stored password hash length:', user.password.length);
@@ -216,12 +249,15 @@ export function setupAuth(app: Express) {
       
       const user = await storage.getUserByEmail(email);
       if (!user) {
+        console.log('Email not found in database:', email);
         // Don't reveal if email exists for security
         return res.json({ 
           message: "If an account with that email exists, a reset token has been generated.",
           resetToken: null 
         });
       }
+      
+      console.log('Found user for password reset:', user.email, 'username:', user.username);
       
       // Generate reset token
       const resetToken = randomBytes(32).toString('hex');
