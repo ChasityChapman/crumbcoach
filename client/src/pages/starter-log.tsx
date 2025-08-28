@@ -116,7 +116,7 @@ export default function StarterLogPage() {
       const hydrationPercent = Math.round((watchedFeedRatio.water / watchedFeedRatio.flour) * 100);
       form.setValue("hydrationPercent", hydrationPercent);
     }
-  }, [watchedFeedRatio, form]);
+  }, [watchedFeedRatio?.flour, watchedFeedRatio?.water, form]);
 
   const onSubmit = (data: StarterLogFormData) => {
     createLogMutation.mutate(data);
@@ -326,9 +326,9 @@ export default function StarterLogPage() {
                           </FormItem>
                         )}
                       />
-                      {form.watch("hydrationPercent") && (
+                      {watchedFeedRatio?.flour && watchedFeedRatio?.water && (
                         <Badge variant="secondary" className="ml-4">
-                          {form.watch("hydrationPercent")}% Hydration
+                          {Math.round((watchedFeedRatio.water / watchedFeedRatio.flour) * 100)}% Hydration
                         </Badge>
                       )}
                     </div>
