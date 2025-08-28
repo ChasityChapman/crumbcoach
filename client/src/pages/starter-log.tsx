@@ -55,7 +55,19 @@ const starterStageOptions = [
 
 export default function StarterLogPage() {
   const [activeTab, setActiveTab] = useState("new-log");
+  const [tempUnit, setTempUnit] = useState<'celsius' | 'fahrenheit'>('celsius');
   const queryClient = useQueryClient();
+
+  // Load temperature unit preference from settings
+  useEffect(() => {
+    const saved = localStorage.getItem('crumbCoachSettings');
+    if (saved) {
+      const settings = JSON.parse(saved);
+      if (settings.tempUnit) {
+        setTempUnit(settings.tempUnit);
+      }
+    }
+  }, []);
 
   // Fetch starter logs
   const { data: starterLogs = [], isLoading } = useQuery<StarterLog[]>({
@@ -355,54 +367,72 @@ export default function StarterLogPage() {
                       Ambient Temperature
                     </FormLabel>
                     <div className="flex items-center gap-3">
-                      <FormField
-                        control={form.control}
-                        name="ambientTempF"
-                        render={({ field }) => (
-                          <FormItem className="flex-1">
-                            <FormControl>
-                              <Input
-                                type="number"
-                                placeholder="70"
-                                value={field.value ?? ""}
-                                onChange={(e) => {
-                                  const value = e.target.value ? parseInt(e.target.value) : undefined;
-                                  field.onChange(value);
-                                  // Auto-convert to Celsius
-                                  if (value) {
-                                    const celsius = Math.round((value - 32) * 5/9);
-                                    form.setValue("ambientTempC", celsius);
-                                  } else {
-                                    form.setValue("ambientTempC", undefined);
-                                  }
-                                }}
-                                data-testid="input-temperature"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Select
-                        defaultValue="F"
-                        onValueChange={(unit) => {
-                          const currentTemp = form.getValues("ambientTempF");
-                          if (currentTemp && unit === "C") {
-                            // Switch to Celsius mode - move F value to C field and clear F
-                            const celsius = Math.round((currentTemp - 32) * 5/9);
-                            form.setValue("ambientTempC", currentTemp); // Use the displayed value as Celsius
-                            form.setValue("ambientTempF", undefined);
-                          }
-                        }}
-                      >
-                        <SelectTrigger className="w-16" data-testid="select-temperature-unit">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="F">°F</SelectItem>
-                          <SelectItem value="C">°C</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      {tempUnit === 'fahrenheit' ? (
+                        <FormField
+                          control={form.control}
+                          name="ambientTempF"
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  placeholder="70"
+                                  min="32"
+                                  max="110"
+                                  value={field.value ?? ""}
+                                  onChange={(e) => {
+                                    const value = e.target.value ? parseInt(e.target.value) : undefined;
+                                    field.onChange(value);
+                                    // Auto-convert to Celsius
+                                    if (value) {
+                                      const celsius = Math.round((value - 32) * 5/9);
+                                      form.setValue("ambientTempC", celsius);
+                                    } else {
+                                      form.setValue("ambientTempC", undefined);
+                                    }
+                                  }}
+                                  data-testid="input-temperature"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      ) : (
+                        <FormField
+                          control={form.control}
+                          name="ambientTempC"
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  placeholder="21"
+                                  min="0"
+                                  max="43"
+                                  value={field.value ?? ""}
+                                  onChange={(e) => {
+                                    const value = e.target.value ? parseInt(e.target.value) : undefined;
+                                    field.onChange(value);
+                                    // Auto-convert to Fahrenheit
+                                    if (value) {
+                                      const fahrenheit = Math.round((value * 9/5) + 32);
+                                      form.setValue("ambientTempF", fahrenheit);
+                                    } else {
+                                      form.setValue("ambientTempF", undefined);
+                                    }
+                                  }}
+                                  data-testid="input-temperature"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                      <div className="w-16 h-10 flex items-center justify-center text-sm font-medium bg-muted rounded-md">
+                        °{tempUnit === 'fahrenheit' ? 'F' : 'C'}
+                      </div>
                     </div>
                   </div>
 
