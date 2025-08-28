@@ -51,12 +51,12 @@ export default function BottomNavigation({ currentPath }: BottomNavigationProps)
           </button>
         </Link>
         
-        <Link href="/recent-bakes">
+        <Link href="/profile">
           <button className={`flex flex-col items-center py-2 px-2 ${
-            isActive('/recent-bakes') ? 'text-accent-orange-500' : 'text-sourdough-500'
+            isActive('/profile') ? 'text-accent-orange-500' : 'text-sourdough-500'
           }`}>
-            <Cookie className="w-5 h-5 mb-1" />
-            <span className="text-xs">Bakes</span>
+            <User className="w-5 h-5 mb-1" />
+            <span className="text-xs">Profile</span>
           </button>
         </Link>
       </div>
