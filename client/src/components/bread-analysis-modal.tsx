@@ -34,7 +34,7 @@ export default function BreadAnalysisModal({ open, onOpenChange, initialImage }:
   const { toast } = useToast();
 
   // Get user's bakes to show photos from
-  const { data: recentBakes = [] } = useQuery({
+  const { data: recentBakes = [] } = useQuery<any[]>({
     queryKey: ['/api/bakes'],
     enabled: open,
   });
