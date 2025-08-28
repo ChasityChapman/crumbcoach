@@ -536,18 +536,11 @@ export default function RecipeModal({ isOpen, onClose, recipe }: RecipeModalProp
         </div>
 
         {/* Action Buttons */}
-        <div className="flex space-x-3 p-6 pt-4 border-t flex-shrink-0">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            className="flex-1 border-sourdough-200"
-          >
-            Cancel
-          </Button>
+        <div className="flex p-6 pt-4 border-t flex-shrink-0">
           <Button
             onClick={handleCreateRecipe}
             disabled={!recipeName.trim() || !difficulty || createRecipeMutation.isPending}
-            className="flex-1 bg-sourdough-500 hover:bg-sourdough-600 text-white"
+            className="w-full bg-sourdough-500 hover:bg-sourdough-600 text-white"
             data-testid="button-create-recipe"
           >
             {createRecipeMutation.isPending 
