@@ -245,6 +245,9 @@ export default function StarterLogPage() {
                   {/* Feed Ratio */}
                   <div className="space-y-4">
                     <Label className="text-sm font-medium">Feed Ratio (Starter : Flour : Water)</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Enter the ratio of starter to flour to water. For example, 1:2:2 means 1 part starter, 2 parts flour, 2 parts water.
+                    </p>
                     <div className="flex items-center gap-3">
                       <FormField
                         control={form.control}
