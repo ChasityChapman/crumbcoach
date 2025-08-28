@@ -9,7 +9,8 @@ import {
   insertTimelineStepSchema,
   insertBakeNoteSchema,
   insertBakePhotoSchema,
-  insertSensorReadingSchema
+  insertSensorReadingSchema,
+  insertStarterLogSchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -410,6 +411,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(reading);
     } catch (error) {
       res.status(400).json({ message: "Invalid sensor data" });
+    }
+  });
+
+  // Starter Logs
+  app.get("/api/starter-logs", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const logs = await storage.getStarterLogs(userId);
+      res.json(logs);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch starter logs" });
+    }
+  });
+
+  app.get("/api/starter-logs/:id", isAuthenticated, async (req, res) => {
+    try {
+      const log = await storage.getStarterLog(req.params.id);
+      if (!log) {
+        return res.status(404).json({ message: "Starter log not found" });
+      }
+      res.json(log);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch starter log" });
+    }
+  });
+
+  app.post("/api/starter-logs", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Auto-calculate hydration percentage from feed ratio
+      let hydrationPercent = null;
+      if (req.body.feedRatio && req.body.feedRatio.flour && req.body.feedRatio.water) {
+        hydrationPercent = Math.round((req.body.feedRatio.water / req.body.feedRatio.flour) * 100);
+      }
+
+      const logData = {
+        ...req.body,
+        userId,
+        hydrationPercent
+      };
+
+      const validatedData = insertStarterLogSchema.parse(logData);
+      const log = await storage.createStarterLog(validatedData);
+      res.status(201).json(log);
+    } catch (error) {
+      console.error('Starter log creation error:', error);
+      res.status(400).json({ message: "Invalid starter log data" });
+    }
+  });
+
+  app.put("/api/starter-logs/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const logId = req.params.id;
+      
+      // Auto-calculate hydration percentage if feed ratio is provided
+      let logData = { ...req.body };
+      if (req.body.feedRatio && req.body.feedRatio.flour && req.body.feedRatio.water) {
+        logData.hydrationPercent = Math.round((req.body.feedRatio.water / req.body.feedRatio.flour) * 100);
+      }
+
+      const log = await storage.updateStarterLog(logId, logData);
+      if (!log) {
+        return res.status(404).json({ message: "Starter log not found" });
+      }
+      res.json(log);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to update starter log" });
+    }
+  });
+
+  app.delete("/api/starter-logs/:id", isAuthenticated, async (req, res) => {
+    try {
+      const success = await storage.deleteStarterLog(req.params.id);
+      if (!success) {
+        return res.status(404).json({ message: "Starter log not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete starter log" });
     }
   });
 

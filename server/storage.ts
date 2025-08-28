@@ -9,6 +9,7 @@ import {
   sensorReadings,
   analyticsEvents,
   userSessions,
+  starterLogs,
   type User,
   type InsertUser,
   type Recipe,
@@ -35,6 +36,8 @@ import {
   type InsertAnalyticsEvent,
   type UserSession,
   type InsertUserSession,
+  type StarterLog,
+  type InsertStarterLog,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, isNull, lt, gte, count, sql } from "drizzle-orm";
@@ -109,6 +112,13 @@ export interface IStorage {
   createTimelinePlan(plan: InsertTimelinePlan): Promise<TimelinePlan>;
   updateTimelinePlan(id: string, planData: Partial<InsertTimelinePlan>): Promise<TimelinePlan | undefined>;
   deleteTimelinePlan(id: string): Promise<boolean>;
+
+  // Starter log operations
+  getStarterLogs(userId?: string): Promise<StarterLog[]>;
+  getStarterLog(id: string): Promise<StarterLog | undefined>;
+  createStarterLog(log: InsertStarterLog): Promise<StarterLog>;
+  updateStarterLog(id: string, logData: Partial<InsertStarterLog>): Promise<StarterLog | undefined>;
+  deleteStarterLog(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -431,6 +441,39 @@ export class DatabaseStorage implements IStorage {
 
   async deleteTimelinePlan(id: string): Promise<boolean> {
     const result = await db.delete(timelinePlans).where(eq(timelinePlans.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Starter log operations
+  async getStarterLogs(userId?: string): Promise<StarterLog[]> {
+    if (userId) {
+      return await db.select().from(starterLogs).where(eq(starterLogs.userId, userId)).orderBy(desc(starterLogs.logDate));
+    }
+    // For backwards compatibility, return all logs if no userId provided
+    return await db.select().from(starterLogs).orderBy(desc(starterLogs.logDate));
+  }
+
+  async getStarterLog(id: string): Promise<StarterLog | undefined> {
+    const [log] = await db.select().from(starterLogs).where(eq(starterLogs.id, id));
+    return log;
+  }
+
+  async createStarterLog(logData: InsertStarterLog): Promise<StarterLog> {
+    const [log] = await db.insert(starterLogs).values(logData).returning();
+    return log;
+  }
+
+  async updateStarterLog(id: string, logData: Partial<InsertStarterLog>): Promise<StarterLog | undefined> {
+    const [updatedLog] = await db
+      .update(starterLogs)
+      .set({ ...logData, updatedAt: new Date() })
+      .where(eq(starterLogs.id, id))
+      .returning();
+    return updatedLog;
+  }
+
+  async deleteStarterLog(id: string): Promise<boolean> {
+    const result = await db.delete(starterLogs).where(eq(starterLogs.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 }

@@ -174,12 +174,55 @@ export const userSessions = pgTable("user_sessions", {
   index("IDX_user_sessions_start").on(table.sessionStart),
 ]);
 
+// Starter logs table for tracking sourdough starter maintenance
+export const starterLogs = pgTable("starter_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  logDate: timestamp("log_date").defaultNow(),
+  
+  // Core feeding data
+  flourTypes: jsonb("flour_types").notNull(), // Array of {type: string, percentage: number} e.g. [{type: "white", percentage: 80}, {type: "whole wheat", percentage: 20}]
+  feedRatio: jsonb("feed_ratio").notNull(), // {starter: number, flour: number, water: number} e.g. {starter: 1, flour: 2, water: 2}
+  hydrationPercent: integer("hydration_percent"), // Auto-calculated hydration percentage
+  feedAmountGrams: integer("feed_amount_grams").notNull(), // Total flour amount added
+  
+  // Environmental conditions
+  ambientTempF: integer("ambient_temp_f"), // Temperature in Fahrenheit
+  ambientTempC: integer("ambient_temp_c"), // Temperature in Celsius
+  
+  // Starter condition
+  starterStage: varchar("starter_stage"), // 'just_fed', 'peak', 'collapsing', 'sluggish'
+  conditionNotes: text("condition_notes"), // Smell, texture, bubbles, rise level
+  
+  // Performance tracking
+  riseTimeHours: integer("rise_time_hours"), // Time to double/triple in hours
+  riseTimeMinutes: integer("rise_time_minutes"), // Additional minutes for precision
+  peakActivity: boolean("peak_activity").default(false), // Whether starter reached peak
+  
+  // Discard usage
+  discardUsed: boolean("discard_used").default(false),
+  discardRecipe: text("discard_recipe"), // What was made with discard
+  
+  // Photo attachment
+  photoUrl: text("photo_url"), // URL to attached photo
+  
+  // Weather data for analytics
+  weatherData: jsonb("weather_data"), // {humidity: number, pressure: number, weatherCondition: string}
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("IDX_starter_logs_user_id").on(table.userId),
+  index("IDX_starter_logs_date").on(table.logDate),
+]);
+
 // Relations
 export const userRelations = relations(users, ({ many }) => ({
   recipes: many(recipes),
   bakes: many(bakes),
   passwordResetTokens: many(passwordResetTokens),
   timelinePlans: many(timelinePlans),
+  starterLogs: many(starterLogs),
 }));
 
 export const passwordResetTokenRelations = relations(passwordResetTokens, ({ one }) => ({
@@ -253,6 +296,13 @@ export const userSessionRelations = relations(userSessions, ({ one }) => ({
   }),
 }));
 
+export const starterLogRelations = relations(starterLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [starterLogs.userId],
+    references: [users.id],
+  }),
+}));
+
 // Insert schemas
 export const insertRecipeSchema = createInsertSchema(recipes).omit({ id: true, createdAt: true });
 export const insertBakeSchema = createInsertSchema(bakes)
@@ -276,6 +326,11 @@ export const insertPasswordResetTokenSchema = createInsertSchema(passwordResetTo
 export const insertTimelinePlanSchema = createInsertSchema(timelinePlans).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents).omit({ id: true, timestamp: true });
 export const insertUserSessionSchema = createInsertSchema(userSessions).omit({ id: true, sessionStart: true, lastActivity: true });
+export const insertStarterLogSchema = createInsertSchema(starterLogs)
+  .omit({ id: true, createdAt: true, updatedAt: true })
+  .extend({
+    logDate: z.union([z.date(), z.string().datetime().transform((str) => new Date(str))]).optional(),
+  });
 
 // Types
 export type Recipe = typeof recipes.$inferSelect;
@@ -300,3 +355,5 @@ export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
 export type InsertAnalyticsEvent = z.infer<typeof insertAnalyticsEventSchema>;
 export type UserSession = typeof userSessions.$inferSelect;
 export type InsertUserSession = z.infer<typeof insertUserSessionSchema>;
+export type StarterLog = typeof starterLogs.$inferSelect;
+export type InsertStarterLog = z.infer<typeof insertStarterLogSchema>;
