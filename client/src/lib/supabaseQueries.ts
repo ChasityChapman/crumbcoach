@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { StarterLog, Recipe, Bake, TimelinePlan, Tutorial } from '@shared/schema';
+import type { StarterLog, Recipe, Bake, TimelinePlan, Tutorial, BakeNote, BakePhoto, TimelineStep } from '@shared/schema';
 
 // Starter Logs
 export const starterLogQueries = {
@@ -236,6 +236,131 @@ export const timelinePlanQueries = {
       .eq('id', id);
     
     if (error) throw error;
+  }
+};
+
+// Bake Notes
+export const bakeNoteQueries = {
+  getByBakeId: async (bakeId: string): Promise<BakeNote[]> => {
+    const { data, error } = await supabase
+      .from('bake_notes')
+      .select('*')
+      .eq('bake_id', bakeId)
+      .order('created_at', { ascending: true });
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  create: async (note: Omit<BakeNote, 'id' | 'createdAt'>): Promise<BakeNote> => {
+    const { data, error } = await supabase
+      .from('bake_notes')
+      .insert({
+        bake_id: note.bakeId,
+        step_index: note.stepIndex,
+        content: note.content,
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    const { error } = await supabase
+      .from('bake_notes')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+  }
+};
+
+// Bake Photos
+export const bakePhotoQueries = {
+  getByBakeId: async (bakeId: string): Promise<BakePhoto[]> => {
+    const { data, error } = await supabase
+      .from('bake_photos')
+      .select('*')
+      .eq('bake_id', bakeId)
+      .order('created_at', { ascending: true });
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  create: async (photo: Omit<BakePhoto, 'id' | 'createdAt'>): Promise<BakePhoto> => {
+    const { data, error } = await supabase
+      .from('bake_photos')
+      .insert({
+        bake_id: photo.bakeId,
+        step_index: photo.stepIndex,
+        filename: photo.filename,
+        caption: photo.caption,
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    const { error } = await supabase
+      .from('bake_photos')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+  }
+};
+
+// Timeline Steps
+export const timelineStepQueries = {
+  getByBakeId: async (bakeId: string): Promise<TimelineStep[]> => {
+    const { data, error } = await supabase
+      .from('timeline_steps')
+      .select('*')
+      .eq('bake_id', bakeId)
+      .order('step_index', { ascending: true });
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  create: async (step: Omit<TimelineStep, 'id'>): Promise<TimelineStep> => {
+    const { data, error } = await supabase
+      .from('timeline_steps')
+      .insert({
+        bake_id: step.bakeId,
+        step_index: step.stepIndex,
+        name: step.name,
+        description: step.description,
+        estimated_duration_minutes: step.estimatedDuration,
+        actual_duration_minutes: step.actualDuration,
+        start_time: step.startTime,
+        end_time: step.endTime,
+        status: step.status,
+        auto_adjustments: step.autoAdjustments,
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  update: async (id: string, updates: Partial<TimelineStep>): Promise<TimelineStep> => {
+    const { data, error } = await supabase
+      .from('timeline_steps')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
   }
 };
 

@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { bakeQueries } from "@/lib/supabaseQueries";
-import type { Bake, BakeNote, BakePhoto, TimelineStep } from "@shared/schema";
+import { bakeQueries, bakeNoteQueries, bakePhotoQueries, timelineStepQueries, recipeQueries } from "@/lib/supabaseQueries";
+import type { Bake, BakeNote, BakePhoto, TimelineStep, Recipe } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
-import { ArrowLeft, Clock, FileText, Camera, X, Brain, RotateCcw } from "lucide-react";
+import { ArrowLeft, Clock, FileText, Camera, X, Brain, RotateCcw, Thermometer } from "lucide-react";
 import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_1756224893332.png";
 import BottomNavigation from "@/components/bottom-navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -21,14 +21,29 @@ function BakeDetailModal({ bake, isOpen, onClose }: BakeDetailModalProps) {
   const [analysis, setAnalysis] = useState<string>('');
   const { toast } = useToast();
 
-  // Notes functionality temporarily disabled during migration
-  const notes: BakeNote[] = [];
+  const { data: notes } = useQuery<BakeNote[]>({
+    queryKey: ["bake_notes", bake?.id],
+    queryFn: () => bakeNoteQueries.getByBakeId(bake!.id),
+    enabled: isOpen && !!bake?.id,
+  });
 
-  // Photos functionality temporarily disabled during migration
-  const photos: BakePhoto[] = [];
+  const { data: photos } = useQuery<BakePhoto[]>({
+    queryKey: ["bake_photos", bake?.id],
+    queryFn: () => bakePhotoQueries.getByBakeId(bake!.id),
+    enabled: isOpen && !!bake?.id,
+  });
 
-  // Timeline functionality temporarily disabled during migration
-  const timelineSteps: TimelineStep[] = [];
+  const { data: timelineSteps } = useQuery<TimelineStep[]>({
+    queryKey: ["timeline_steps", bake?.id],
+    queryFn: () => timelineStepQueries.getByBakeId(bake!.id),
+    enabled: isOpen && !!bake?.id,
+  });
+
+  const { data: recipe } = useQuery<Recipe | undefined>({
+    queryKey: ["recipe", bake?.recipeId],
+    queryFn: () => bake?.recipeId ? recipeQueries.getById(bake.recipeId) : Promise.resolve(undefined),
+    enabled: isOpen && !!bake?.recipeId,
+  });
 
   const analyzeMutation = useMutation({
     mutationFn: async ({ photoId, imageData }: { photoId: string; imageData: string }) => {
@@ -53,7 +68,7 @@ function BakeDetailModal({ bake, isOpen, onClose }: BakeDetailModalProps) {
     
     try {
       // Convert file to base64 for analysis
-      const response = await fetch(`/photos/${photo.filename}`);
+      const response = await fetch(`/api/photos/${photo.filename}`);
       const blob = await response.blob();
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -72,6 +87,13 @@ function BakeDetailModal({ bake, isOpen, onClose }: BakeDetailModalProps) {
   };
 
   if (!isOpen || !bake) return null;
+
+  // Parse environmental data
+  const envData = bake.environmentalData ? 
+    (typeof bake.environmentalData === 'string' ? 
+      JSON.parse(bake.environmentalData) : 
+      bake.environmentalData) : 
+    null;
 
   const startTime = new Date(bake.startTime || Date.now());
   const endTime = bake.actualEndTime ? new Date(bake.actualEndTime) : new Date(bake.estimatedEndTime || Date.now());
@@ -94,6 +116,59 @@ function BakeDetailModal({ bake, isOpen, onClose }: BakeDetailModalProps) {
         </div>
 
         <div className="max-h-96 overflow-y-auto">
+          {/* Recipe Information */}
+          {recipe && (
+            <div className="p-4 border-b border-sourdough-100">
+              <h3 className="font-medium text-sourdough-800 mb-3">Recipe Used</h3>
+              <div className="bg-sourdough-50 rounded-lg p-3">
+                <h4 className="font-medium text-sourdough-800">{recipe.name}</h4>
+                {recipe.description && (
+                  <p className="text-sm text-sourdough-600 mt-1">{recipe.description}</p>
+                )}
+                <div className="mt-2 text-sm text-sourdough-600">
+                  <div className="flex justify-between">
+                    <span>Hydration:</span>
+                    <span>{recipe.hydrationPercentage}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Yield:</span>
+                    <span>{recipe.yieldAmount}g</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Environmental Data */}
+          {envData && (
+            <div className="p-4 border-b border-sourdough-100">
+              <h3 className="font-medium text-sourdough-800 mb-3">Environmental Conditions</h3>
+              <div className="grid grid-cols-2 gap-4">
+                {envData.temperature && (
+                  <div className="bg-sourdough-50 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-semibold text-sourdough-800">
+                      {Math.round(envData.temperature)}°F
+                    </div>
+                    <div className="text-sm text-sourdough-600">Temperature</div>
+                  </div>
+                )}
+                {envData.humidity && (
+                  <div className="bg-sourdough-50 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-semibold text-sourdough-800">
+                      {Math.round(envData.humidity)}%
+                    </div>
+                    <div className="text-sm text-sourdough-600">Humidity</div>
+                  </div>
+                )}
+              </div>
+              {envData.notes && (
+                <div className="mt-3 text-sm text-sourdough-600 bg-sourdough-50 rounded-lg p-3">
+                  <strong>Environmental Notes:</strong> {envData.notes}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Timing Info */}
           <div className="p-4 border-b border-sourdough-100">
             <div className="flex items-center space-x-2 mb-3">
