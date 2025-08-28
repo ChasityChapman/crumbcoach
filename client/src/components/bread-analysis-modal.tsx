@@ -9,11 +9,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, Camera, Sparkles, TrendingUp, AlertCircle, Thermometer, Upload, History, X } from "lucide-react";
+import { Loader2, Camera, Sparkles, TrendingUp, AlertCircle, Thermometer, Upload, History, X, CheckCircle, Database } from "lucide-react";
 import { analyzeBreadPhoto, convertFileToBase64, type BreadAnalysis, type BreadContext } from "@/lib/breadAnalysis";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import { bakeQueries } from "@/lib/supabaseQueries";
+import { bakeQueries, sensorQueries, recipeQueries } from "@/lib/supabaseQueries";
+import { useSensors } from "@/hooks/use-sensors";
 
 interface BreadAnalysisModalProps {
   open: boolean;
@@ -32,6 +33,7 @@ export default function BreadAnalysisModal({ open, onOpenChange, initialImage }:
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
+  const { sensorData } = useSensors();
 
   // Get user's bakes to show photos from
   const { data: recentBakes = [] } = useQuery<any[]>({
@@ -39,10 +41,104 @@ export default function BreadAnalysisModal({ open, onOpenChange, initialImage }:
     enabled: open,
   });
 
+  // Get active bake data for auto-populating context
+  const { data: allBakes = [] } = useQuery<any[]>({
+    queryKey: ['/api/bakes'],
+    enabled: open,
+  });
+
+  // Find the most recent active bake
+  const activeBake = allBakes.find(bake => bake.status === 'active') || allBakes[0];
+
+  // Get latest sensor readings  
+  const { data: latestSensor } = useQuery({
+    queryKey: ["sensors", "latest"],
+    queryFn: sensorQueries.getLatest,
+    enabled: open,
+  });
+
+  // Get recipes to match with active bake
+  const { data: recipes = [] } = useQuery<any[]>({
+    queryKey: ['/api/recipes'],
+    enabled: open,
+  });
+
+  // Get active recipe details
+  const activeRecipe = activeBake ? recipes.find(recipe => recipe.id === activeBake.recipeId) : null;
+
+  // Get timeline steps for the active bake to understand current step
+  const { data: timelineSteps = [] } = useQuery<any[]>({
+    queryKey: [`/api/bakes/${activeBake?.id}/timeline`],
+    enabled: open && !!activeBake?.id,
+  });
+
   // Get photos from all recent bakes
   const allPhotos = recentBakes.flatMap((bake: any) => 
     (bake.photos || []).map((photo: any) => ({ ...photo, bakeName: bake.recipeName || 'Untitled Bake' }))
   );
+
+  // Auto-populate context from active bake data
+  useEffect(() => {
+    if (!open) return;
+
+    const autoContext: BreadContext = {};
+
+    // Temperature and humidity from sensors
+    if (latestSensor) {
+      autoContext.temperature = latestSensor.temperature ? latestSensor.temperature / 10 : undefined;
+      autoContext.humidity = latestSensor.humidity ? latestSensor.humidity / 10 : undefined;
+    } else if (sensorData) {
+      autoContext.temperature = sensorData.temperature;
+      autoContext.humidity = sensorData.humidity;
+    }
+
+    // Recipe information from active bake
+    if (activeRecipe) {
+      autoContext.recipeName = activeRecipe.name;
+      // Calculate hydration from ingredients if available
+      if (activeRecipe.ingredients) {
+        let flourWeight = 0;
+        let waterWeight = 0;
+        
+        activeRecipe.ingredients.forEach((ingredient: any) => {
+          const name = ingredient.name?.toLowerCase() || '';
+          const amount = parseInt(ingredient.amount) || 0;
+          
+          if (name.includes('flour')) {
+            flourWeight += amount;
+          } else if (name.includes('water')) {
+            waterWeight += amount;
+          }
+        });
+        
+        if (flourWeight > 0) {
+          autoContext.recipeHydration = Math.round((waterWeight / flourWeight) * 100);
+        }
+      }
+    }
+
+    // Bake information
+    if (activeBake) {
+      autoContext.recipeName = activeBake.recipeName || autoContext.recipeName;
+      
+      // Calculate total proofing time from timeline steps
+      const totalTime = timelineSteps.reduce((total: number, step: any) => {
+        return total + (step.duration || 0);
+      }, 0);
+      
+      if (totalTime > 0) {
+        autoContext.proofingTime = `${Math.floor(totalTime / 60)}h ${totalTime % 60}m`;
+      }
+
+      // Add starter information if available in bake notes or metadata
+      if (activeBake.notes) {
+        autoContext.additionalNotes = `Active bake notes: ${activeBake.notes}`;
+      }
+    }
+
+    // Set the auto-detected context
+    setContext(autoContext);
+  }, [open, latestSensor, sensorData, activeRecipe, activeBake, timelineSteps]);
 
   // Camera functionality
   const initializeCamera = async () => {
@@ -309,167 +405,88 @@ export default function BreadAnalysisModal({ open, onOpenChange, initialImage }:
             <div className="space-y-6">
               <div className="border-t pt-6">
                 <h3 className="font-semibold text-sourdough-800 mb-4 flex items-center gap-2">
-                  <Thermometer className="w-4 h-4" />
-                  Baking Context (Optional but Recommended)
+                  <Database className="w-4 h-4" />
+                  Auto-Detected Baking Context
                 </h3>
                 <p className="text-sm text-sourdough-600 mb-4">
-                  Providing context helps our AI give more accurate and personalized feedback.
+                  Using data from your active bake, sensors, and recipe information for more accurate analysis.
                 </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Environmental Conditions */}
-                  <div className="space-y-3">
-                    <div>
-                      <Label htmlFor="temperature" className="text-sm font-medium">
-                        Room Temperature (°C)
-                      </Label>
-                      <Input
-                        id="temperature"
-                        type="number"
-                        placeholder="e.g., 22"
-                        value={context.temperature || ''}
-                        onChange={(e) => setContext(prev => ({ 
-                          ...prev, 
-                          temperature: e.target.value ? Number(e.target.value) : undefined 
-                        }))}
-                        className="mt-1"
-                      />
+                <Card className="p-4 bg-sourdough-50">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Environmental Conditions */}
+                    <div className="space-y-3">
+                      <h4 className="font-medium text-sourdough-700 flex items-center gap-2">
+                        <Thermometer className="w-4 h-4" />
+                        Environment
+                      </h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-sourdough-600">Temperature:</span>
+                          <span className="font-medium flex items-center gap-1">
+                            {context.temperature ? `${context.temperature.toFixed(1)}°C` : 'Not detected'}
+                            {context.temperature && <CheckCircle className="w-3 h-3 text-green-500" />}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sourdough-600">Humidity:</span>
+                          <span className="font-medium flex items-center gap-1">
+                            {context.humidity ? `${context.humidity.toFixed(1)}%` : 'Not detected'}
+                            {context.humidity && <CheckCircle className="w-3 h-3 text-green-500" />}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    
-                    <div>
-                      <Label htmlFor="humidity" className="text-sm font-medium">
-                        Humidity (%)
-                      </Label>
-                      <Input
-                        id="humidity"
-                        type="number"
-                        placeholder="e.g., 65"
-                        value={context.humidity || ''}
-                        onChange={(e) => setContext(prev => ({ 
-                          ...prev, 
-                          humidity: e.target.value ? Number(e.target.value) : undefined 
-                        }))}
-                        className="mt-1"
-                      />
-                    </div>
-                  </div>
 
-                  {/* Recipe Information */}
-                  <div className="space-y-3">
-                    <div>
-                      <Label htmlFor="recipeName" className="text-sm font-medium">
-                        Recipe Used
-                      </Label>
-                      <Input
-                        id="recipeName"
-                        placeholder="e.g., Classic Sourdough"
-                        value={context.recipeName || ''}
-                        onChange={(e) => setContext(prev => ({ 
-                          ...prev, 
-                          recipeName: e.target.value 
-                        }))}
-                        className="mt-1"
-                      />
+                    {/* Recipe Information */}
+                    <div className="space-y-3">
+                      <h4 className="font-medium text-sourdough-700">Recipe Details</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-sourdough-600">Recipe:</span>
+                          <span className="font-medium flex items-center gap-1">
+                            {context.recipeName || 'Not detected'}
+                            {context.recipeName && <CheckCircle className="w-3 h-3 text-green-500" />}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sourdough-600">Hydration:</span>
+                          <span className="font-medium flex items-center gap-1">
+                            {context.recipeHydration ? `${context.recipeHydration}%` : 'Not detected'}
+                            {context.recipeHydration && <CheckCircle className="w-3 h-3 text-green-500" />}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    
-                    <div>
-                      <Label htmlFor="recipeHydration" className="text-sm font-medium">
-                        Dough Hydration (%)
-                      </Label>
-                      <Input
-                        id="recipeHydration"
-                        type="number"
-                        placeholder="e.g., 75"
-                        value={context.recipeHydration || ''}
-                        onChange={(e) => setContext(prev => ({ 
-                          ...prev, 
-                          recipeHydration: e.target.value ? Number(e.target.value) : undefined 
-                        }))}
-                        className="mt-1"
-                      />
-                    </div>
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  {/* Starter Information */}
-                  <div className="space-y-3">
-                    <div>
-                      <Label htmlFor="starterAge" className="text-sm font-medium">
-                        Starter Age & Status
-                      </Label>
-                      <Select 
-                        value={context.starterAge || ''} 
-                        onValueChange={(value) => setContext(prev => ({ ...prev, starterAge: value }))}
-                      >
-                        <SelectTrigger className="mt-1">
-                          <SelectValue placeholder="Select starter age" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="young">Young (less than 2 weeks)</SelectItem>
-                          <SelectItem value="established">Established (2 weeks - 3 months)</SelectItem>
-                          <SelectItem value="mature">Mature (3+ months)</SelectItem>
-                          <SelectItem value="recently-fed">Recently fed (within 24hrs)</SelectItem>
-                          <SelectItem value="peak">At peak activity</SelectItem>
-                          <SelectItem value="sluggish">Sluggish/needs attention</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="starterHydration" className="text-sm font-medium">
-                        Starter Hydration (%)
-                      </Label>
-                      <Input
-                        id="starterHydration"
-                        type="number"
-                        placeholder="e.g., 100"
-                        value={context.starterHydration || ''}
-                        onChange={(e) => setContext(prev => ({ 
-                          ...prev, 
-                          starterHydration: e.target.value ? Number(e.target.value) : undefined 
-                        }))}
-                        className="mt-1"
-                      />
+                    {/* Timing Information */}
+                    <div className="space-y-3 md:col-span-2">
+                      <h4 className="font-medium text-sourdough-700">Bake Progress</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-sourdough-600">Timeline:</span>
+                          <span className="font-medium flex items-center gap-1">
+                            {context.proofingTime || 'Not calculated'}
+                            {context.proofingTime && <CheckCircle className="w-3 h-3 text-green-500" />}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sourdough-600">Active Bake:</span>
+                          <span className="font-medium flex items-center gap-1">
+                            {activeBake ? 'Detected' : 'None active'}
+                            {activeBake && <CheckCircle className="w-3 h-3 text-green-500" />}
+                          </span>
+                        </div>
+                      </div>
+                      {context.additionalNotes && (
+                        <div className="mt-3 p-2 bg-white rounded border text-sm">
+                          <span className="text-sourdough-600">Notes: </span>
+                          <span className="font-medium">{context.additionalNotes}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
-
-                  {/* Timing & Notes */}
-                  <div className="space-y-3">
-                    <div>
-                      <Label htmlFor="proofingTime" className="text-sm font-medium">
-                        Total Proofing Time
-                      </Label>
-                      <Input
-                        id="proofingTime"
-                        placeholder="e.g., 4 hours bulk + 12 hours cold"
-                        value={context.proofingTime || ''}
-                        onChange={(e) => setContext(prev => ({ 
-                          ...prev, 
-                          proofingTime: e.target.value 
-                        }))}
-                        className="mt-1"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="additionalNotes" className="text-sm font-medium">
-                        Additional Notes
-                      </Label>
-                      <Textarea
-                        id="additionalNotes"
-                        placeholder="Any challenges, observations, or special techniques used..."
-                        value={context.additionalNotes || ''}
-                        onChange={(e) => setContext(prev => ({ 
-                          ...prev, 
-                          additionalNotes: e.target.value 
-                        }))}
-                        className="mt-1"
-                        rows={2}
-                      />
-                    </div>
-                  </div>
-                </div>
+                </Card>
               </div>
 
               <div className="text-center pt-4 border-t">
