@@ -317,6 +317,9 @@ export default function StarterLogPage() {
                         </Badge>
                       )}
                     </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      💡 <strong>Tip:</strong> 100% hydration (1:1 water to flour ratio) is the most common starter feeding ratio and creates a balanced, active starter.
+                    </p>
                   </div>
 
                   {/* Feed Amount */}
