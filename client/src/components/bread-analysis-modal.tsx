@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,9 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Camera, Sparkles, TrendingUp, AlertCircle, Thermometer, Droplets } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Loader2, Camera, Sparkles, TrendingUp, AlertCircle, Thermometer, Upload, History, X } from "lucide-react";
 import { analyzeBreadPhoto, convertFileToBase64, type BreadAnalysis, type BreadContext } from "@/lib/breadAnalysis";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { bakeQueries } from "@/lib/supabaseQueries";
 
 interface BreadAnalysisModalProps {
   open: boolean;
@@ -22,7 +26,72 @@ export default function BreadAnalysisModal({ open, onOpenChange, initialImage }:
   const [analysis, setAnalysis] = useState<BreadAnalysis | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [context, setContext] = useState<BreadContext>({});
+  const [showCameraPreview, setShowCameraPreview] = useState(false);
+  const [imageSource, setImageSource] = useState<'upload' | 'camera' | 'gallery'>('upload');
+  
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
+
+  // Get user's bakes to show photos from
+  const { data: recentBakes = [] } = useQuery({
+    queryKey: ['/api/bakes'],
+    enabled: open,
+  });
+
+  // Get photos from all recent bakes
+  const allPhotos = recentBakes.flatMap((bake: any) => 
+    (bake.photos || []).map((photo: any) => ({ ...photo, bakeName: bake.recipeName || 'Untitled Bake' }))
+  );
+
+  // Camera functionality
+  const initializeCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'environment' } // Use back camera by default
+      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+      setShowCameraPreview(true);
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      toast({
+        title: "Camera access denied",
+        description: "Unable to access camera. Please use file upload instead.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const capturePhoto = () => {
+    if (!videoRef.current || !canvasRef.current) return;
+    
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+    
+    if (!context) return;
+    
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0);
+    
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+    setSelectedImage(dataUrl);
+    setAnalysis(null);
+    stopCamera();
+    setImageSource('camera');
+  };
+
+  const stopCamera = () => {
+    if (videoRef.current?.srcObject) {
+      const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
+      tracks.forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
+    setShowCameraPreview(false);
+  };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -32,9 +101,24 @@ export default function BreadAnalysisModal({ open, onOpenChange, initialImage }:
     reader.onload = (e) => {
       setSelectedImage(e.target?.result as string);
       setAnalysis(null); // Clear previous analysis
+      setImageSource('upload');
     };
     reader.readAsDataURL(file);
   };
+
+  const handlePhotoSelect = (photoData: string) => {
+    setSelectedImage(photoData);
+    setAnalysis(null);
+    setImageSource('gallery');
+  };
+
+  // Clean up camera on close
+  useEffect(() => {
+    if (!open) {
+      stopCamera();
+    }
+    return () => stopCamera();
+  }, [open]);
 
   const handleAnalyze = async () => {
     if (!selectedImage) {
@@ -91,45 +175,134 @@ export default function BreadAnalysisModal({ open, onOpenChange, initialImage }:
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Image Upload Section */}
-          <div className="space-y-4">
-            <div className="text-center">
-              {selectedImage ? (
-                <div className="relative">
-                  <img 
-                    src={selectedImage} 
-                    alt="Bread to analyze" 
-                    className="w-full max-w-md mx-auto rounded-lg shadow-md"
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => document.getElementById('bread-image-input')?.click()}
-                    className="mt-2"
-                  >
-                    <Camera className="w-4 h-4 mr-2" />
-                    Change Photo
-                  </Button>
-                </div>
-              ) : (
+          {/* Photo Selection Section */}
+          {!selectedImage ? (
+            <Tabs defaultValue="upload" onValueChange={(value) => setImageSource(value as any)}>
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="upload" className="flex items-center gap-2">
+                  <Upload className="w-4 h-4" />
+                  Upload
+                </TabsTrigger>
+                <TabsTrigger value="camera" className="flex items-center gap-2">
+                  <Camera className="w-4 h-4" />
+                  Camera
+                </TabsTrigger>
+                <TabsTrigger value="gallery" className="flex items-center gap-2">
+                  <History className="w-4 h-4" />
+                  My Photos
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="upload" className="mt-6">
                 <div 
-                  className="border-2 border-dashed border-sourdough-300 rounded-lg p-8 cursor-pointer hover:border-sourdough-500 transition-colors"
+                  className="border-2 border-dashed border-sourdough-300 rounded-lg p-8 cursor-pointer hover:border-sourdough-500 transition-colors text-center"
                   onClick={() => document.getElementById('bread-image-input')?.click()}
                 >
-                  <Camera className="w-12 h-12 mx-auto mb-4 text-sourdough-400" />
-                  <p className="text-sourdough-600">Click to upload a photo of your bread</p>
+                  <Upload className="w-12 h-12 mx-auto mb-4 text-sourdough-400" />
+                  <p className="text-sourdough-600 mb-2">Click to upload a photo of your bread</p>
+                  <p className="text-sm text-sourdough-500">JPG, PNG or WEBP (Max 10MB)</p>
                 </div>
-              )}
-              
-              <input
-                id="bread-image-input"
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-              />
+                <input
+                  id="bread-image-input"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+              </TabsContent>
+
+              <TabsContent value="camera" className="mt-6">
+                {showCameraPreview ? (
+                  <div className="relative">
+                    <video 
+                      ref={videoRef} 
+                      autoPlay 
+                      playsInline 
+                      className="w-full rounded-lg shadow-md"
+                    />
+                    <canvas ref={canvasRef} className="hidden" />
+                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-4">
+                      <Button onClick={capturePhoto} className="bg-accent-orange-500 hover:bg-accent-orange-600">
+                        <Camera className="w-4 h-4 mr-2" />
+                        Capture
+                      </Button>
+                      <Button variant="outline" onClick={stopCamera}>
+                        <X className="w-4 h-4 mr-2" />
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <div 
+                      className="border-2 border-dashed border-sourdough-300 rounded-lg p-8 cursor-pointer hover:border-sourdough-500 transition-colors"
+                      onClick={initializeCamera}
+                    >
+                      <Camera className="w-12 h-12 mx-auto mb-4 text-sourdough-400" />
+                      <p className="text-sourdough-600 mb-2">Take a photo of your bread</p>
+                      <p className="text-sm text-sourdough-500">Click to start camera</p>
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="gallery" className="mt-6">
+                {allPhotos.length > 0 ? (
+                  <ScrollArea className="h-64">
+                    <div className="grid grid-cols-2 gap-3">
+                      {allPhotos.map((photo: any, index: number) => (
+                        <div 
+                          key={photo.id || index}
+                          className="relative group cursor-pointer"
+                          onClick={() => handlePhotoSelect(photo.filename)} // Assuming filename contains base64 data
+                        >
+                          <img 
+                            src={photo.filename} 
+                            alt={`${photo.bakeName} - ${photo.caption || 'Bread photo'}`}
+                            className="w-full h-24 object-cover rounded-lg shadow-sm group-hover:shadow-md transition-shadow"
+                          />
+                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-lg transition-opacity" />
+                          <div className="absolute bottom-1 left-1 right-1">
+                            <p className="text-xs text-white bg-black bg-opacity-50 px-1 py-0.5 rounded truncate">
+                              {photo.bakeName}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                ) : (
+                  <div className="text-center py-8">
+                    <History className="w-12 h-12 mx-auto mb-4 text-sourdough-400" />
+                    <p className="text-sourdough-600 mb-2">No photos yet</p>
+                    <p className="text-sm text-sourdough-500">Photos from your previous bakes will appear here</p>
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          ) : (
+            <div className="text-center">
+              <div className="relative">
+                <img 
+                  src={selectedImage} 
+                  alt="Bread to analyze" 
+                  className="w-full max-w-md mx-auto rounded-lg shadow-md"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedImage('');
+                    setAnalysis(null);
+                  }}
+                  className="mt-2"
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Change Photo
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Context Information Section */}
           {selectedImage && !analysis && (
