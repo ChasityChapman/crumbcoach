@@ -278,8 +278,8 @@ export default function RecipeModal({ isOpen, onClose, recipe }: RecipeModalProp
     <DialogPrimitive.Root open={isOpen} onOpenChange={onClose}>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        <DialogPrimitive.Content className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-2xl translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg max-h-[90vh] flex flex-col">
-          <div className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <DialogPrimitive.Content className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-2xl translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg max-h-[90vh] flex flex-col">
+          <div className="flex flex-row items-center justify-between space-y-0 p-6 pb-4 border-b flex-shrink-0">
             <DialogPrimitive.Title className="text-base sm:text-lg font-semibold leading-none tracking-tight font-display text-sourdough-800">
               {recipe?.id ? "Edit Recipe" : "Create New Recipe"}
             </DialogPrimitive.Title>
@@ -288,8 +288,8 @@ export default function RecipeModal({ isOpen, onClose, recipe }: RecipeModalProp
             </Button>
           </div>
 
-        <div className="flex-1 flex flex-col min-h-0 p-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0 p-6">
             <TabsList className="grid w-full grid-cols-2 mb-4 flex-shrink-0">
               <TabsTrigger value="url" className="flex items-center space-x-2" data-testid="tab-url-import">
                 <Link className="w-4 h-4" />
