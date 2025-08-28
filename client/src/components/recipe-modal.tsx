@@ -335,19 +335,6 @@ export default function RecipeModal({ isOpen, onClose, recipe }: RecipeModalProp
                 )}
               </Button>
               
-              <div className="border-t border-sourdough-200 pt-3">
-                <p className="text-xs text-sourdough-500 mb-2">Or test with sample data:</p>
-                <Button
-                  onClick={() => extractRecipeMutation.mutate("test")}
-                  disabled={extractRecipeMutation.isPending}
-                  variant="outline"
-                  className="w-full border-sourdough-200 text-sourdough-600 hover:bg-sourdough-50"
-                  data-testid="button-test-extraction"
-                >
-                  {extractRecipeMutation.isPending ? "Testing..." : "🧪 Try with Sample Recipe"}
-                </Button>
-              </div>
-              
               {extractRecipeMutation.isPending && (
                 <div className="bg-sourdough-50 border border-sourdough-200 rounded-lg p-4">
                   <div className="flex items-center space-x-3">
