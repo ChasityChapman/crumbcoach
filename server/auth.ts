@@ -6,6 +6,7 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
+import { createClient } from "@supabase/supabase-js";
 
 declare global {
   namespace Express {
@@ -14,6 +15,15 @@ declare global {
 }
 
 const scryptAsync = promisify(scrypt);
+
+// Initialize Supabase client for server-side use
+const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+
+let supabase: any = null;
+if (supabaseUrl && supabaseServiceKey) {
+  supabase = createClient(supabaseUrl, supabaseServiceKey);
+}
 
 async function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
@@ -347,7 +357,56 @@ export function setupAuth(app: Express) {
   });
 }
 
-// Middleware to check if user is authenticated
+// Middleware to verify Supabase JWT token
+export const verifySupabaseAuth = async (req: any, res: any, next: any) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: "Authorization header missing or invalid" });
+    }
+
+    if (!supabase) {
+      console.error('Supabase client not initialized - missing environment variables');
+      return res.status(500).json({ message: "Authentication service unavailable" });
+    }
+
+    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    
+    // Verify the JWT token with Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (error || !user) {
+      console.log('Supabase auth verification failed:', error?.message);
+      return res.status(401).json({ message: "Invalid or expired token" });
+    }
+
+    // Find or create user in our local database
+    let localUser = await storage.getUserByEmail(user.email);
+    
+    if (!localUser) {
+      // Create user if they don't exist locally
+      const newUser = {
+        email: user.email,
+        firstName: user.user_metadata?.firstName || user.user_metadata?.first_name || '',
+        lastName: user.user_metadata?.lastName || user.user_metadata?.last_name || '',
+        username: user.email, // Use email as username for Supabase users
+        password: '', // No password needed for Supabase users
+      };
+      
+      localUser = await storage.createUser(newUser);
+      console.log('Created new user from Supabase auth:', user.email);
+    }
+
+    // Attach user to request object
+    req.user = localUser;
+    next();
+  } catch (error) {
+    console.error('Supabase auth middleware error:', error);
+    res.status(500).json({ message: "Authentication error" });
+  }
+};
+
+// Legacy middleware to check if user is authenticated (kept for backward compatibility)
 export const isAuthenticated = (req: any, res: any, next: any) => {
   if (req.isAuthenticated() && req.user) {
     return next();

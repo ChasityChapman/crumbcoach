@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { analyzeSourdoughImage, extractRecipeFromWebpage } from "./anthropic";
 import { analyzeBreadFromImage } from "./breadAnalysis";
-import { setupAuth, isAuthenticated } from "./auth";
+import { setupAuth, verifySupabaseAuth } from "./auth";
 import { 
   insertRecipeSchema, 
   insertBakeSchema, 
@@ -32,7 +32,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes are now handled in auth.ts
 
   // Recipes
-  app.get("/api/recipes", isAuthenticated, async (req: any, res) => {
+  app.get("/api/recipes", verifySupabaseAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
       const recipes = await storage.getRecipes(userId);
@@ -42,7 +42,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/recipes/:id", isAuthenticated, async (req, res) => {
+  app.get("/api/recipes/:id", verifySupabaseAuth, async (req, res) => {
     try {
       const recipe = await storage.getRecipe(req.params.id);
       if (!recipe) {
@@ -54,7 +54,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/recipes", isAuthenticated, async (req: any, res) => {
+  app.post("/api/recipes", verifySupabaseAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
       const validatedData = insertRecipeSchema.parse({ ...req.body, userId });
@@ -65,7 +65,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/recipes/:id", isAuthenticated, async (req: any, res) => {
+  app.put("/api/recipes/:id", verifySupabaseAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
       const recipeId = req.params.id;
@@ -78,7 +78,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Test extraction endpoint
-  app.post("/api/recipes/extract-test", isAuthenticated, async (req: any, res) => {
+  app.post("/api/recipes/extract-test", verifySupabaseAuth, async (req: any, res) => {
     // Return a test recipe to verify form population works
     const testRecipe = {
       name: "Classic Sourdough Bread",
@@ -106,7 +106,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Extract recipe from URL using AI
-  app.post("/api/recipes/extract-from-url", isAuthenticated, async (req: any, res) => {
+  app.post("/api/recipes/extract-from-url", verifySupabaseAuth, async (req: any, res) => {
     try {
       const { url } = req.body;
       
@@ -157,7 +157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Bakes
-  app.get("/api/bakes", isAuthenticated, async (req: any, res) => {
+  app.get("/api/bakes", verifySupabaseAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
       const bakes = await storage.getBakes(userId);
@@ -167,7 +167,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/bakes/active", isAuthenticated, async (req: any, res) => {
+  app.get("/api/bakes/active", verifySupabaseAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
       const activeBake = await storage.getActiveBake(userId);
@@ -177,7 +177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/bakes/:id", isAuthenticated, async (req, res) => {
+  app.get("/api/bakes/:id", verifySupabaseAuth, async (req, res) => {
     try {
       const bake = await storage.getBake(req.params.id);
       if (!bake) {
@@ -189,7 +189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/bakes", isAuthenticated, async (req: any, res) => {
+  app.post("/api/bakes", verifySupabaseAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
       console.log('Received bake data:', JSON.stringify(req.body, null, 2));
@@ -206,7 +206,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/bakes/:id", isAuthenticated, async (req, res) => {
+  app.patch("/api/bakes/:id", verifySupabaseAuth, async (req, res) => {
     try {
       const bake = await storage.updateBake(req.params.id, req.body);
       if (!bake) {
@@ -219,7 +219,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete bake
-  app.delete("/api/bakes/:id", isAuthenticated, async (req, res) => {
+  app.delete("/api/bakes/:id", verifySupabaseAuth, async (req, res) => {
     try {
       const success = await storage.deleteBake(req.params.id);
       if (!success) {
@@ -232,7 +232,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Timeline Steps
-  app.get("/api/bakes/:bakeId/timeline", isAuthenticated, async (req, res) => {
+  app.get("/api/bakes/:bakeId/timeline", verifySupabaseAuth, async (req, res) => {
     try {
       const steps = await storage.getTimelineSteps(req.params.bakeId);
       res.json(steps);
@@ -241,7 +241,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/timeline-steps", isAuthenticated, async (req, res) => {
+  app.post("/api/timeline-steps", verifySupabaseAuth, async (req, res) => {
     try {
       console.log('Received timeline step data:', JSON.stringify(req.body, null, 2));
       const validatedData = insertTimelineStepSchema.parse(req.body);
@@ -257,7 +257,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/timeline-steps/:id", isAuthenticated, async (req, res) => {
+  app.patch("/api/timeline-steps/:id", verifySupabaseAuth, async (req, res) => {
     try {
       console.log("Updating timeline step:", req.params.id, "with data:", JSON.stringify(req.body, null, 2));
       
@@ -288,7 +288,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Notes
-  app.get("/api/bakes/:bakeId/notes", isAuthenticated, async (req, res) => {
+  app.get("/api/bakes/:bakeId/notes", verifySupabaseAuth, async (req, res) => {
     try {
       const notes = await storage.getBakeNotes(req.params.bakeId);
       res.json(notes);
@@ -297,7 +297,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/notes", isAuthenticated, async (req, res) => {
+  app.post("/api/notes", verifySupabaseAuth, async (req, res) => {
     try {
       const validatedData = insertBakeNoteSchema.parse(req.body);
       const note = await storage.createBakeNote(validatedData);
@@ -308,7 +308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // AI Analysis for photos
-  app.post("/api/photos/:id/analyze", isAuthenticated, async (req: any, res) => {
+  app.post("/api/photos/:id/analyze", verifySupabaseAuth, async (req: any, res) => {
     try {
       const photoId = req.params.id;
       const { imageData } = req.body;
@@ -345,7 +345,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // AI Bread Analysis endpoint
-  app.post("/api/analyze-bread", isAuthenticated, async (req: any, res) => {
+  app.post("/api/analyze-bread", verifySupabaseAuth, async (req: any, res) => {
     try {
       const { image, context } = req.body;
       
@@ -365,7 +365,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Photos
-  app.get("/api/bakes/:bakeId/photos", isAuthenticated, async (req, res) => {
+  app.get("/api/bakes/:bakeId/photos", verifySupabaseAuth, async (req, res) => {
     try {
       const photos = await storage.getBakePhotos(req.params.bakeId);
       res.json(photos);
@@ -374,7 +374,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/photos", isAuthenticated, async (req, res) => {
+  app.post("/api/photos", verifySupabaseAuth, async (req, res) => {
     try {
       const validatedData = insertBakePhotoSchema.parse(req.body);
       const photo = await storage.createBakePhoto(validatedData);
@@ -436,7 +436,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Starter Logs
-  app.get("/api/starter-logs", isAuthenticated, async (req: any, res) => {
+  app.get("/api/starter-logs", verifySupabaseAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
       const logs = await storage.getStarterLogs(userId);
@@ -446,7 +446,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/starter-logs/:id", isAuthenticated, async (req, res) => {
+  app.get("/api/starter-logs/:id", verifySupabaseAuth, async (req, res) => {
     try {
       const log = await storage.getStarterLog(req.params.id);
       if (!log) {
@@ -458,7 +458,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/starter-logs", isAuthenticated, async (req: any, res) => {
+  app.post("/api/starter-logs", verifySupabaseAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
       
@@ -483,7 +483,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/starter-logs/:id", isAuthenticated, async (req: any, res) => {
+  app.put("/api/starter-logs/:id", verifySupabaseAuth, async (req: any, res) => {
     try {
       const logId = req.params.id;
       
@@ -503,7 +503,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/starter-logs/:id", isAuthenticated, async (req, res) => {
+  app.delete("/api/starter-logs/:id", verifySupabaseAuth, async (req, res) => {
     try {
       const success = await storage.deleteStarterLog(req.params.id);
       if (!success) {
@@ -516,7 +516,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Timeline recalibration endpoint
-  app.post("/api/bakes/:id/recalibrate", isAuthenticated, async (req, res) => {
+  app.post("/api/bakes/:id/recalibrate", verifySupabaseAuth, async (req, res) => {
     try {
       const bake = await storage.getBake(req.params.id);
       if (!bake) {
@@ -595,7 +595,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Timeline planning routes
-  app.get("/api/timeline-plans", isAuthenticated, async (req: any, res) => {
+  app.get("/api/timeline-plans", verifySupabaseAuth, async (req: any, res) => {
     try {
       const plans = await storage.getTimelinePlans(req.user.id);
       res.json(plans);
@@ -605,7 +605,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/timeline-plans", isAuthenticated, async (req: any, res) => {
+  app.post("/api/timeline-plans", verifySupabaseAuth, async (req: any, res) => {
     try {
       const { name, targetEndTime, recipeIds } = req.body;
       
@@ -684,7 +684,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/timeline-plans/:id", isAuthenticated, async (req: any, res) => {
+  app.delete("/api/timeline-plans/:id", verifySupabaseAuth, async (req: any, res) => {
     try {
       const plan = await storage.getTimelinePlan(req.params.id);
       if (!plan || plan.userId !== req.user.id) {
