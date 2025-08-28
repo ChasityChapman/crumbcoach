@@ -17,6 +17,7 @@ import { CalendarIcon, Camera, Plus, Thermometer, FlaskConical, Clock, TrendingU
 import { apiRequest } from "@/lib/queryClient";
 import { insertStarterLogSchema, type StarterLog } from "@shared/schema";
 import { format } from "date-fns";
+import BottomNavigation from "@/components/bottom-navigation";
 
 // Form schema with validation
 const starterLogFormSchema = insertStarterLogSchema.extend({
@@ -110,7 +111,7 @@ export default function StarterLogPage() {
   };
 
   return (
-    <div className="p-4 max-w-4xl mx-auto space-y-6">
+    <div className="p-4 max-w-4xl mx-auto space-y-6 pb-20">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Starter Log</h1>
@@ -662,6 +663,9 @@ export default function StarterLogPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Bottom Navigation */}
+      <BottomNavigation currentPath="/starter-log" />
     </div>
   );
 }
