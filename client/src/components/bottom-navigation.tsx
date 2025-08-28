@@ -14,9 +14,9 @@ export default function BottomNavigation({ currentPath }: BottomNavigationProps)
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-sourdough-100 safe-area-pb z-40">
-      <div className="grid grid-cols-5 py-3 px-2 max-w-md mx-auto">
+      <div className="grid grid-cols-6 py-3 px-1 max-w-lg mx-auto">
         <Link href="/">
-          <button className={`flex flex-col items-center py-2 px-2 ${
+          <button className={`flex flex-col items-center py-2 px-1 ${
             isActive('/') ? 'text-accent-orange-500' : 'text-sourdough-500'
           }`}>
             <Home className="w-5 h-5 mb-1" />
@@ -25,7 +25,7 @@ export default function BottomNavigation({ currentPath }: BottomNavigationProps)
         </Link>
         
         <Link href="/recipes">
-          <button className={`flex flex-col items-center py-2 px-2 ${
+          <button className={`flex flex-col items-center py-2 px-1 ${
             isActive('/recipes') ? 'text-accent-orange-500' : 'text-sourdough-500'
           }`}>
             <BookOpen className="w-5 h-5 mb-1" />
@@ -34,7 +34,7 @@ export default function BottomNavigation({ currentPath }: BottomNavigationProps)
         </Link>
         
         <Link href="/starter-log">
-          <button className={`flex flex-col items-center py-2 px-2 ${
+          <button className={`flex flex-col items-center py-2 px-1 ${
             isActive('/starter-log') ? 'text-accent-orange-500' : 'text-sourdough-500'
           }`}>
             <FlaskConical className="w-5 h-5 mb-1" />
@@ -42,8 +42,17 @@ export default function BottomNavigation({ currentPath }: BottomNavigationProps)
           </button>
         </Link>
         
+        <Link href="/timeline-planner">
+          <button className={`flex flex-col items-center py-2 px-1 ${
+            isActive('/timeline-planner') ? 'text-accent-orange-500' : 'text-sourdough-500'
+          }`}>
+            <CalendarClock className="w-5 h-5 mb-1" />
+            <span className="text-xs">Timeline</span>
+          </button>
+        </Link>
+        
         <Link href="/recent-bakes">
-          <button className={`flex flex-col items-center py-2 px-2 ${
+          <button className={`flex flex-col items-center py-2 px-1 ${
             isActive('/recent-bakes') ? 'text-accent-orange-500' : 'text-sourdough-500'
           }`}>
             <Cookie className="w-5 h-5 mb-1" />
@@ -52,7 +61,7 @@ export default function BottomNavigation({ currentPath }: BottomNavigationProps)
         </Link>
         
         <Link href="/profile">
-          <button className={`flex flex-col items-center py-2 px-2 ${
+          <button className={`flex flex-col items-center py-2 px-1 ${
             isActive('/profile') ? 'text-accent-orange-500' : 'text-sourdough-500'
           }`}>
             <User className="w-5 h-5 mb-1" />
