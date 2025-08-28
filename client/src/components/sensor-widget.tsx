@@ -22,7 +22,7 @@ export default function SensorWidget({ reading }: SensorWidgetProps) {
   
   const tempCelsius = reading ? (reading.temperature || 240) / 10 : 24;
   const temperature = tempUnit === 'fahrenheit' ? (tempCelsius * 9/5) + 32 : tempCelsius;
-  const humidity = reading ? reading.humidity || 68 : 68;
+  const humidity = reading ? (reading.humidity || 680) / 10 : 68;
 
   return (
     <div className="px-4 mb-6">
