@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { Recipe } from "@shared/schema";
+import { recipeQueries } from "@/lib/supabaseQueries";
 import BottomNavigation from "@/components/bottom-navigation";
 import RecipeModal from "@/components/recipe-modal";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,7 +17,8 @@ export default function Recipes() {
   const [sortOrder, setSortOrder] = useState<string>("a-z");
   
   const { data: recipes, isLoading } = useQuery<Recipe[]>({
-    queryKey: ["/api/recipes"],
+    queryKey: ["recipes"],
+    queryFn: recipeQueries.getAll,
   });
 
   // Sort recipes based on filter selection

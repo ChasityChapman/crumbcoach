@@ -14,10 +14,10 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { CalendarIcon, Camera, Plus, Thermometer, FlaskConical, Clock, TrendingUp } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
 import { insertStarterLogSchema, type StarterLog } from "@shared/schema";
 import { format } from "date-fns";
 import BottomNavigation from "@/components/bottom-navigation";
+import { starterLogQueries } from "@/lib/supabaseQueries";
 
 // Form schema with validation
 const starterLogFormSchema = insertStarterLogSchema.extend({
@@ -71,17 +71,15 @@ export default function StarterLogPage() {
 
   // Fetch starter logs
   const { data: starterLogs = [], isLoading } = useQuery<StarterLog[]>({
-    queryKey: ["/api/starter-logs"],
+    queryKey: ["starter-logs"],
+    queryFn: starterLogQueries.getAll,
   });
 
   // Create starter log mutation
   const createLogMutation = useMutation({
-    mutationFn: async (data: StarterLogFormData) => {
-      const response = await apiRequest("POST", "/api/starter-logs", data);
-      return response.json();
-    },
+    mutationFn: starterLogQueries.create,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/starter-logs"] });
+      queryClient.invalidateQueries({ queryKey: ["starter-logs"] });
       setActiveTab("history");
       form.reset();
     },

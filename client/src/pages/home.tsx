@@ -1,6 +1,8 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import type { Bake, Recipe, SensorReading, TimelineStep, User } from "@shared/schema";
+import { queryClient } from "@/lib/queryClient";
+import type { Bake, Recipe, SensorReading, TimelineStep } from "@shared/schema";
+import { bakeQueries, sensorQueries, recipeQueries } from "@/lib/supabaseQueries";
+import type { User } from "@supabase/supabase-js";
 import ActiveBakeCard from "@/components/active-bake-card";
 import SensorWidget from "@/components/sensor-widget";
 import QuickActions from "@/components/quick-actions";
@@ -16,7 +18,7 @@ import { useState, useEffect } from "react";
 import { Bell, LogOut, User as UserIcon } from "lucide-react";
 import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_1756224893332.png";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
@@ -28,41 +30,40 @@ import {
 
 export default function Home() {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, signOut } = useSupabaseAuth();
   const [cameraOpen, setCameraOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
   const [startBakeOpen, setStartBakeOpen] = useState(false);
   const [newRecipeOpen, setNewRecipeOpen] = useState(false);
   const [isCreatingBake, setIsCreatingBake] = useState(false);
 
-  const handleLogout = () => {
-    window.location.href = "/api/logout";
+  const handleLogout = async () => {
+    await signOut();
+    // The auth state change will automatically redirect to auth page
   };
 
   const getUserDisplayName = () => {
-    const typedUser = user as User;
-    if (typedUser?.firstName && typedUser?.lastName) {
-      return `${typedUser.firstName} ${typedUser.lastName}`;
+    if (user?.user_metadata?.firstName && user?.user_metadata?.lastName) {
+      return `${user.user_metadata.firstName} ${user.user_metadata.lastName}`;
     }
-    if (typedUser?.firstName) {
-      return typedUser.firstName;
+    if (user?.user_metadata?.firstName) {
+      return user.user_metadata.firstName;
     }
-    if (typedUser?.email) {
-      return typedUser.email;
+    if (user?.email) {
+      return user.email;
     }
     return "User";
   };
 
   const getUserInitials = () => {
-    const typedUser = user as User;
-    if (typedUser?.firstName && typedUser?.lastName) {
-      return `${typedUser.firstName[0]}${typedUser.lastName[0]}`.toUpperCase();
+    if (user?.user_metadata?.firstName && user?.user_metadata?.lastName) {
+      return `${user.user_metadata.firstName[0]}${user.user_metadata.lastName[0]}`.toUpperCase();
     }
-    if (typedUser?.firstName) {
-      return typedUser.firstName[0].toUpperCase();
+    if (user?.user_metadata?.firstName) {
+      return user.user_metadata.firstName[0].toUpperCase();
     }
-    if (typedUser?.email) {
-      return typedUser.email[0].toUpperCase();
+    if (user?.email) {
+      return user.email[0].toUpperCase();
     }
     return "U";
   };
@@ -80,7 +81,8 @@ export default function Home() {
 
   // Get all bakes and filter for active ones
   const { data: allBakes } = useQuery<Bake[]>({
-    queryKey: ["/api/bakes"],
+    queryKey: ["bakes"],
+    queryFn: bakeQueries.getAll,
     staleTime: 0, // Always refetch to ensure fresh data
     refetchOnWindowFocus: true,
     refetchOnMount: true,
@@ -91,54 +93,26 @@ export default function Home() {
     .sort((a, b) => new Date(b.startTime || 0).getTime() - new Date(a.startTime || 0).getTime()); // Sort by newest first
 
   const { data: latestSensor } = useQuery<SensorReading | null>({
-    queryKey: ["/api/sensors/latest"],
+    queryKey: ["sensors", "latest"],
+    queryFn: sensorQueries.getLatest,
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   const { data: recipes } = useQuery<Recipe[]>({
-    queryKey: ["/api/recipes"],
+    queryKey: ["recipes"],
+    queryFn: recipeQueries.getAll,
   });
 
   // Timeline data is now handled individually by each ActiveBakeCard
 
   // Helper function to create timeline steps for existing bake
+  // TODO: Migrate this to use Supabase timeline queries
   const createTimelineSteps = async (bake: Bake) => {
-    console.log('Creating timeline steps for existing bake:', bake.id);
-    const recipe = recipes?.find(r => r.id === bake.recipeId);
-    
-    if (recipe && recipe.steps) {
-      const steps = recipe.steps as any[];
-      console.log('Found recipe with', steps.length, 'steps');
-      
-      for (let i = 0; i < steps.length; i++) {
-        const step = steps[i];
-        try {
-          const timelineStep = await apiRequest("POST", "/api/timeline-steps", {
-            bakeId: bake.id,
-            stepIndex: i,
-            name: step.name,
-            description: step.description || null,
-            estimatedDuration: step.duration,
-            status: i === 0 ? 'active' : 'pending',
-            startTime: i === 0 ? new Date().toISOString() : null,
-            endTime: null,
-            actualDuration: null,
-            autoAdjustments: null
-          });
-          console.log('Created timeline step:', timelineStep);
-        } catch (error) {
-          console.error('Failed to create timeline step:', error);
-        }
-      }
-      
-      // Refresh timeline after creation
-      queryClient.invalidateQueries({ queryKey: [`/api/bakes/${bake.id}/timeline`] });
-      
-      toast({
-        title: "Timeline Created!",
-        description: "Your baking timeline is now ready",
-      });
-    }
+    console.log('Timeline creation temporarily disabled during Supabase migration');
+    toast({
+      title: "Feature Coming Soon",
+      description: "Timeline creation will be available after migration",
+    });
   };
 
   // Timeline creation is now handled by individual ActiveBakeCard components
@@ -161,7 +135,7 @@ export default function Home() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={(user as User)?.profileImageUrl || ''} alt={getUserDisplayName()} />
+                    <AvatarImage src={user?.user_metadata?.profileImageUrl || ''} alt={getUserDisplayName()} />
                     <AvatarFallback>{getUserInitials()}</AvatarFallback>
                   </Avatar>
                 </Button>
@@ -170,9 +144,9 @@ export default function Home() {
                 <div className="flex items-center justify-start gap-2 p-2">
                   <div className="flex flex-col space-y-1 leading-none">
                     <p className="font-medium text-sm sm:text-base">{getUserDisplayName()}</p>
-                    {(user as User)?.email && (
+                    {user?.email && (
                       <p className="w-[200px] truncate text-xs sm:text-sm text-muted-foreground">
-                        {(user as User).email}
+                        {user.email}
                       </p>
                     )}
                   </div>
@@ -209,7 +183,7 @@ export default function Home() {
         )}
 
         {/* Sensor Data */}
-        <SensorWidget reading={latestSensor} />
+        <SensorWidget reading={latestSensor || undefined} />
 
         
         {/* Quick Actions */}
