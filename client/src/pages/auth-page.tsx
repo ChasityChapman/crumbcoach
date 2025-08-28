@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_1756224893332.png";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,6 @@ import { Mail, Lock } from "lucide-react";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import { testSupabaseConnection } from "@/test-supabase";
 
 interface LoginData {
   email: string;
@@ -27,11 +26,6 @@ export default function AuthPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { signIn, signUp, user } = useSupabaseAuth();
-
-  // Test Supabase connection on component mount
-  useEffect(() => {
-    testSupabaseConnection();
-  }, []);
 
   // Redirect if already authenticated
   if (user) {

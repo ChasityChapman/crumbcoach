@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { analyzeSourdoughImage, extractRecipeFromWebpage } from "./anthropic";
+import { analyzeBreadFromImage } from "./breadAnalysis";
 import { setupAuth, isAuthenticated } from "./auth";
 import { 
   insertRecipeSchema, 
@@ -340,6 +341,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Failed to analyze photo:", error);
       res.status(500).json({ message: "Failed to analyze photo" });
+    }
+  });
+
+  // AI Bread Analysis endpoint
+  app.post("/api/analyze-bread", isAuthenticated, async (req: any, res) => {
+    try {
+      const { image } = req.body;
+      
+      if (!image) {
+        return res.status(400).json({ message: "Image data is required" });
+      }
+      
+      const analysis = await analyzeBreadFromImage(image);
+      res.json(analysis);
+    } catch (error) {
+      console.error("Failed to analyze bread:", error);
+      res.status(500).json({ 
+        message: "Failed to analyze bread", 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
     }
   });
 

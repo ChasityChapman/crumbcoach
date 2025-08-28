@@ -14,8 +14,9 @@ import CameraModal from "@/components/camera-modal";
 import NotesModal from "@/components/notes-modal";
 import StartBakeModal from "@/components/start-bake-modal";
 import RecipeModal from "@/components/recipe-modal";
+import BreadAnalysisModal from "@/components/bread-analysis-modal";
 import { useState, useEffect } from "react";
-import { Bell, LogOut, User as UserIcon } from "lucide-react";
+import { Bell, LogOut, User as UserIcon, Sparkles } from "lucide-react";
 import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_1756224893332.png";
 import { useToast } from "@/hooks/use-toast";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
@@ -35,6 +36,7 @@ export default function Home() {
   const [notesOpen, setNotesOpen] = useState(false);
   const [startBakeOpen, setStartBakeOpen] = useState(false);
   const [newRecipeOpen, setNewRecipeOpen] = useState(false);
+  const [breadAnalysisOpen, setBreadAnalysisOpen] = useState(false);
   const [isCreatingBake, setIsCreatingBake] = useState(false);
 
   const handleLogout = async () => {
@@ -202,6 +204,30 @@ export default function Home() {
 
         {/* Note: Timeline view is now integrated into each ActiveBakeCard */}
 
+        {/* AI Bread Analysis Feature */}
+        <div className="px-4 mb-6">
+          <div className="bg-gradient-to-r from-accent-orange-500 to-accent-orange-600 rounded-xl p-4 shadow-lg">
+            <div className="flex items-center justify-between text-white">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="w-5 h-5" />
+                  <h3 className="font-semibold">AI Bread Analysis</h3>
+                </div>
+                <p className="text-sm text-orange-100 leading-relaxed">
+                  Upload a photo of your bread and get expert AI feedback on crumb structure, crust, and tips for improvement.
+                </p>
+              </div>
+              <Button 
+                onClick={() => setBreadAnalysisOpen(true)}
+                className="bg-white text-accent-orange-600 hover:bg-orange-50 ml-4 shadow-md"
+                size="sm"
+              >
+                Try Now
+              </Button>
+            </div>
+          </div>
+        </div>
+
         {/* Tutorial Preview */}
         <TutorialPreview />
 
@@ -234,6 +260,10 @@ export default function Home() {
       <RecipeModal
         isOpen={newRecipeOpen}
         onClose={() => setNewRecipeOpen(false)}
+      />
+      <BreadAnalysisModal
+        open={breadAnalysisOpen}
+        onOpenChange={setBreadAnalysisOpen}
       />
     </div>
   );
