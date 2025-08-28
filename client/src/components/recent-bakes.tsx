@@ -1,5 +1,6 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
+import { bakeQueries } from "@/lib/supabaseQueries";
 import type { Bake, BakePhoto } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Share2, RefreshCw, FileText, X, RotateCcw } from "lucide-react";
@@ -11,7 +12,8 @@ import { useLocation } from "wouter";
 export default function RecentBakes() {
   const { toast } = useToast();
   const { data: bakes } = useQuery<Bake[]>({
-    queryKey: ["/api/bakes"],
+    queryKey: ["bakes"],
+    queryFn: bakeQueries.getAll,
   });
 
   const handleShare = async (bake: Bake) => {
@@ -31,16 +33,20 @@ export default function RecentBakes() {
   // Restart bake mutation
   const restartBakeMutation = useMutation({
     mutationFn: async (bake: Bake) => {
-      return apiRequest("POST", "/api/bakes", {
+      return bakeQueries.create({
         recipeId: bake.recipeId,
         name: `${bake.name} (Restart)`,
         status: "active",
-        startTime: new Date().toISOString(),
+        startTime: new Date(),
+        currentStep: 0,
+        estimatedEndTime: null,
+        actualEndTime: null,
+        environmentalData: null,
+        timelineAdjustments: null,
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/bakes"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/bakes/active"] });
+      queryClient.invalidateQueries({ queryKey: ["bakes"] });
       toast({
         title: "Bake Restarted! 🍞",
         description: "Your new baking session has begun",
@@ -66,7 +72,12 @@ export default function RecentBakes() {
     <div className="px-4 mb-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-sourdough-800">Recent Bakes</h3>
-        <Button variant="ghost" size="sm" className="text-accent-orange-500">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="text-accent-orange-500"
+          onClick={() => setLocation('/recent-bakes')}
+        >
           View All
         </Button>
       </div>

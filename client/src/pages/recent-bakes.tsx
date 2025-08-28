@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { bakeQueries } from "@/lib/supabaseQueries";
 import type { Bake, BakeNote, BakePhoto, TimelineStep } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
@@ -7,7 +8,6 @@ import { ArrowLeft, Clock, FileText, Camera, X, Brain, RotateCcw } from "lucide-
 import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_1756224893332.png";
 import BottomNavigation from "@/components/bottom-navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 interface BakeDetailModalProps {
@@ -21,25 +21,19 @@ function BakeDetailModal({ bake, isOpen, onClose }: BakeDetailModalProps) {
   const [analysis, setAnalysis] = useState<string>('');
   const { toast } = useToast();
 
-  const { data: notes } = useQuery<BakeNote[]>({
-    queryKey: [`/api/bakes/${bake?.id}/notes`],
-    enabled: isOpen && !!bake?.id,
-  });
+  // Notes functionality temporarily disabled during migration
+  const notes: BakeNote[] = [];
 
-  const { data: photos } = useQuery<BakePhoto[]>({
-    queryKey: [`/api/bakes/${bake?.id}/photos`],
-    enabled: isOpen && !!bake?.id,
-  });
+  // Photos functionality temporarily disabled during migration
+  const photos: BakePhoto[] = [];
 
-  const { data: timelineSteps } = useQuery<TimelineStep[]>({
-    queryKey: [`/api/bakes/${bake?.id}/timeline`],
-    enabled: isOpen && !!bake?.id,
-  });
+  // Timeline functionality temporarily disabled during migration
+  const timelineSteps: TimelineStep[] = [];
 
   const analyzeMutation = useMutation({
     mutationFn: async ({ photoId, imageData }: { photoId: string; imageData: string }) => {
-      const response = await apiRequest('POST', `/api/photos/${photoId}/analyze`, { imageData });
-      return response.json();
+      // Photo analysis temporarily disabled during migration
+      return { analysis: 'Photo analysis coming soon!' };
     },
     onSuccess: (data) => {
       setAnalysis(data.analysis);
@@ -55,11 +49,11 @@ function BakeDetailModal({ bake, isOpen, onClose }: BakeDetailModalProps) {
   });
 
   const handleAnalyzePhoto = async (photo: BakePhoto) => {
-    if (!photo.filePath) return;
+    if (!photo.filename) return;
     
     try {
       // Convert file to base64 for analysis
-      const response = await fetch(photo.filePath);
+      const response = await fetch(`/photos/${photo.filename}`);
       const blob = await response.blob();
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -237,21 +231,27 @@ export default function RecentBakesPage() {
   const queryClient = useQueryClient();
 
   const { data: bakes } = useQuery<Bake[]>({
-    queryKey: ["/api/bakes"],
+    queryKey: ["bakes"],
+    queryFn: bakeQueries.getAll,
   });
 
   // Restart bake mutation
   const restartBakeMutation = useMutation({
     mutationFn: async (bake: Bake) => {
-      return apiRequest("POST", "/api/bakes", {
+      return bakeQueries.create({
         recipeId: bake.recipeId,
         name: `${bake.name} (Restart)`,
         status: "active",
-        startTime: new Date().toISOString(),
+        startTime: new Date(),
+        currentStep: 0,
+        estimatedEndTime: null,
+        actualEndTime: null,
+        environmentalData: null,
+        timelineAdjustments: null,
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/bakes"] });
+      queryClient.invalidateQueries({ queryKey: ["bakes"] });
       toast({
         title: "Bake Restarted",
         description: "Your bake has been restarted successfully!",
