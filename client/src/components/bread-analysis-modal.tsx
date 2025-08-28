@@ -3,8 +3,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Camera, Sparkles, TrendingUp, AlertCircle } from "lucide-react";
-import { analyzeBreadPhoto, convertFileToBase64, type BreadAnalysis } from "@/lib/breadAnalysis";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2, Camera, Sparkles, TrendingUp, AlertCircle, Thermometer, Droplets } from "lucide-react";
+import { analyzeBreadPhoto, convertFileToBase64, type BreadAnalysis, type BreadContext } from "@/lib/breadAnalysis";
 import { useToast } from "@/hooks/use-toast";
 
 interface BreadAnalysisModalProps {
@@ -17,6 +21,7 @@ export default function BreadAnalysisModal({ open, onOpenChange, initialImage }:
   const [selectedImage, setSelectedImage] = useState<string>(initialImage || "");
   const [analysis, setAnalysis] = useState<BreadAnalysis | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [context, setContext] = useState<BreadContext>({});
   const { toast } = useToast();
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,7 +50,7 @@ export default function BreadAnalysisModal({ open, onOpenChange, initialImage }:
     try {
       // Convert image to base64
       const base64Data = selectedImage.split(',')[1];
-      const result = await analyzeBreadPhoto(base64Data);
+      const result = await analyzeBreadPhoto(base64Data, context);
       setAnalysis(result);
       toast({
         title: "Analysis complete!",
@@ -124,13 +129,181 @@ export default function BreadAnalysisModal({ open, onOpenChange, initialImage }:
                 className="hidden"
               />
             </div>
+          </div>
 
-            {selectedImage && !analysis && (
-              <div className="text-center">
+          {/* Context Information Section */}
+          {selectedImage && !analysis && (
+            <div className="space-y-6">
+              <div className="border-t pt-6">
+                <h3 className="font-semibold text-sourdough-800 mb-4 flex items-center gap-2">
+                  <Thermometer className="w-4 h-4" />
+                  Baking Context (Optional but Recommended)
+                </h3>
+                <p className="text-sm text-sourdough-600 mb-4">
+                  Providing context helps our AI give more accurate and personalized feedback.
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Environmental Conditions */}
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="temperature" className="text-sm font-medium">
+                        Room Temperature (°C)
+                      </Label>
+                      <Input
+                        id="temperature"
+                        type="number"
+                        placeholder="e.g., 22"
+                        value={context.temperature || ''}
+                        onChange={(e) => setContext(prev => ({ 
+                          ...prev, 
+                          temperature: e.target.value ? Number(e.target.value) : undefined 
+                        }))}
+                        className="mt-1"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="humidity" className="text-sm font-medium">
+                        Humidity (%)
+                      </Label>
+                      <Input
+                        id="humidity"
+                        type="number"
+                        placeholder="e.g., 65"
+                        value={context.humidity || ''}
+                        onChange={(e) => setContext(prev => ({ 
+                          ...prev, 
+                          humidity: e.target.value ? Number(e.target.value) : undefined 
+                        }))}
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Recipe Information */}
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="recipeName" className="text-sm font-medium">
+                        Recipe Used
+                      </Label>
+                      <Input
+                        id="recipeName"
+                        placeholder="e.g., Classic Sourdough"
+                        value={context.recipeName || ''}
+                        onChange={(e) => setContext(prev => ({ 
+                          ...prev, 
+                          recipeName: e.target.value 
+                        }))}
+                        className="mt-1"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="recipeHydration" className="text-sm font-medium">
+                        Dough Hydration (%)
+                      </Label>
+                      <Input
+                        id="recipeHydration"
+                        type="number"
+                        placeholder="e.g., 75"
+                        value={context.recipeHydration || ''}
+                        onChange={(e) => setContext(prev => ({ 
+                          ...prev, 
+                          recipeHydration: e.target.value ? Number(e.target.value) : undefined 
+                        }))}
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  {/* Starter Information */}
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="starterAge" className="text-sm font-medium">
+                        Starter Age & Status
+                      </Label>
+                      <Select 
+                        value={context.starterAge || ''} 
+                        onValueChange={(value) => setContext(prev => ({ ...prev, starterAge: value }))}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder="Select starter age" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="young">Young (less than 2 weeks)</SelectItem>
+                          <SelectItem value="established">Established (2 weeks - 3 months)</SelectItem>
+                          <SelectItem value="mature">Mature (3+ months)</SelectItem>
+                          <SelectItem value="recently-fed">Recently fed (within 24hrs)</SelectItem>
+                          <SelectItem value="peak">At peak activity</SelectItem>
+                          <SelectItem value="sluggish">Sluggish/needs attention</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="starterHydration" className="text-sm font-medium">
+                        Starter Hydration (%)
+                      </Label>
+                      <Input
+                        id="starterHydration"
+                        type="number"
+                        placeholder="e.g., 100"
+                        value={context.starterHydration || ''}
+                        onChange={(e) => setContext(prev => ({ 
+                          ...prev, 
+                          starterHydration: e.target.value ? Number(e.target.value) : undefined 
+                        }))}
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Timing & Notes */}
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="proofingTime" className="text-sm font-medium">
+                        Total Proofing Time
+                      </Label>
+                      <Input
+                        id="proofingTime"
+                        placeholder="e.g., 4 hours bulk + 12 hours cold"
+                        value={context.proofingTime || ''}
+                        onChange={(e) => setContext(prev => ({ 
+                          ...prev, 
+                          proofingTime: e.target.value 
+                        }))}
+                        className="mt-1"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="additionalNotes" className="text-sm font-medium">
+                        Additional Notes
+                      </Label>
+                      <Textarea
+                        id="additionalNotes"
+                        placeholder="Any challenges, observations, or special techniques used..."
+                        value={context.additionalNotes || ''}
+                        onChange={(e) => setContext(prev => ({ 
+                          ...prev, 
+                          additionalNotes: e.target.value 
+                        }))}
+                        className="mt-1"
+                        rows={2}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-center pt-4 border-t">
                 <Button 
                   onClick={handleAnalyze}
                   disabled={isAnalyzing}
-                  className="bg-accent-orange-500 hover:bg-accent-orange-600"
+                  className="bg-accent-orange-500 hover:bg-accent-orange-600 px-8"
                 >
                   {isAnalyzing ? (
                     <>
@@ -145,8 +318,8 @@ export default function BreadAnalysisModal({ open, onOpenChange, initialImage }:
                   )}
                 </Button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Analysis Results */}
           {analysis && (

@@ -347,13 +347,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AI Bread Analysis endpoint
   app.post("/api/analyze-bread", isAuthenticated, async (req: any, res) => {
     try {
-      const { image } = req.body;
+      const { image, context } = req.body;
       
       if (!image) {
         return res.status(400).json({ message: "Image data is required" });
       }
       
-      const analysis = await analyzeBreadFromImage(image);
+      const analysis = await analyzeBreadFromImage(image, context);
       res.json(analysis);
     } catch (error) {
       console.error("Failed to analyze bread:", error);

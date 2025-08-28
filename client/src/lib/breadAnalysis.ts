@@ -17,7 +17,18 @@ export interface BreadAnalysis {
   strengths: string[];
 }
 
-export async function analyzeBreadPhoto(imageBase64: string): Promise<BreadAnalysis> {
+export interface BreadContext {
+  temperature?: number;
+  humidity?: number;
+  recipeName?: string;
+  recipeHydration?: number;
+  starterAge?: string;
+  starterHydration?: number;
+  proofingTime?: string;
+  additionalNotes?: string;
+}
+
+export async function analyzeBreadPhoto(imageBase64: string, context?: BreadContext): Promise<BreadAnalysis> {
   try {
     const response = await fetch('/api/analyze-bread', {
       method: 'POST',
@@ -25,7 +36,8 @@ export async function analyzeBreadPhoto(imageBase64: string): Promise<BreadAnaly
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ 
-        image: imageBase64 
+        image: imageBase64,
+        context: context || {} 
       }),
     });
 

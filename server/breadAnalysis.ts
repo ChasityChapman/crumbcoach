@@ -34,13 +34,26 @@ export interface BreadAnalysis {
   strengths: string[];
 }
 
-export async function analyzeBreadFromImage(base64Image: string): Promise<BreadAnalysis> {
+interface BreadContext {
+  temperature?: number;
+  humidity?: number;
+  recipeName?: string;
+  recipeHydration?: number;
+  starterAge?: string;
+  starterHydration?: number;
+  proofingTime?: string;
+  additionalNotes?: string;
+}
+
+export async function analyzeBreadFromImage(base64Image: string, context?: BreadContext): Promise<BreadAnalysis> {
   try {
     const response = await anthropic.messages.create({
       // "claude-sonnet-4-20250514"
       model: DEFAULT_MODEL_STR,
       max_tokens: 1500,
       system: `You are an expert sourdough baker and bread evaluator. Analyze the bread image and provide detailed, constructive feedback to help the baker improve their technique. Focus on crumb structure, crust development, shape, and overall appearance.
+
+When evaluating the bread, consider the environmental conditions, recipe details, and starter information provided to give more accurate and personalized feedback. Take into account how these factors should influence the expected outcome.
 
 Return your analysis as a JSON object with this exact structure:
 {
@@ -65,7 +78,26 @@ Return your analysis as a JSON object with this exact structure:
         content: [
           {
             type: "text",
-            text: "Please analyze this sourdough bread and provide detailed feedback on how to improve it. Look at the crumb structure, crust development, shape, and overall appearance."
+            text: `Please analyze this sourdough bread and provide detailed feedback on how to improve it. Look at the crumb structure, crust development, shape, and overall appearance.
+
+${context ? `
+BAKING CONTEXT:
+${context.temperature ? `- Room Temperature: ${context.temperature}°C` : ''}
+${context.humidity ? `- Humidity: ${context.humidity}%` : ''}
+${context.recipeName ? `- Recipe Used: ${context.recipeName}` : ''}
+${context.recipeHydration ? `- Dough Hydration: ${context.recipeHydration}%` : ''}
+${context.starterAge ? `- Starter Status: ${context.starterAge}` : ''}
+${context.starterHydration ? `- Starter Hydration: ${context.starterHydration}%` : ''}
+${context.proofingTime ? `- Proofing Time: ${context.proofingTime}` : ''}
+${context.additionalNotes ? `- Additional Notes: ${context.additionalNotes}` : ''}
+
+Please consider how these conditions may have affected the bread's development and adjust your analysis accordingly. For example:
+- Lower temperatures typically require longer fermentation times
+- High humidity can affect crust formation  
+- Higher hydration doughs create more open crumb structures
+- Starter maturity affects flavor development and rise
+- Proofing time affects texture and flavor development
+` : ''}`
           },
           {
             type: "image",
