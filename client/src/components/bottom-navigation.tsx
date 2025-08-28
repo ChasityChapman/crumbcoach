@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Home, BookOpen, Play, User, Clock, CalendarClock, FlaskConical, History } from "lucide-react";
+import { Home, BookOpen, Play, User, Clock, CalendarClock, FlaskConical, Cookie } from "lucide-react";
 
 interface BottomNavigationProps {
   currentPath: string;
@@ -55,8 +55,8 @@ export default function BottomNavigation({ currentPath }: BottomNavigationProps)
           <button className={`flex flex-col items-center py-2 px-2 ${
             isActive('/recent-bakes') ? 'text-accent-orange-500' : 'text-sourdough-500'
           }`}>
-            <History className="w-5 h-5 mb-1" />
-            <span className="text-xs">Recent</span>
+            <Cookie className="w-5 h-5 mb-1" />
+            <span className="text-xs">Bakes</span>
           </button>
         </Link>
       </div>
