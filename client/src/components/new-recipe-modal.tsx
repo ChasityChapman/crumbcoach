@@ -216,7 +216,7 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
               </Button>
             </div>
 
-            <div className="space-y-3 min-h-0">
+            <div className="space-y-3">
               {ingredients.map((ingredient, index) => (
                 <div key={ingredient.id} className="border border-sourdough-200 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
