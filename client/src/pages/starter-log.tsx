@@ -62,23 +62,6 @@ export default function StarterLogPage() {
   const [selectedRecipeId, setSelectedRecipeId] = useState<string>("");
   const [recipeModalOpen, setRecipeModalOpen] = useState(false);
 
-  // Track recipe count to detect when new recipes are created
-  const [previousRecipeCount, setPreviousRecipeCount] = useState(0);
-
-  // Watch for new recipes being created and auto-select them for discard usage
-  useEffect(() => {
-    if (recipes.length > previousRecipeCount && recipeModalOpen) {
-      // A new recipe was created
-      const newestRecipe = recipes[0]; // Recipes are ordered by created_at desc
-      if (newestRecipe && discardUsageType === "new-recipe") {
-        setSelectedRecipeId(newestRecipe.id);
-        setDiscardUsageType("existing-recipe");
-        form.setValue("discardRecipe", newestRecipe.name);
-        setRecipeModalOpen(false);
-      }
-    }
-    setPreviousRecipeCount(recipes.length);
-  }, [recipes.length, recipeModalOpen, discardUsageType, previousRecipeCount, form]);
   const queryClient = useQueryClient();
 
   // Load temperature unit preference from settings
@@ -102,19 +85,6 @@ export default function StarterLogPage() {
   const { data: recipes = [] } = useQuery<Recipe[]>({
     queryKey: ["recipes"],
     queryFn: recipeQueries.getAll,
-  });
-
-  // Create starter log mutation
-  const createLogMutation = useMutation({
-    mutationFn: starterLogQueries.create,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["starter-logs"] });
-      setActiveTab("history");
-      form.reset();
-      // Reset discard usage state
-      setDiscardUsageType("notes");
-      setSelectedRecipeId("");
-    },
   });
 
   const form = useForm<StarterLogFormData>({
@@ -147,6 +117,19 @@ export default function StarterLogPage() {
       form.setValue("hydrationPercent", hydrationPercent);
     }
   }, [watchedFeedRatio?.flour, watchedFeedRatio?.water, form]);
+
+  // Create starter log mutation
+  const createLogMutation = useMutation({
+    mutationFn: starterLogQueries.create,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["starter-logs"] });
+      setActiveTab("history");
+      form.reset();
+      // Reset discard usage state
+      setDiscardUsageType("notes");
+      setSelectedRecipeId("");
+    },
+  });
 
   const onSubmit = (data: StarterLogFormData) => {
     createLogMutation.mutate(data);
