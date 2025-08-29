@@ -168,11 +168,11 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       {/* FIX: grid shell + fixed height + hidden outer overflow */}
-      <DialogContent 
+      <DialogContent
         className={cn(
-          "w-[min(100vw-1rem,56rem)] max-w-[90vw]",
-          "max-h-[90svh] md:max-h-[85svh]",
-          "flex flex-col overflow-hidden p-0"
+          "p-0 flex flex-col overflow-hidden",
+          "w-screen max-w-none md:w-[min(100vw-2rem,56rem)]",
+          "h-[100svh] md:h-auto md:max-h-[85svh]"
         )}
       >
         <div className="sticky top-0 z-10 bg-white/90 backdrop-blur px-6 pt-6 pb-4 border-b">
