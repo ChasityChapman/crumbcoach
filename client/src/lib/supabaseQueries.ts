@@ -18,7 +18,7 @@ export const starterLogQueries = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
-    // Map camelCase form fields to snake_case database columns (only essential ones)
+    // Use only the most basic columns that definitely exist
     const { data, error } = await supabase
       .from('starter_logs')
       .insert({
@@ -32,7 +32,6 @@ export const starterLogQueries = {
         rise_time_minutes: ((starterLog.riseTimeHours || 0) * 60 + (starterLog.riseTimeMinutes || 0)) || null,
         starter_health: starterLog.starterStage,
         texture_notes: starterLog.conditionNotes,
-        discard_amount_grams: starterLog.discardUsed ? (starterLog.feedAmountGrams || 50) : null,
       })
       .select()
       .single();
