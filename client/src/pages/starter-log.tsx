@@ -139,12 +139,26 @@ export default function StarterLogPage() {
   const createLogMutation = useMutation({
     mutationFn: starterLogQueries.create,
     onSuccess: () => {
+      console.log('Starter log saved successfully');
       queryClient.invalidateQueries({ queryKey: ["starter-logs"] });
       setActiveTab("history");
       form.reset();
       // Reset discard usage state
       setDiscardUsageType("notes");
       setSelectedRecipeId("");
+      toast({
+        title: "Log Entry Saved",
+        description: "Your starter log entry has been saved successfully.",
+        duration: 3000,
+      });
+    },
+    onError: (error) => {
+      console.error('Error saving starter log:', error);
+      toast({
+        title: "Save Failed",
+        description: "Failed to save your starter log entry. Please try again.",
+        duration: 5000,
+      });
     },
   });
 
@@ -201,11 +215,20 @@ export default function StarterLogPage() {
   };
 
   const onSubmit = (data: StarterLogFormData) => {
-    // Ensure logDate is properly formatted for the mutation
+    console.log('Form submitted with data:', data);
+    
+    // Ensure all fields are properly formatted for the mutation
     const formattedData = {
       ...data,
       logDate: data.logDate || new Date(),
+      hydrationPercent: data.hydrationPercent ?? null,
+      ambientTempF: data.ambientTempF ?? null,
+      ambientTempC: data.ambientTempC ?? null,
+      riseTimeHours: data.riseTimeHours ?? null,
+      riseTimeMinutes: data.riseTimeMinutes ?? null,
     };
+    
+    console.log('Formatted data for mutation:', formattedData);
     createLogMutation.mutate(formattedData);
   };
 
