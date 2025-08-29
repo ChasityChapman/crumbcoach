@@ -140,6 +140,19 @@ export const timelinePlans = pgTable("timeline_plans", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// User entitlements table for subscription management
+export const userEntitlements = pgTable("user_entitlements", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  subscriptionStatus: varchar("subscription_status").notNull(), // 'free', 'hobby_pro'
+  entitlements: jsonb("entitlements").notNull(), // RevenueCat entitlements
+  revenueCatCustomerInfo: jsonb("revenue_cat_customer_info"), // Full RevenueCat customer data
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("IDX_user_entitlements_user_id").on(table.userId),
+]);
+
 // Analytics events table to track user actions
 export const analyticsEvents = pgTable("analytics_events", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -223,6 +236,7 @@ export const userRelations = relations(users, ({ many }) => ({
   passwordResetTokens: many(passwordResetTokens),
   timelinePlans: many(timelinePlans),
   starterLogs: many(starterLogs),
+  entitlements: many(userEntitlements),
 }));
 
 export const passwordResetTokenRelations = relations(passwordResetTokens, ({ one }) => ({
@@ -303,6 +317,13 @@ export const starterLogRelations = relations(starterLogs, ({ one }) => ({
   }),
 }));
 
+export const userEntitlementRelations = relations(userEntitlements, ({ one }) => ({
+  user: one(users, {
+    fields: [userEntitlements.userId],
+    references: [users.id],
+  }),
+}));
+
 // Insert schemas
 export const insertRecipeSchema = createInsertSchema(recipes).omit({ id: true, createdAt: true });
 export const insertBakeSchema = createInsertSchema(bakes)
@@ -331,6 +352,7 @@ export const insertStarterLogSchema = createInsertSchema(starterLogs)
   .extend({
     logDate: z.union([z.date(), z.string().datetime().transform((str) => new Date(str))]).optional(),
   });
+export const insertUserEntitlementSchema = createInsertSchema(userEntitlements).omit({ id: true, createdAt: true, updatedAt: true });
 
 // Types
 export type Recipe = typeof recipes.$inferSelect;
@@ -357,3 +379,5 @@ export type UserSession = typeof userSessions.$inferSelect;
 export type InsertUserSession = z.infer<typeof insertUserSessionSchema>;
 export type StarterLog = typeof starterLogs.$inferSelect;
 export type InsertStarterLog = z.infer<typeof insertStarterLogSchema>;
+export type UserEntitlement = typeof userEntitlements.$inferSelect;
+export type InsertUserEntitlement = z.infer<typeof insertUserEntitlementSchema>;
