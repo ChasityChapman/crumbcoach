@@ -206,6 +206,15 @@ export default function StarterLogPage() {
                 <FlaskConical className="h-5 w-5 text-amber-500" />
                 Log Starter Feeding
               </CardTitle>
+              <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <Settings className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-blue-700 dark:text-blue-300">
+                  <p className="font-medium">Save Time with Defaults</p>
+                  <p className="text-blue-600 dark:text-blue-400 mt-1">
+                    Fill out your typical feeding preferences and click "Save as Defaults" to automatically load them for future entries.
+                  </p>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <Form {...form}>
