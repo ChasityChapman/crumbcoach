@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { getPhotoUrl } from './storage';
 import type { StarterLog, Recipe, Bake, TimelinePlan, Tutorial, BakeNote, BakePhoto, TimelineStep } from '@shared/schema';
 
 // Starter Logs
@@ -287,7 +288,12 @@ export const bakePhotoQueries = {
       .order('created_at', { ascending: true });
     
     if (error) throw error;
-    return data || [];
+    
+    // Add storage URLs to photo data
+    return (data || []).map(photo => ({
+      ...photo,
+      url: getPhotoUrl(photo.filename)
+    }));
   },
 
   create: async (photo: Omit<BakePhoto, 'id' | 'createdAt'>): Promise<BakePhoto> => {

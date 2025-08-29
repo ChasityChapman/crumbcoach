@@ -9,6 +9,7 @@ import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_175622489
 import BottomNavigation from "@/components/bottom-navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import PhotoGallery from "@/components/photo-gallery";
 
 interface BakeDetailModalProps {
   bake: Bake;
@@ -127,12 +128,12 @@ function BakeDetailModal({ bake, isOpen, onClose }: BakeDetailModalProps) {
                 )}
                 <div className="mt-2 text-sm text-sourdough-600">
                   <div className="flex justify-between">
-                    <span>Hydration:</span>
-                    <span>{recipe.hydrationPercentage}%</span>
+                    <span>Difficulty:</span>
+                    <span>{recipe.difficulty}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Yield:</span>
-                    <span>{recipe.yieldAmount}g</span>
+                    <span>Total Time:</span>
+                    <span>{recipe.totalTimeHours}h</span>
                   </div>
                 </div>
               </div>
@@ -237,61 +238,9 @@ function BakeDetailModal({ bake, isOpen, onClose }: BakeDetailModalProps) {
             )}
           </div>
 
-          {/* Photos */}
+          {/* Photos Gallery */}
           <div className="p-4">
-            <div className="flex items-center space-x-2 mb-3">
-              <Camera className="w-5 h-5 text-sourdough-600" />
-              <h3 className="font-medium text-sourdough-800">Photos</h3>
-            </div>
-            {photos && photos.length > 0 ? (
-              <div className="space-y-3">
-                {photos.map((photo) => (
-                  <div key={photo.id} className="space-y-2">
-                    <div className="aspect-video bg-sourdough-100 rounded-lg flex items-center justify-center relative">
-                      {photo.filePath ? (
-                        <img 
-                          src={photo.filePath} 
-                          alt={photo.description || 'Bake photo'} 
-                          className="w-full h-full object-cover rounded-lg"
-                        />
-                      ) : (
-                        <Camera className="w-8 h-8 text-sourdough-400" />
-                      )}
-                    </div>
-                    
-                    {photo.description && (
-                      <p className="text-xs text-sourdough-600">{photo.description}</p>
-                    )}
-                    
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleAnalyzePhoto(photo)}
-                        disabled={analyzeMutation.isPending || !photo.filePath}
-                        className="text-xs"
-                        data-testid={`button-analyze-photo-${photo.id}`}
-                      >
-                        <Brain className="w-3 h-3 mr-1" />
-                        {analyzeMutation.isPending && selectedPhoto === photo.id 
-                          ? "Analyzing..." 
-                          : "AI Analysis"
-                        }
-                      </Button>
-                    </div>
-                    
-                    {selectedPhoto === photo.id && analysis && (
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">
-                        <h4 className="text-sm font-medium text-blue-900 mb-2">AI Analysis Results</h4>
-                        <div className="text-sm text-blue-800 whitespace-pre-wrap">{analysis}</div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-sourdough-500">No photos taken during this bake</p>
-            )}
+            <PhotoGallery bakeId={bake.id} className="" />
           </div>
         </div>
       </div>
