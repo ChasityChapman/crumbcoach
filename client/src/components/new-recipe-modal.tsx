@@ -158,11 +158,13 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
     <Dialog open={isOpen} onOpenChange={onClose}>
       {/* FIX: grid shell + fixed height + hidden outer overflow */}
       <DialogContent className="p-0">
-        <DialogHeader className="p-6 pb-4 border-b">
-          <DialogTitle className="font-display text-sourdough-800">Create New Recipe</DialogTitle>
-        </DialogHeader>
+        <div className="sticky top-0 z-10 bg-white/90 backdrop-blur px-6 pt-6 pb-4 border-b">
+          <DialogHeader>
+            <DialogTitle className="font-display text-sourdough-800">Create New Recipe</DialogTitle>
+          </DialogHeader>
+        </div>
 
-        <div className="p-6 space-y-6">
+        <div className="px-6 py-4 max-h-[65vh] overflow-y-auto space-y-6">
           {/* Basic Info */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -357,27 +359,28 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
           </div>
         </div>
 
-        <div className="flex space-x-3 p-6 pt-4 border-t">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            className="flex-1 border-sourdough-200"
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={
-              !recipeName.trim() ||
-              !difficulty ||
-              steps.some(step => !step.name.trim()) ||
-              ingredients.some(ing => !ing.name.trim() || ing.amount <= 0) ||
-              createRecipeMutation.isPending
-            }
-            className="flex-1 bg-sourdough-500 hover:bg-sourdough-600 text-white"
-          >
-            {createRecipeMutation.isPending ? "Creating..." : "Create Recipe"}
-          </Button>
+        <div className="sticky bottom-0 z-10 bg-white/90 backdrop-blur px-6 py-4 border-t">
+          <div className="flex justify-end gap-3">
+            <Button 
+              variant="outline" 
+              onClick={onClose}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={
+                !recipeName.trim() ||
+                !difficulty ||
+                steps.some(step => !step.name.trim()) ||
+                ingredients.some(ing => !ing.name.trim() || ing.amount <= 0) ||
+                createRecipeMutation.isPending
+              }
+              className="bg-sourdough-500 hover:bg-sourdough-600 text-white"
+            >
+              {createRecipeMutation.isPending ? "Creating..." : "Create Recipe"}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
