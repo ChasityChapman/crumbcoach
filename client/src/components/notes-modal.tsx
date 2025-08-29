@@ -66,11 +66,8 @@ export default function NotesModal({ isOpen, onClose, bakeId }: NotesModalProps)
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-lg mx-auto max-h-[80vh] flex flex-col">
-        <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <DialogHeader className="pb-4">
           <DialogTitle className="font-display text-sourdough-800">Bake Notes</DialogTitle>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="w-4 h-4" />
-          </Button>
         </DialogHeader>
 
         {/* Help Text */}
