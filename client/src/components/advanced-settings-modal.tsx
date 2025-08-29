@@ -97,14 +97,16 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
         .single();
       
       return data;
-    },
-    onSuccess: (userData) => {
-      if (userData) {
-        setFirstName(userData.first_name || '');
-        setLastName(userData.last_name || '');
-      }
     }
   });
+
+  // Populate form fields when user data loads
+  useEffect(() => {
+    if (currentUser) {
+      setFirstName(currentUser.first_name || '');
+      setLastName(currentUser.last_name || '');
+    }
+  }, [currentUser]);
 
   // Update user profile mutation
   const updateUserMutation = useMutation({
