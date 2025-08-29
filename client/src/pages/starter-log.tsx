@@ -62,17 +62,21 @@ export default function StarterLogPage() {
   const [discardUsageType, setDiscardUsageType] = useState<"notes" | "existing-recipe" | "new-recipe">("notes");
   const [selectedRecipeId, setSelectedRecipeId] = useState<string>("");
   const [recipeModalOpen, setRecipeModalOpen] = useState(false);
+  const [starterName, setStarterName] = useState<string>('My Starter');
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Load temperature unit preference from settings
+  // Load preferences from settings
   useEffect(() => {
     const saved = localStorage.getItem('crumbCoachSettings');
     if (saved) {
       const settings = JSON.parse(saved);
       if (settings.tempUnit) {
         setTempUnit(settings.tempUnit);
+      }
+      if (settings.starterName) {
+        setStarterName(settings.starterName);
       }
     }
   }, []);
@@ -235,6 +239,32 @@ export default function StarterLogPage() {
         </div>
         <FlaskConical className="h-8 w-8 text-amber-500" />
       </div>
+
+      {/* Starter Name Display */}
+      <Card className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border-amber-200 dark:border-amber-800">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center justify-center">
+                <FlaskConical className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-amber-900 dark:text-amber-100">
+                  {starterName}
+                </h2>
+                <p className="text-sm text-amber-700 dark:text-amber-300">
+                  Your sourdough starter
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-amber-600 dark:text-amber-400">
+                Customize this name in Advanced Settings
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-2">
