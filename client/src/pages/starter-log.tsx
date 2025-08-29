@@ -217,23 +217,20 @@ export default function StarterLogPage() {
   const onSubmit = (data: StarterLogFormData) => {
     console.log('Form submitted with data:', data);
     
-    // Map form data to actual database column names (based on SQL query results)
+    // Map form data to actual database column names (from database query)
     const formattedData = {
       logDate: data.logDate || new Date(),
       flourTypes: data.flourTypes,
       feedRatio: data.feedRatio,
       feedAmountGrams: data.feedAmountGrams,
       hydrationPercent: data.hydrationPercent ?? null,
-      // Use the actual column names from the database
-      starterStage: data.starterStage ?? null, 
-      conditionNotes: data.conditionNotes ?? "", 
-      riseTimeHours: data.riseTimeHours ?? null,
-      riseTimeMinutes: data.riseTimeMinutes ?? null,
-      ambientTempF: data.ambientTempF ?? null,
-      ambientTempC: data.ambientTempC ?? null,
-      discardUsed: data.discardUsed ?? false,
-      discardRecipe: data.discardRecipe ?? "",
-      peakActivity: data.peakActivity ?? false,
+      // Map to the actual database columns that exist
+      environmentalTemp: data.ambientTempC || data.ambientTempF || null, // Maps to environmental_temp
+      riseTimeMinutes: (data.riseTimeHours || 0) * 60 + (data.riseTimeMinutes || 0) || null, // Combine into rise_time_minutes
+      starterHealth: data.starterStage ?? null, // Maps to starter_health
+      textureNotes: data.conditionNotes ?? "", // Maps to texture_notes
+      discardAmountGrams: data.discardUsed ? (data.feedAmountGrams || 50) : null, // Maps to discard_amount_grams
+      // Note: peakActivity doesn't seem to have a corresponding column in the database
     };
     
     console.log('Formatted data for mutation:', formattedData);
