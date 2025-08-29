@@ -1,3 +1,15 @@
+Below is a drop-in replacement for your component that:
+
+Forces a predictable layout using CSS Grid on the dialog container.
+
+Makes the middle section truly scrollable with min-h-0 + overflow-y-auto.
+
+Avoids double scroll by putting overflow-hidden on the dialog shell.
+
+(Bonus) fixes parseInt → parseFloat so decimal amounts work.
+
+Paste this in place of your component:
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -335,7 +347,15 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
                       <Input
                         type="number"
                         value={step.duration}
-                        onChange={(e) => updateStep(step.id, "duration", parseInt(e.target.value) || 0)}
+                        onChange={(e) =>
+                          updateStep(
+                            step.id,
+                            "duration",
+                            Number.isNaN(parseFloat(e.target.value))
+                              ? 0
+                              : parseFloat(e.target.value)
+                          )
+                        }
                         min="1"
                         className="border-sourdough-200"
                       />
@@ -358,13 +378,9 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Footer */}
         <div className="flex space-x-3 p-6 pt-4 border-t">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            className="flex-1 border-sourdough-200"
-          >
+          <Button variant="outline" onClick={onClose} className="flex-1 border-sourdough-200">
             Cancel
           </Button>
           <Button
@@ -385,3 +401,13 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
     </Dialog>
   );
 }
+
+
+If this still doesn’t scroll, two quick sanity checks:
+
+Make sure you don’t have a global rule disabling scroll:
+
+html, body { overflow: hidden; } /* ← remove or override */
+
+
+Confirm no ancestor of the dialog (like a page wrapper) is forcing overflow-hidden + fixed height. The dialog renders in a portal, but a locked <body> can still block page scroll.
