@@ -158,7 +158,7 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
     <Dialog open={isOpen} onOpenChange={onClose}>
       {/* FIX: grid shell + fixed height + hidden outer overflow */}
       <DialogContent 
-        className="w-[calc(100vw-1rem)] max-w-3xl max-h-[85vh] p-0 overflow-hidden flex flex-col mx-auto my-4"
+        className="w-[95vw] sm:w-[90vw] md:w-[80vw] lg:w-[70vw] max-w-3xl max-h-[85vh] p-0 overflow-hidden flex flex-col mx-auto my-4"
       >
         <DialogHeader className="p-6 pb-4 border-b">
           <DialogTitle className="font-display text-sourdough-800">Create New Recipe</DialogTitle>
@@ -166,7 +166,7 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
 
         <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-visible">
           {/* Basic Info */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="recipeName">Recipe Name *</Label>
               <Input
@@ -235,8 +235,8 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
-                    <div className="sm:col-span-3 space-y-2">
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                    <div className="md:col-span-3 space-y-2">
                       <Label>Name *</Label>
                       <Input
                         value={ingredient.name}
@@ -321,8 +321,8 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
                     )}
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="col-span-2 space-y-2">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="md:col-span-2 space-y-2">
                       <Label>Step Name *</Label>
                       <Input
                         value={step.name}
