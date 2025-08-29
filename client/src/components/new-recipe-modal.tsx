@@ -198,7 +198,7 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
                 <SelectTrigger className="border-sourdough-200">
                   <SelectValue placeholder="Select difficulty" />
                 </SelectTrigger>
-                <SelectContent className="max-h-[50vh] overflow-y-auto" position="popper" sideOffset={4}>
+                <SelectContent position="popper" sideOffset={6} className="max-h-[50svh] overflow-y-auto">
                   <SelectItem value="beginner">Beginner</SelectItem>
                   <SelectItem value="intermediate">Intermediate</SelectItem>
                   <SelectItem value="advanced">Advanced</SelectItem>
@@ -278,7 +278,7 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
                         <SelectTrigger className="border-sourdough-200">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="max-h-[50vh] overflow-y-auto" position="popper" sideOffset={4}>
+                        <SelectContent position="popper" sideOffset={6} className="max-h-[50svh] overflow-y-auto">
                           <SelectItem value="g">g</SelectItem>
                           <SelectItem value="kg">kg</SelectItem>
                           <SelectItem value="ml">ml</SelectItem>
