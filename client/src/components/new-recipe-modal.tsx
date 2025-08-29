@@ -157,23 +157,12 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       {/* FIX: grid shell + fixed height + hidden outer overflow */}
-      <DialogContent
-        className="
-          w-[calc(100vw-2rem)]
-          max-w-3xl
-          h-[90vh]
-          p-0
-          overflow-hidden
-          flex flex-col
-        "
-      >
-        {/* Header (fixed height) */}
-        <DialogHeader className="p-6 pb-4 border-b flex-shrink-0">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-3xl max-h-[90vh] p-0 overflow-y-auto">
+        <DialogHeader className="p-6 pb-4 border-b">
           <DialogTitle className="font-display text-sourdough-800">Create New Recipe</DialogTitle>
         </DialogHeader>
 
-        {/* Middle section (scrollable) */}
-        <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-6">
+        <div className="p-6 space-y-6">
           {/* Basic Info */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -368,8 +357,7 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
           </div>
         </div>
 
-        {/* Footer (fixed height) */}
-        <div className="flex space-x-3 p-6 pt-4 border-t flex-shrink-0">
+        <div className="flex space-x-3 p-6 pt-4 border-t">
           <Button
             variant="outline"
             onClick={onClose}
