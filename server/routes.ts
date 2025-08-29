@@ -4,6 +4,9 @@ import { z } from "zod";
 import bcrypt from "bcrypt";
 import { eq, and, desc } from "drizzle-orm";
 import { db } from "./db";
+import { requestLogger, errorHandler, getHealthCheck } from "./middleware/monitoring";
+import { PerformanceMonitor } from "./utils/performance";
+import { runDeploymentChecks, getDeploymentSummary } from "./utils/deployment-check";
 import { 
   users, 
   recipes, 
@@ -86,13 +89,41 @@ const resetPasswordSchema = z.object({
 export async function registerRoutes(app: Express): Promise<Server> {
   console.log('=== REGISTERING ROUTES ===');
   
-  // Health check endpoint
+  // Add monitoring middleware
+  app.use(requestLogger);
+  
+  // Enhanced health check endpoint
   app.get('/api/health', (req, res) => {
-    res.json({ 
-      status: 'healthy', 
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV || 'development',
-      version: '1.0.0'
+    res.json(getHealthCheck());
+  });
+
+  // Production readiness check endpoint
+  app.get('/api/deployment-status', async (req, res) => {
+    try {
+      const checks = await runDeploymentChecks();
+      const summary = getDeploymentSummary(checks);
+      
+      res.json({
+        summary,
+        checks,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      res.status(500).json({
+        error: 'Failed to run deployment checks',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Performance metrics endpoint
+  app.get('/api/metrics', (req, res) => {
+    const metrics = PerformanceMonitor.getMetrics();
+    res.json({
+      performance: metrics,
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+      timestamp: new Date().toISOString()
     });
   });
 
@@ -669,11 +700,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Error handling middleware
-  app.use((error: any, req: Request, res: Response, next: any) => {
-    console.error('Unhandled error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  });
+  // Add error handling middleware
+  app.use(errorHandler);
 
   console.log('=== ROUTES REGISTERED SUCCESSFULLY ===');
   
