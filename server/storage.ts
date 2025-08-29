@@ -119,6 +119,12 @@ export interface IStorage {
   createStarterLog(log: InsertStarterLog): Promise<StarterLog>;
   updateStarterLog(id: string, logData: Partial<InsertStarterLog>): Promise<StarterLog | undefined>;
   deleteStarterLog(id: string): Promise<boolean>;
+  
+  // GDPR/CCPA Compliance operations
+  deleteAllUserData(userId: string): Promise<boolean>;
+  exportUserData(userId: string): Promise<any>;
+  anonymizeUserData(userId: string): Promise<boolean>;
+  cleanupExpiredData(): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -512,6 +518,126 @@ export class DatabaseStorage implements IStorage {
   async deleteStarterLog(id: string): Promise<boolean> {
     const result = await db.delete(starterLogs).where(eq(starterLogs.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // GDPR/CCPA Compliance operations
+  async deleteAllUserData(userId: string): Promise<boolean> {
+    try {
+      console.log('GDPR: Starting complete data deletion for user:', userId);
+      
+      // Delete user data in order of dependencies (child records first)
+      await db.delete(sensorReadings).where(eq(sensorReadings.userId, userId));
+      await db.delete(bakePhotos).where(eq(bakePhotos.userId, userId));
+      await db.delete(bakeNotes).where(eq(bakeNotes.userId, userId));
+      await db.delete(timelineSteps).where(sql`${timelineSteps.bakeId} IN (SELECT id FROM bakes WHERE userId = ${userId})`);
+      await db.delete(timelinePlans).where(eq(timelinePlans.userId, userId));
+      await db.delete(bakes).where(eq(bakes.userId, userId));
+      await db.delete(recipes).where(eq(recipes.userId, userId));
+      await db.delete(starterLogs).where(eq(starterLogs.userId, userId));
+      await db.delete(users).where(eq(users.id, userId));
+      
+      console.log('GDPR: Complete data deletion successful');
+      return true;
+    } catch (error) {
+      console.error('GDPR: Data deletion failed:', error);
+      return false;
+    }
+  }
+
+  async exportUserData(userId: string): Promise<any> {
+    try {
+      console.log('GDPR: Starting data export for user:', userId);
+      
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+      const userRecipes = await db.select().from(recipes).where(eq(recipes.userId, userId));
+      const userBakes = await db.select().from(bakes).where(eq(bakes.userId, userId));
+      const userNotes = await db.select().from(bakeNotes).where(eq(bakeNotes.userId, userId));
+      const userPhotos = await db.select().from(bakePhotos).where(eq(bakePhotos.userId, userId));
+      const userSensors = await db.select().from(sensorReadings).where(eq(sensorReadings.userId, userId));
+      const userLogs = await db.select().from(starterLogs).where(eq(starterLogs.userId, userId));
+      const userPlans = await db.select().from(timelinePlans).where(eq(timelinePlans.userId, userId));
+      
+      // Get timeline steps for user's bakes
+      const bakeIds = userBakes.map(bake => bake.id);
+      let userTimeline = [];
+      if (bakeIds.length > 0) {
+        userTimeline = await db.select().from(timelineSteps)
+          .where(sql`${timelineSteps.bakeId} IN (${sql.join(bakeIds.map(id => sql`${id}`), sql`, `)})`);
+      }
+      
+      return {
+        profile: {
+          id: user?.id,
+          username: user?.username,
+          email: user?.email,
+          createdAt: user?.createdAt,
+          updatedAt: user?.updatedAt
+        },
+        recipes: userRecipes,
+        bakes: userBakes,
+        notes: userNotes,
+        photos: userPhotos,
+        sensorReadings: userSensors,
+        starterLogs: userLogs,
+        timelinePlans: userPlans,
+        timelineSteps: userTimeline
+      };
+    } catch (error) {
+      console.error('GDPR: Data export failed:', error);
+      throw error;
+    }
+  }
+
+  async anonymizeUserData(userId: string): Promise<boolean> {
+    try {
+      console.log('GDPR: Starting data anonymization for user:', userId);
+      
+      // Anonymize personal data while keeping recipe/baking data
+      const anonymizedData = {
+        username: `anonymous_${Date.now()}`,
+        email: `deleted_${Date.now()}@example.com`,
+        password: 'ACCOUNT_DELETED',
+        updatedAt: new Date()
+      };
+      
+      await db.update(users)
+        .set(anonymizedData)
+        .where(eq(users.id, userId));
+      
+      console.log('GDPR: Data anonymization successful');
+      return true;
+    } catch (error) {
+      console.error('GDPR: Data anonymization failed:', error);
+      return false;
+    }
+  }
+
+  async cleanupExpiredData(): Promise<number> {
+    try {
+      // Delete data older than 7 years (GDPR retention limit)
+      const cutoffDate = new Date();
+      cutoffDate.setFullYear(cutoffDate.getFullYear() - 7);
+      
+      let totalDeleted = 0;
+      
+      // Clean up old sensor readings (keep only last 2 years)
+      const sensorCutoff = new Date();
+      sensorCutoff.setFullYear(sensorCutoff.getFullYear() - 2);
+      const sensorResult = await db.delete(sensorReadings)
+        .where(sql`${sensorReadings.timestamp} < ${sensorCutoff}`);
+      totalDeleted += sensorResult.rowCount || 0;
+      
+      // Clean up old bakes and associated data
+      const bakeResult = await db.delete(bakes)
+        .where(sql`${bakes.createdAt} < ${cutoffDate}`);
+      totalDeleted += bakeResult.rowCount || 0;
+      
+      console.log(`Data retention: Cleaned up ${totalDeleted} expired records`);
+      return totalDeleted;
+    } catch (error) {
+      console.error('Data retention cleanup failed:', error);
+      return 0;
+    }
   }
 }
 

@@ -1221,21 +1221,6 @@ function detectOvenConflicts(ovenSchedule: any[]) {
     }
   });
 
-  // Data retention cleanup (internal endpoint)
-  app.post("/api/admin/cleanup-expired-data", async (req, res) => {
-    try {
-      // This endpoint could be secured with admin authentication in production
-      const deletedCount = await storage.cleanupExpiredData();
-      res.json({ 
-        message: "Data retention cleanup completed",
-        deletedRecords: deletedCount
-      });
-    } catch (error) {
-      console.error('Data cleanup error:', error);
-      res.status(500).json({ message: "Failed to cleanup expired data" });
-    }
-  });
-
   const server = createServer(app);
   return server;
 }

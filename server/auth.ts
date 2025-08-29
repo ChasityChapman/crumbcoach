@@ -71,7 +71,7 @@ export function setupAuth(app: Express) {
     try {
       console.log('🔥 REGISTRATION with name capture');
       // SECURITY: Never log request body as it contains sensitive password data
-      console.log('Registration attempt for username:', req.body.username, 'email:', req.body.email);
+      console.log('Registration attempt received');
       
       const { username, email, password, firstName, lastName } = req.body;
       
@@ -140,7 +140,7 @@ export function setupAuth(app: Express) {
   // Login endpoint 
   app.post("/api/login", async (req, res) => {
     try {
-      console.log('🔥 LOGIN attempt - user:', req.body.username?.substring(0, 3) + '***');
+      console.log('🔥 LOGIN attempt received');
       
       const { username, password } = req.body;
       
@@ -150,20 +150,20 @@ export function setupAuth(app: Express) {
       
       const user = await storage.getUserByUsername(username);
       if (!user) {
-        console.log('User not found by username:', username);
+        console.log('User not found by primary identifier');
         // Also try to find by email in case they're using email to login
         const userByEmail = await storage.getUserByEmail(username);
         if (!userByEmail) {
-          console.log('User not found by email either:', username);
+          console.log('User not found by secondary identifier');
           return res.status(401).json({ message: "Invalid credentials" });
         }
-        console.log('Found user by email instead:', userByEmail.email);
+        console.log('Found user by secondary identifier');
         // Use the user found by email
         const validPassword = await comparePasswords(password, userByEmail.password);
         console.log('Password verification completed for email login');
         
         if (!validPassword) {
-          console.log('Password validation failed for email login - user attempted:', username.substring(0, 3) + '***');
+          console.log('Password validation failed for secondary identifier login');
           return res.status(401).json({ message: "Invalid credentials" });
         }
         
@@ -187,7 +187,7 @@ export function setupAuth(app: Express) {
         return;
       }
       
-      console.log('Found user:', user.email, 'stored password hash length:', user.password.length);
+      console.log('Found user, verifying credentials');
       // SECURITY: Never log raw passwords - only log that verification is being attempted
       console.log('Attempting password verification for user:', user.email);
       
@@ -195,7 +195,7 @@ export function setupAuth(app: Express) {
       console.log('Password verification completed for username login');
       
       if (!validPassword) {
-        console.log('Password validation failed for username login - user attempted:', username.substring(0, 3) + '***');
+        console.log('Password validation failed for primary identifier login');
         return res.status(401).json({ message: "Invalid credentials" });
       }
       
@@ -278,7 +278,7 @@ export function setupAuth(app: Express) {
         });
       }
       
-      console.log('Found user for password reset:', user.email, 'username:', user.username);
+      console.log('Found user for password reset, generating token');
       
       // Generate reset token
       const resetToken = randomBytes(32).toString('hex');
@@ -290,7 +290,7 @@ export function setupAuth(app: Express) {
         expiresAt,
       });
       
-      console.log('Reset token generated for user:', user.email);
+      console.log('Reset token generated successfully');
       
       res.json({ 
         message: "Password reset token generated. Copy the token below and use it on the reset password page.",
@@ -328,14 +328,14 @@ export function setupAuth(app: Express) {
       
       // Update password
       const hashedPassword = await hashPassword(newPassword);
-      console.log('Updating password for user:', user.email, 'hash length:', hashedPassword.length);
+      console.log('Updating password for user');
       const updateResult = await storage.updateUser(user.id, { password: hashedPassword });
       console.log('Password update result:', !!updateResult);
       
       // Mark token as used
       await storage.markPasswordResetTokenAsUsed(resetToken.id);
       
-      console.log('Password reset successful for user:', user.email);
+      console.log('Password reset successful');
       
       res.json({ message: "Password reset successful. You can now log in with your new password." });
       
@@ -397,7 +397,7 @@ export const verifySupabaseAuth = async (req: any, res: any, next: any) => {
       };
       
       localUser = await storage.createUser(newUser);
-      console.log('Created new user from Supabase auth:', user.email);
+      console.log('Created new user from Supabase auth');
     }
 
     // Attach user to request object
