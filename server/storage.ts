@@ -40,7 +40,7 @@ import {
   type InsertStarterLog,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, isNull, lt, gte, count, sql } from "drizzle-orm";
+import { eq, desc, and, isNull, lt, gte, count, sql, or } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 // Interface for storage operations
@@ -96,8 +96,8 @@ export interface IStorage {
   deleteTutorial(id: string): Promise<boolean>;
 
   // Sensor reading operations
-  getSensorReadings(): Promise<SensorReading[]>;
-  getLatestSensorReading(): Promise<SensorReading | undefined>;
+  getSensorReadings(userId?: string): Promise<SensorReading[]>;
+  getLatestSensorReading(userId?: string): Promise<SensorReading | undefined>;
   createSensorReading(reading: InsertSensorReading): Promise<SensorReading>;
 
   // Password reset token operations
@@ -360,11 +360,48 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Sensor reading operations
-  async getSensorReadings(): Promise<SensorReading[]> {
+  async getSensorReadings(userId?: string): Promise<SensorReading[]> {
+    if (userId) {
+      // Get readings that are either global (no bakeId) or belong to user's bakes
+      return await db.select({
+        id: sensorReadings.id,
+        bakeId: sensorReadings.bakeId,
+        temperature: sensorReadings.temperature,
+        humidity: sensorReadings.humidity,
+        timestamp: sensorReadings.timestamp,
+      })
+      .from(sensorReadings)
+      .leftJoin(bakes, eq(sensorReadings.bakeId, bakes.id))
+      .where(or(
+        isNull(sensorReadings.bakeId), // Global readings
+        eq(bakes.userId, userId)        // User's bake-specific readings
+      ))
+      .orderBy(desc(sensorReadings.timestamp));
+    }
     return await db.select().from(sensorReadings).orderBy(desc(sensorReadings.timestamp));
   }
 
-  async getLatestSensorReading(): Promise<SensorReading | undefined> {
+  async getLatestSensorReading(userId?: string): Promise<SensorReading | undefined> {
+    if (userId) {
+      // Get latest reading that is either global (no bakeId) or belongs to user's bakes
+      const [reading] = await db.select({
+        id: sensorReadings.id,
+        bakeId: sensorReadings.bakeId,
+        temperature: sensorReadings.temperature,
+        humidity: sensorReadings.humidity,
+        timestamp: sensorReadings.timestamp,
+      })
+      .from(sensorReadings)
+      .leftJoin(bakes, eq(sensorReadings.bakeId, bakes.id))
+      .where(or(
+        isNull(sensorReadings.bakeId), // Global readings
+        eq(bakes.userId, userId)        // User's bake-specific readings
+      ))
+      .orderBy(desc(sensorReadings.timestamp))
+      .limit(1);
+      return reading;
+    }
+    
     const [reading] = await db
       .select()
       .from(sensorReadings)

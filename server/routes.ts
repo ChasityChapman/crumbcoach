@@ -269,9 +269,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/bakes", verifySupabaseAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      console.log('Received bake data:', JSON.stringify(req.body, null, 2));
+      console.log('Creating bake for user:', userId);
       const validatedData = insertBakeSchema.parse({ ...req.body, userId });
-      console.log('Validated data:', JSON.stringify(validatedData, null, 2));
       const bake = await storage.createBake(validatedData);
       res.status(201).json(bake);
     } catch (error) {
@@ -344,9 +343,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/timeline-steps", verifySupabaseAuth, async (req, res) => {
     try {
-      console.log('Received timeline step data:', JSON.stringify(req.body, null, 2));
       const validatedData = insertTimelineStepSchema.parse(req.body);
-      console.log('Validated timeline step data:', JSON.stringify(validatedData, null, 2));
+      
+      // SECURITY: Verify user owns the bake before creating timeline step
+      const bake = await storage.getBake(validatedData.bakeId);
+      if (!bake || bake.userId !== (req as any).user.id) {
+        return res.status(403).json({ message: "Unauthorized - cannot create timeline step for this bake" });
+      }
+      
+      console.log('Creating timeline step for bake:', validatedData.bakeId, 'user:', (req as any).user.id);
       const step = await storage.createTimelineStep(validatedData);
       res.status(201).json(step);
     } catch (error) {
@@ -370,7 +375,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!bake || bake.userId !== req.user.id) {
         return res.status(403).json({ message: "Unauthorized" });
       }
-      console.log("Updating timeline step:", req.params.id, "with data:", JSON.stringify(req.body, null, 2));
+      console.log("Updating timeline step:", req.params.id, "for user:", req.user.id);
       
       // Validate the update data using the same schema but make all fields optional
       const updateData = {
@@ -380,7 +385,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         endTime: req.body.endTime ? new Date(req.body.endTime) : undefined,
       };
       
-      console.log("Processed update data:", JSON.stringify(updateData, null, 2));
+      console.log("Processing timeline step update for:", req.params.id);
       
       const updatedStep = await storage.updateTimelineStep(req.params.id, updateData);
       if (!updatedStep) {
@@ -417,9 +422,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/notes", verifySupabaseAuth, async (req, res) => {
+  app.post("/api/notes", verifySupabaseAuth, async (req: any, res) => {
     try {
       const validatedData = insertBakeNoteSchema.parse(req.body);
+      
+      // SECURITY: Verify user owns the bake before creating note
+      const bake = await storage.getBake(validatedData.bakeId);
+      if (!bake || bake.userId !== req.user.id) {
+        return res.status(403).json({ message: "Unauthorized - cannot create note for this bake" });
+      }
+      
+      console.log('Creating note for bake:', validatedData.bakeId, 'user:', req.user.id);
       const note = await storage.createBakeNote(validatedData);
       res.status(201).json(note);
     } catch (error) {
@@ -503,9 +516,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/photos", verifySupabaseAuth, async (req, res) => {
+  app.post("/api/photos", verifySupabaseAuth, async (req: any, res) => {
     try {
       const validatedData = insertBakePhotoSchema.parse(req.body);
+      
+      // SECURITY: Verify user owns the bake before creating photo
+      const bake = await storage.getBake(validatedData.bakeId);
+      if (!bake || bake.userId !== req.user.id) {
+        return res.status(403).json({ message: "Unauthorized - cannot create photo for this bake" });
+      }
+      
+      console.log('Creating photo for bake:', validatedData.bakeId, 'user:', req.user.id);
       const photo = await storage.createBakePhoto(validatedData);
       res.status(201).json(photo);
     } catch (error) {
@@ -535,28 +556,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Sensor Readings
-  app.get("/api/sensors", async (req, res) => {
+  // Sensor Readings - SECURITY: Require authentication
+  app.get("/api/sensors", verifySupabaseAuth, async (req: any, res) => {
     try {
-      const readings = await storage.getSensorReadings();
+      const userId = req.user.id;
+      const readings = await storage.getSensorReadings(userId);
       res.json(readings);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch sensor readings" });
     }
   });
 
-  app.get("/api/sensors/latest", async (req, res) => {
+  app.get("/api/sensors/latest", verifySupabaseAuth, async (req: any, res) => {
     try {
-      const reading = await storage.getLatestSensorReading();
+      const userId = req.user.id;
+      const reading = await storage.getLatestSensorReading(userId);
       res.json(reading || null);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch latest sensor reading" });
     }
   });
 
-  app.post("/api/sensors", async (req, res) => {
+  app.post("/api/sensors", verifySupabaseAuth, async (req: any, res) => {
     try {
-      const validatedData = insertSensorReadingSchema.parse(req.body);
+      const userId = req.user.id;
+      const validatedData = insertSensorReadingSchema.parse({ ...req.body, userId });
+      console.log('Creating sensor reading for user:', userId);
       const reading = await storage.createSensorReading(validatedData);
       res.status(201).json(reading);
     } catch (error) {
