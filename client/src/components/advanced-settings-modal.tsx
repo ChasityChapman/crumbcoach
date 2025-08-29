@@ -15,7 +15,6 @@ import {
   Timer, 
   Database, 
   Accessibility, 
-  Code, 
   Download,
   Trash2,
   RotateCcw,
@@ -75,8 +74,6 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
   const [hapticFeedback, setHapticFeedback] = useState(true);
   
   // Debug Settings
-  const [debugMode, setDebugMode] = useState(false);
-  const [showRawData, setShowRawData] = useState(false);
 
   // Profile Settings
   const [firstName, setFirstName] = useState('');
@@ -197,8 +194,6 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
     setVoiceNotifications(false);
     setHapticFeedback(true);
     setSensorOverride(false);
-    setDebugMode(false);
-    setShowRawData(false);
     
     toast({
       title: "Settings Reset",
@@ -670,51 +665,6 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                     </div>
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Code className="w-5 h-5" />
-                  <span>Developer Options</span>
-                  <Badge variant="secondary">Advanced</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex-1">
-                      <Label className="text-base font-medium">Debug Mode</Label>
-                      <p className="text-sm text-muted-foreground">Show detailed logging and error information</p>
-                    </div>
-                    <div className="flex-shrink-0 ml-4">
-                      <Button 
-                        variant={debugMode ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setDebugMode(!debugMode)}
-                      >
-                        {debugMode ? "ON" : "OFF"}
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex-1">
-                      <Label className="text-base font-medium">Show Raw Sensor Data</Label>
-                      <p className="text-sm text-muted-foreground">Display unprocessed sensor readings</p>
-                    </div>
-                    <div className="flex-shrink-0 ml-4">
-                      <Button 
-                        variant={showRawData ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setShowRawData(!showRawData)}
-                      >
-                        {showRawData ? "ON" : "OFF"}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
                 
                 <Separator />
                 
@@ -724,6 +674,7 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                 </Button>
               </CardContent>
             </Card>
+            
           </TabsContent>
         </Tabs>
         
