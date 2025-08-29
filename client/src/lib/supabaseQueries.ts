@@ -18,12 +18,28 @@ export const starterLogQueries = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
+    // Map camelCase form fields to snake_case database columns
     const { data, error } = await supabase
       .from('starter_logs')
       .insert({
-        ...starterLog,
         log_date: starterLog.logDate || new Date().toISOString(),
         user_id: user.id,
+        flour_types: starterLog.flourTypes,
+        feed_ratio: starterLog.feedRatio,
+        feed_amount_grams: starterLog.feedAmountGrams,
+        hydration_percent: starterLog.hydrationPercent,
+        environmental_temp: starterLog.ambientTempC || starterLog.ambientTempF || null,
+        rise_time_minutes: ((starterLog.riseTimeHours || 0) * 60 + (starterLog.riseTimeMinutes || 0)) || null,
+        starter_health: starterLog.starterStage,
+        texture_notes: starterLog.conditionNotes,
+        discard_amount_grams: starterLog.discardUsed ? (starterLog.feedAmountGrams || 50) : null,
+        photos: null, // Not implemented yet
+        aroma_notes: null, // Not implemented yet  
+        environmental_humidity: null, // Not implemented yet
+        peak_height_cm: null, // Not implemented yet
+        ph_level: null, // Not implemented yet
+        feeding_schedule: null, // Not implemented yet
+        weather_data: starterLog.weatherData,
       })
       .select()
       .single();

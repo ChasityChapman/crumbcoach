@@ -217,28 +217,13 @@ export default function StarterLogPage() {
   const onSubmit = (data: StarterLogFormData) => {
     console.log('Form submitted with data:', data);
     
-    // Use camelCase field names that the mutation expects
-    const formattedData = {
+    // Submit form data directly - mapping handled in Supabase query
+    createLogMutation.mutate({
+      ...data,
       logDate: data.logDate || new Date(),
-      flourTypes: data.flourTypes,
-      feedRatio: data.feedRatio,
-      feedAmountGrams: data.feedAmountGrams,
-      hydrationPercent: data.hydrationPercent ?? null,
-      ambientTempF: data.ambientTempF ?? null,
-      ambientTempC: data.ambientTempC ?? null,
-      starterStage: data.starterStage ?? null,
-      conditionNotes: data.conditionNotes ?? "",
-      riseTimeHours: data.riseTimeHours ?? null,
-      riseTimeMinutes: data.riseTimeMinutes ?? null,
-      discardUsed: data.discardUsed ?? false,
-      discardRecipe: data.discardRecipe ?? "",
-      peakActivity: data.peakActivity ?? false,
       photoUrl: null, // Optional field
       weatherData: null, // Optional field
-    };
-    
-    console.log('Formatted data for mutation:', formattedData);
-    createLogMutation.mutate(formattedData);
+    });
   };
 
   return (
