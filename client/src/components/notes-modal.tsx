@@ -73,6 +73,13 @@ export default function NotesModal({ isOpen, onClose, bakeId }: NotesModalProps)
           </Button>
         </DialogHeader>
 
+        {/* Help Text */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+          <p className="text-sm text-blue-800">
+            💡 <strong>Tip:</strong> Use notes to track your observations during baking - dough texture, timing adjustments, environmental conditions, or anything you want to remember for next time!
+          </p>
+        </div>
+
         <div className="space-y-4 flex-1 overflow-y-auto">
           {/* Current Note Input */}
           <div className="bg-sourdough-50 rounded-lg p-4">
