@@ -217,7 +217,17 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
               </Button>
             </div>
 
-            <div className="space-y-3">
+            {/* 👇 make JUST the list scrollable */}
+            <div
+              className="
+                space-y-3
+                max-h-[45vh]
+                overflow-y-auto
+                min-h-0
+                pr-1
+                overscroll-contain
+              "
+            >
               {ingredients.map((ingredient, index) => (
                 <div key={ingredient.id} className="border border-sourdough-200 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
@@ -303,7 +313,16 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
               </Button>
             </div>
 
-            <div className="space-y-3">
+            <div
+              className="
+                space-y-3
+                max-h-[40vh]
+                overflow-y-auto
+                min-h-0
+                pr-1
+                overscroll-contain
+              "
+            >
               {steps.map((step, index) => (
                 <div key={step.id} className="border border-sourdough-200 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
