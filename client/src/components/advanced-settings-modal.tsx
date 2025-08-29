@@ -22,7 +22,8 @@ import {
   Bell,
   Eye,
   Volume2,
-  User
+  User,
+  Settings
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
@@ -93,7 +94,7 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
       console.log('Fetching user data for ID:', user.id);
       
       const { data, error } = await supabase
-        .from('users')
+        .from('user_profiles')
         .select('*')
         .eq('id', user.id)
         .single();
@@ -132,7 +133,7 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
       console.log('Current user ID:', user.id);
 
       const { data, error } = await supabase
-        .from('users')
+        .from('user_profiles')
         .update({ 
           first_name: firstName,
           last_name: lastName 
@@ -232,7 +233,7 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
-            <Code className="w-5 h-5" />
+            <Settings className="w-5 h-5" />
             <span>Advanced Settings</span>
           </DialogTitle>
         </DialogHeader>
