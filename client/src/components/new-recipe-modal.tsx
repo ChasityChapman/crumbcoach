@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -156,15 +156,13 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
   if (!isOpen) return null;
 
   return (
-    <DialogPrimitive.Root open={isOpen} onOpenChange={onClose}>
-      <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        <DialogPrimitive.Content className="fixed inset-4 z-50 w-auto h-auto border bg-background p-4 sm:p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 sm:rounded-lg flex flex-col overflow-hidden">
-          <div className="flex flex-col space-y-1.5 text-center sm:text-left pb-4">
-            <DialogPrimitive.Title className="text-base sm:text-lg font-semibold leading-none tracking-tight font-display text-sourdough-800">Create New Recipe</DialogPrimitive.Title>
-          </div>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="font-display text-sourdough-800">Create New Recipe</DialogTitle>
+        </DialogHeader>
 
-        <div className="space-y-4 flex-1 overflow-y-auto pr-2 min-h-0">
+        <div className="space-y-4">
           {/* Basic Info */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -352,7 +350,7 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
         </div>
 
         {/* Action Buttons */}
-        <div className="flex space-x-3 pt-4 border-t flex-shrink-0">
+        <div className="flex space-x-3 pt-4 border-t">
           <Button
             variant="outline"
             onClick={onClose}
@@ -368,8 +366,7 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
             {createRecipeMutation.isPending ? "Creating..." : "Create Recipe"}
           </Button>
         </div>
-        </DialogPrimitive.Content>
-      </DialogPrimitive.Portal>
-    </DialogPrimitive.Root>
+      </DialogContent>
+    </Dialog>
   );
 }
