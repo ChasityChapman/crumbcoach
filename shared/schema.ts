@@ -328,7 +328,7 @@ export const userEntitlementRelations = relations(userEntitlements, ({ one }) =>
 export const insertRecipeSchema = createInsertSchema(recipes)
   .omit({ id: true, createdAt: true })
   .extend({
-    description: z.string().nullable().optional().transform(val => val || null),
+    description: z.union([z.string(), z.null(), z.undefined()]).optional().transform(val => val || null),
   });
 export const insertBakeSchema = createInsertSchema(bakes)
   .omit({ id: true, createdAt: true })

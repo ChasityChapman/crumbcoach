@@ -61,21 +61,35 @@ const authenticateUser = async (req: Request, res: Response, next: any) => {
       const userId = payload.sub;
       console.log('Authenticated user ID:', userId);
       
-      // Check if user exists in our database, create if not
+      // Check if user exists in our database, create or update if not
       const existingUser = await db.select().from(users).where(eq(users.id, userId)).limit(1);
       
       if (existingUser.length === 0) {
-        console.log('User not found in database, creating user record');
+        console.log('User not found by ID, checking by email');
         const userMetadata = payload.user_metadata || {};
-        const newUser = await db.insert(users).values({
-          id: userId, // Set to match Supabase user ID
-          email: payload.email || userMetadata.email,
-          username: userMetadata.email?.split('@')[0] || `user_${userId.slice(0, 8)}`,
-          password: 'social_auth', // Placeholder for social auth users
-          firstName: userMetadata.firstName || userMetadata.first_name,
-          lastName: userMetadata.lastName || userMetadata.last_name,
-        }).returning();
-        console.log('Created new user:', newUser[0]);
+        const email = payload.email || userMetadata.email;
+        
+        // Check if a user with this email exists with a different ID
+        const existingEmailUser = await db.select().from(users).where(eq(users.email, email)).limit(1);
+        
+        if (existingEmailUser.length > 0) {
+          console.log('User exists with different ID, updating ID to match Supabase');
+          // Update the existing user's ID to match Supabase
+          await db.update(users)
+            .set({ id: userId })
+            .where(eq(users.email, email));
+        } else {
+          console.log('Creating new user record');
+          const newUser = await db.insert(users).values({
+            id: userId, // Set to match Supabase user ID
+            email: email,
+            username: email?.split('@')[0] || `user_${userId.slice(0, 8)}`,
+            password: 'social_auth', // Placeholder for social auth users
+            firstName: userMetadata.firstName || userMetadata.first_name,
+            lastName: userMetadata.lastName || userMetadata.last_name,
+          }).returning();
+          console.log('Created new user:', newUser[0]);
+        }
       }
       
       req.userId = userId;
