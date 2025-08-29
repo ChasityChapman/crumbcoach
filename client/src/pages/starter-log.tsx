@@ -173,6 +173,33 @@ export default function StarterLogPage() {
     });
   };
 
+  // Load saved defaults into the form
+  const loadDefaults = () => {
+    const saved = localStorage.getItem('crumbCoachSettings');
+    if (saved) {
+      const settings = JSON.parse(saved);
+      if (settings.starterDefaults) {
+        const defaults = settings.starterDefaults;
+        if (defaults.flourTypes) form.setValue("flourTypes", defaults.flourTypes);
+        if (defaults.feedRatio) form.setValue("feedRatio", defaults.feedRatio);
+        if (defaults.feedAmountGrams) form.setValue("feedAmountGrams", defaults.feedAmountGrams);
+        if (defaults.starterStage) form.setValue("starterStage", defaults.starterStage);
+        
+        toast({
+          title: "Defaults Loaded",
+          description: "Your saved feeding preferences have been restored.",
+          duration: 2000,
+        });
+      } else {
+        toast({
+          title: "No Defaults Found",
+          description: "No saved feeding preferences found. Set up your preferences and click 'Save as Defaults'.",
+          duration: 3000,
+        });
+      }
+    }
+  };
+
   const onSubmit = (data: StarterLogFormData) => {
     createLogMutation.mutate(data);
   };
@@ -759,6 +786,16 @@ export default function StarterLogPage() {
                       data-testid="button-reset-form"
                     >
                       Reset
+                    </Button>
+                    <Button 
+                      type="button"
+                      variant="outline"
+                      onClick={loadDefaults}
+                      data-testid="button-load-defaults"
+                      className="flex items-center gap-2"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Load Defaults
                     </Button>
                     <Button 
                       type="button"
