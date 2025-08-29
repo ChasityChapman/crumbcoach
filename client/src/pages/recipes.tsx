@@ -64,12 +64,7 @@ export default function Recipes() {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-sourdough-100">
         <div className="px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-sourdough-500 rounded-lg flex items-center justify-center">
-              <img src={crumbCoachLogo} alt="Crumb Coach" className="w-4 h-4 object-contain" />
-            </div>
-            <h1 className="font-display font-semibold text-lg text-sourdough-800">Recipes</h1>
-          </div>
+          <h1 className="font-display font-semibold text-lg text-sourdough-800">Recipes</h1>
           <Button 
             onClick={() => {
               setSelectedRecipe(null);
