@@ -1,0 +1,112 @@
+: inside the Ingredients (and optionally Steps) list, so it scrolls independently even if the modal shell is being stubborn.
+
+Quick, reliable patch (works regardless of grid vs flex)
+
+Wrap the long ingredients list in its own scroll container with a fixed viewport-based height. Same idea works for steps if that list also gets long.
+
+Replace your Ingredients block’s list wrapper:
+
+{/* Ingredients */}
+<div className="space-y-4">
+  <div className="flex items-center justify-between">
+    <Label className="text-base font-medium">Ingredients *</Label>
+    <Button
+      onClick={addIngredient}
+      size="sm"
+      className="bg-sourdough-500 hover:bg-sourdough-600 text-white"
+    >
+      <Plus className="w-4 h-4 mr-1" />
+      Add Ingredient
+    </Button>
+  </div>
+
+  {/* 👇 make JUST the list scrollable */}
+  <div
+    className="
+      space-y-3
+      max-h-[45vh]    /* or 50vh if you prefer */
+      overflow-y-auto
+      min-h-0
+      pr-1            /* avoids layout shift from scrollbar */
+      overscroll-contain
+    "
+  >
+    {ingredients.map((ingredient, index) => (
+      <div key={ingredient.id} className="border border-sourdough-200 rounded-lg p-4">
+        ...
+      </div>
+    ))}
+  </div>
+</div>
+
+
+If your Steps list can also get long, do the same:
+
+{/* Steps */}
+<div className="space-y-4">
+  <div className="flex items-center justify-between">
+    <Label className="text-base font-medium">Recipe Steps *</Label>
+    <Button onClick={addStep} size="sm" className="bg-sourdough-500 hover:bg-sourdough-600 text-white">
+      <Plus className="w-4 h-4 mr-1" />
+      Add Step
+    </Button>
+  </div>
+
+  <div
+    className="
+      space-y-3
+      max-h-[40vh]
+      overflow-y-auto
+      min-h-0
+      pr-1
+      overscroll-contain
+    "
+  >
+    {steps.map(...)}
+  </div>
+</div>
+
+Why this works
+
+Even if the dialog container itself refuses to cooperate (grid vs. flex, body scroll-lock, etc.), these wrappers get an absolute max height tied to the viewport and own their own vertical scroll. No dependency on the parent’s layout.
+
+Two more guardrails (copy/paste friendly)
+
+Make sure amounts accept decimals:
+
+onChange={(e) => updateIngredient(
+  ingredient.id,
+  "amount",
+  Number.isNaN(parseFloat(e.target.value)) ? 0 : parseFloat(e.target.value)
+)}
+
+
+If your unit <SelectContent> gets clipped inside the scrollable area, switch it to popper:
+
+<Select>
+  <SelectTrigger className="border-sourdough-200">
+    <SelectValue />
+  </SelectTrigger>
+  <SelectContent position="popper" sideOffset={4}>
+    {/* items */}
+  </SelectContent>
+</Select>
+
+
+If you still want the whole middle section to scroll (not just the lists), keep your original layout but add this to the middle wrapper (and make sure the dialog has a fixed height):
+
+// DialogContent: ensure a fixed height
+<DialogContent className="w-[calc(100vw-2rem)] max-w-3xl h-[90vh] p-0 overflow-hidden flex flex-col">
+
+  <DialogHeader className="p-6 pb-4 border-b flex-shrink-0">...</DialogHeader>
+
+  {/* Middle */}
+  <div className="min-h-0 flex-1 overflow-y-auto p-6 space-y-6">...</div>
+
+  <div className="flex space-x-3 p-6 pt-4 border-t flex-shrink-0">...</div>
+</DialogContent>
+
+
+Key bits there are h-[90vh] on DialogContent and min-h-0 flex-1 overflow-y-auto on the middle.
+
+Try the ingredients-only scroll wrapper first—it’s the most bulletproof, quickest fix. If that doesn’t move, I’ll refactor your DialogContent definition (the shadcn component itself) so it always provides a scroll track.
