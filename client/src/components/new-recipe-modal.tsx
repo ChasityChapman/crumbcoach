@@ -157,26 +157,12 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       {/* FIX: grid shell + fixed height + hidden outer overflow */}
-      <DialogContent 
-        className="!grid-cols-1 !gap-0 w-[95vw] max-w-[95vw] sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] xl:max-w-3xl h-[85vh] max-h-[85vh] p-0 overflow-hidden flex flex-col !translate-y-[-50%]"
-        style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          maxWidth: 'calc(100vw - 2rem)',
-          width: 'calc(100vw - 2rem)',
-          height: '85vh',
-          maxHeight: '85vh',
-          display: 'flex !important',
-          flexDirection: 'column'
-        }}
-      >
-        <DialogHeader className="p-4 sm:p-6 pb-4 border-b flex-shrink-0">
+      <DialogContent className="p-0">
+        <DialogHeader className="p-6 pb-4 border-b">
           <DialogTitle className="font-display text-sourdough-800">Create New Recipe</DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6 scrollbar-visible">
+        <div className="p-6 space-y-6">
           {/* Basic Info */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -371,7 +357,7 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
           </div>
         </div>
 
-        <div className="flex space-x-3 p-4 sm:p-6 pt-4 border-t flex-shrink-0">
+        <div className="flex space-x-3 p-6 pt-4 border-t">
           <Button
             variant="outline"
             onClick={onClose}
