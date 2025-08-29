@@ -158,11 +158,18 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
     <Dialog open={isOpen} onOpenChange={onClose}>
       {/* FIX: grid shell + fixed height + hidden outer overflow */}
       <DialogContent 
-        className="w-[98vw] max-w-[95vw] sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] xl:max-w-3xl max-h-[90vh] p-0 overflow-hidden flex flex-col"
+        className="!grid-cols-1 !gap-0 w-[95vw] max-w-[95vw] sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] xl:max-w-3xl h-[85vh] max-h-[85vh] p-0 overflow-hidden flex flex-col !translate-y-[-50%]"
         style={{
-          margin: '0.5rem',
-          maxWidth: 'calc(100vw - 1rem)',
-          width: 'calc(100vw - 1rem)'
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          maxWidth: 'calc(100vw - 2rem)',
+          width: 'calc(100vw - 2rem)',
+          height: '85vh',
+          maxHeight: '85vh',
+          display: 'flex !important',
+          flexDirection: 'column'
         }}
       >
         <DialogHeader className="p-4 sm:p-6 pb-4 border-b flex-shrink-0">
