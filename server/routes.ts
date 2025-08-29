@@ -48,11 +48,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/recipes/:id", verifySupabaseAuth, async (req, res) => {
+  app.get("/api/recipes/:id", verifySupabaseAuth, async (req: any, res) => {
     try {
       const recipe = await storage.getRecipe(req.params.id);
       if (!recipe) {
         return res.status(404).json({ message: "Recipe not found" });
+      }
+      if (recipe.userId !== req.user.id) {
+        return res.status(403).json({ message: "Unauthorized" });
       }
       res.json(recipe);
     } catch (error) {
@@ -75,6 +78,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.id;
       const recipeId = req.params.id;
+      
+      // Check ownership first
+      const existingRecipe = await storage.getRecipe(recipeId);
+      if (!existingRecipe) {
+        return res.status(404).json({ message: "Recipe not found" });
+      }
+      if (existingRecipe.userId !== userId) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      
       const recipeData = { ...req.body, userId };
       const recipe = await storage.updateRecipe(recipeId, recipeData);
       res.json(recipe);
@@ -183,11 +196,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/bakes/:id", verifySupabaseAuth, async (req, res) => {
+  app.get("/api/bakes/:id", verifySupabaseAuth, async (req: any, res) => {
     try {
       const bake = await storage.getBake(req.params.id);
       if (!bake) {
         return res.status(404).json({ message: "Bake not found" });
+      }
+      if (bake.userId !== req.user.id) {
+        return res.status(403).json({ message: "Unauthorized" });
       }
       res.json(bake);
     } catch (error) {
@@ -212,12 +228,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/bakes/:id", verifySupabaseAuth, async (req, res) => {
+  app.patch("/api/bakes/:id", verifySupabaseAuth, async (req: any, res) => {
     try {
-      const bake = await storage.updateBake(req.params.id, req.body);
-      if (!bake) {
+      // Check ownership first
+      const existingBake = await storage.getBake(req.params.id);
+      if (!existingBake) {
         return res.status(404).json({ message: "Bake not found" });
       }
+      if (existingBake.userId !== req.user.id) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      
+      const bake = await storage.updateBake(req.params.id, req.body);
       res.json(bake);
     } catch (error) {
       res.status(500).json({ message: "Failed to update bake" });
@@ -225,8 +247,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete bake
-  app.delete("/api/bakes/:id", verifySupabaseAuth, async (req, res) => {
+  app.delete("/api/bakes/:id", verifySupabaseAuth, async (req: any, res) => {
     try {
+      // Check ownership first
+      const existingBake = await storage.getBake(req.params.id);
+      if (!existingBake) {
+        return res.status(404).json({ message: "Bake not found" });
+      }
+      if (existingBake.userId !== req.user.id) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      
       const success = await storage.deleteBake(req.params.id);
       if (!success) {
         return res.status(404).json({ message: "Bake not found" });
@@ -238,8 +269,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Timeline Steps
-  app.get("/api/bakes/:bakeId/timeline", verifySupabaseAuth, async (req, res) => {
+  app.get("/api/bakes/:bakeId/timeline", verifySupabaseAuth, async (req: any, res) => {
     try {
+      // Check bake ownership first
+      const bake = await storage.getBake(req.params.bakeId);
+      if (!bake) {
+        return res.status(404).json({ message: "Bake not found" });
+      }
+      if (bake.userId !== req.user.id) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      
       const steps = await storage.getTimelineSteps(req.params.bakeId);
       res.json(steps);
     } catch (error) {
@@ -263,8 +303,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/timeline-steps/:id", verifySupabaseAuth, async (req, res) => {
+  app.patch("/api/timeline-steps/:id", verifySupabaseAuth, async (req: any, res) => {
     try {
+      // Get the timeline step and verify ownership via bake
+      const step = await storage.getTimelineStep(req.params.id);
+      if (!step) {
+        return res.status(404).json({ message: "Timeline step not found" });
+      }
+      
+      const bake = await storage.getBake(step.bakeId);
+      if (!bake || bake.userId !== req.user.id) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
       console.log("Updating timeline step:", req.params.id, "with data:", JSON.stringify(req.body, null, 2));
       
       // Validate the update data using the same schema but make all fields optional
@@ -277,12 +327,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Processed update data:", JSON.stringify(updateData, null, 2));
       
-      const step = await storage.updateTimelineStep(req.params.id, updateData);
-      if (!step) {
+      const updatedStep = await storage.updateTimelineStep(req.params.id, updateData);
+      if (!updatedStep) {
         return res.status(404).json({ message: "Timeline step not found" });
       }
-      console.log("Successfully updated timeline step:", step.id);
-      res.json(step);
+      console.log("Successfully updated timeline step:", updatedStep.id);
+      res.json(updatedStep);
     } catch (error) {
       console.error("Timeline step update error:", error);
       if (error instanceof Error) {
@@ -294,8 +344,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Notes
-  app.get("/api/bakes/:bakeId/notes", verifySupabaseAuth, async (req, res) => {
+  app.get("/api/bakes/:bakeId/notes", verifySupabaseAuth, async (req: any, res) => {
     try {
+      // Check bake ownership first
+      const bake = await storage.getBake(req.params.bakeId);
+      if (!bake) {
+        return res.status(404).json({ message: "Bake not found" });
+      }
+      if (bake.userId !== req.user.id) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      
       const notes = await storage.getBakeNotes(req.params.bakeId);
       res.json(notes);
     } catch (error) {
@@ -371,8 +430,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Photos
-  app.get("/api/bakes/:bakeId/photos", verifySupabaseAuth, async (req, res) => {
+  app.get("/api/bakes/:bakeId/photos", verifySupabaseAuth, async (req: any, res) => {
     try {
+      // Check bake ownership first
+      const bake = await storage.getBake(req.params.bakeId);
+      if (!bake) {
+        return res.status(404).json({ message: "Bake not found" });
+      }
+      if (bake.userId !== req.user.id) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      
       const photos = await storage.getBakePhotos(req.params.bakeId);
       res.json(photos);
     } catch (error) {
@@ -452,11 +520,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/starter-logs/:id", verifySupabaseAuth, async (req, res) => {
+  app.get("/api/starter-logs/:id", verifySupabaseAuth, async (req: any, res) => {
     try {
       const log = await storage.getStarterLog(req.params.id);
       if (!log) {
         return res.status(404).json({ message: "Starter log not found" });
+      }
+      if (log.userId !== req.user.id) {
+        return res.status(403).json({ message: "Unauthorized" });
       }
       res.json(log);
     } catch (error) {
@@ -493,6 +564,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const logId = req.params.id;
       
+      // Check ownership first
+      const existingLog = await storage.getStarterLog(logId);
+      if (!existingLog) {
+        return res.status(404).json({ message: "Starter log not found" });
+      }
+      if (existingLog.userId !== req.user.id) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      
       // Auto-calculate hydration percentage if feed ratio is provided
       let logData = { ...req.body };
       if (req.body.feedRatio && req.body.feedRatio.flour && req.body.feedRatio.water) {
@@ -500,17 +580,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const log = await storage.updateStarterLog(logId, logData);
-      if (!log) {
-        return res.status(404).json({ message: "Starter log not found" });
-      }
       res.json(log);
     } catch (error) {
       res.status(400).json({ message: "Failed to update starter log" });
     }
   });
 
-  app.delete("/api/starter-logs/:id", verifySupabaseAuth, async (req, res) => {
+  app.delete("/api/starter-logs/:id", verifySupabaseAuth, async (req: any, res) => {
     try {
+      // Check ownership first
+      const existingLog = await storage.getStarterLog(req.params.id);
+      if (!existingLog) {
+        return res.status(404).json({ message: "Starter log not found" });
+      }
+      if (existingLog.userId !== req.user.id) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      
       const success = await storage.deleteStarterLog(req.params.id);
       if (!success) {
         return res.status(404).json({ message: "Starter log not found" });
@@ -522,11 +608,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Timeline recalibration endpoint
-  app.post("/api/bakes/:id/recalibrate", verifySupabaseAuth, async (req, res) => {
+  app.post("/api/bakes/:id/recalibrate", verifySupabaseAuth, async (req: any, res) => {
     try {
       const bake = await storage.getBake(req.params.id);
       if (!bake) {
         return res.status(404).json({ message: "Bake not found" });
+      }
+      if (bake.userId !== req.user.id) {
+        return res.status(403).json({ message: "Unauthorized" });
       }
 
       // Get current environmental conditions
