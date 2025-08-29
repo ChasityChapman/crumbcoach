@@ -158,13 +158,13 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
     <Dialog open={isOpen} onOpenChange={onClose}>
       {/* FIX: grid shell + fixed height + hidden outer overflow */}
       <DialogContent className="p-0">
-        <div className="sticky top-0 z-10 bg-white/90 backdrop-blur px-6 pt-6 pb-4 border-b">
+        <div className="px-6 pt-6 pb-4 border-b">
           <DialogHeader>
             <DialogTitle className="font-display text-sourdough-800">Create New Recipe</DialogTitle>
           </DialogHeader>
         </div>
 
-        <div className="px-6 py-4 max-h-[65vh] overflow-y-auto space-y-6">
+        <div className="px-6 py-4 space-y-6">
           {/* Basic Info */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -359,7 +359,7 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
           </div>
         </div>
 
-        <div className="sticky bottom-0 z-10 bg-white/90 backdrop-blur px-6 py-4 border-t">
+        <div className="px-6 py-4 border-t">
           <div className="flex justify-end gap-3">
             <Button 
               variant="outline" 
