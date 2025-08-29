@@ -139,20 +139,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
         validUrl = 'https://' + url;
       }
       
+      let parsedUrl;
       try {
-        new URL(validUrl);
+        parsedUrl = new URL(validUrl);
       } catch (error) {
         return res.status(400).json({ message: "Invalid URL format" });
       }
+      
+      // SSRF Protection: Block private/internal addresses
+      const hostname = parsedUrl.hostname.toLowerCase();
+      
+      // Block localhost and loopback addresses
+      if (hostname === 'localhost' || 
+          hostname === '127.0.0.1' || 
+          hostname.startsWith('127.') ||
+          hostname === '::1' ||
+          hostname === '0.0.0.0') {
+        return res.status(400).json({ message: "Access to local addresses is not allowed" });
+      }
+      
+      // Block private IP ranges and internal domains
+      const privatePatterns = [
+        /^10\./,                    // 10.0.0.0/8
+        /^192\.168\./,              // 192.168.0.0/16
+        /^172\.(1[6-9]|2[0-9]|3[0-1])\./, // 172.16.0.0/12
+        /^169\.254\./,              // Link-local
+        /^fc00:/,                   // IPv6 private
+        /^fe80:/,                   // IPv6 link-local
+        /\.local$/,                 // mDNS domains
+        /^metadata\./,              // Cloud metadata
+        /^169\.254\.169\.254/,      // AWS/GCP metadata
+        /^100\.64\./,               // Carrier-grade NAT
+      ];
+      
+      for (const pattern of privatePatterns) {
+        if (pattern.test(hostname)) {
+          return res.status(400).json({ message: "Access to private networks is not allowed" });
+        }
+      }
+      
+      // Only allow HTTP/HTTPS protocols
+      if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+        return res.status(400).json({ message: "Only HTTP and HTTPS protocols are allowed" });
+      }
 
-      // Fetch webpage content
+      // Fetch webpage content with security restrictions
       console.log('Fetching URL:', validUrl);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
       const response = await fetch(validUrl, {
+        signal: controller.signal,
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         },
         redirect: 'follow'
       });
+      clearTimeout(timeoutId);
+      
+      // Check content type to ensure it's HTML
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('text/html') && !contentType.includes('text/plain')) {
+        return res.status(400).json({ message: "URL must point to an HTML webpage" });
+      }
 
       if (!response.ok) {
         console.error('Failed to fetch webpage:', response.status, response.statusText);
@@ -160,6 +209,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const htmlContent = await response.text();
+      
+      // Limit content size to prevent memory exhaustion
+      if (htmlContent.length > 5 * 1024 * 1024) { // 5MB limit
+        return res.status(400).json({ message: "Webpage content too large" });
+      }
+      
       console.log('Fetched HTML content length:', htmlContent.length);
       
       // Extract recipe using AI
