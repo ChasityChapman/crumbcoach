@@ -68,9 +68,10 @@ const authenticateUser = async (req: Request, res: Response, next: any) => {
         console.log('User not found in database, creating user record');
         const userMetadata = payload.user_metadata || {};
         const newUser = await db.insert(users).values({
-          id: userId,
+          id: userId, // Set to match Supabase user ID
           email: payload.email || userMetadata.email,
           username: userMetadata.email?.split('@')[0] || `user_${userId.slice(0, 8)}`,
+          password: 'social_auth', // Placeholder for social auth users
           firstName: userMetadata.firstName || userMetadata.first_name,
           lastName: userMetadata.lastName || userMetadata.last_name,
         }).returning();
