@@ -4,12 +4,13 @@ import type { Bake, BakeNote, BakePhoto, TimelineStep, Recipe } from "@shared/sc
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
-import { ArrowLeft, Clock, FileText, Camera, X, Brain, RotateCcw, Thermometer } from "lucide-react";
+import { ArrowLeft, Clock, FileText, Camera, X, Brain, RotateCcw, Thermometer, Plus } from "lucide-react";
 import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_1756224893332.png";
 import BottomNavigation from "@/components/bottom-navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import PhotoGallery from "@/components/photo-gallery";
+import StartBakeModal from "@/components/start-bake-modal";
 
 interface BakeDetailModalProps {
   bake: Bake;
@@ -251,6 +252,7 @@ function BakeDetailModal({ bake, isOpen, onClose }: BakeDetailModalProps) {
 export default function RecentBakesPage() {
   const [selectedBake, setSelectedBake] = useState<Bake | null>(null);
   const [showRestartOptions, setShowRestartOptions] = useState(false);
+  const [startBakeModalOpen, setStartBakeModalOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -314,6 +316,14 @@ export default function RecentBakesPage() {
             />
             <h1 className="font-display font-semibold text-lg text-sourdough-800">Recent Bakes</h1>
           </div>
+          <Button
+            onClick={() => setStartBakeModalOpen(true)}
+            className="bg-accent-orange-500 hover:bg-accent-orange-600 text-white flex items-center gap-2"
+            data-testid="button-start-new-bake"
+          >
+            <Plus className="w-4 h-4" />
+            Start Bake
+          </Button>
         </div>
       </header>
 
@@ -405,6 +415,16 @@ export default function RecentBakesPage() {
 
       {/* Bottom Navigation */}
       <BottomNavigation currentPath="/recent-bakes" />
+
+      {/* Start Bake Modal */}
+      <StartBakeModal
+        isOpen={startBakeModalOpen}
+        onClose={() => setStartBakeModalOpen(false)}
+        onBakeStarted={() => {
+          setStartBakeModalOpen(false);
+          queryClient.invalidateQueries({ queryKey: ["bakes"] });
+        }}
+      />
 
       {/* Bake Detail Modal */}
       <BakeDetailModal
