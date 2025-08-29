@@ -217,22 +217,22 @@ export default function StarterLogPage() {
   const onSubmit = (data: StarterLogFormData) => {
     console.log('Form submitted with data:', data);
     
-    // Use exact schema column names from shared/schema.ts
+    // Use actual Supabase column names (snake_case)
     const formattedData = {
-      logDate: data.logDate || new Date(),
-      flourTypes: data.flourTypes,
-      feedRatio: data.feedRatio,
-      feedAmountGrams: data.feedAmountGrams,
-      hydrationPercent: data.hydrationPercent ?? null,
-      ambientTempF: data.ambientTempF ?? null,
-      ambientTempC: data.ambientTempC ?? null,
-      starterStage: data.starterStage ?? null,
-      conditionNotes: data.conditionNotes ?? "",
-      riseTimeHours: data.riseTimeHours ?? null,
-      riseTimeMinutes: data.riseTimeMinutes ?? null,
-      discardUsed: data.discardUsed ?? false,
-      discardRecipe: data.discardRecipe ?? "",
-      peakActivity: data.peakActivity ?? false,
+      log_date: data.logDate || new Date(),
+      flour_types: data.flourTypes,
+      feed_ratio: data.feedRatio,
+      feed_amount_grams: data.feedAmountGrams,
+      hydration_percent: data.hydrationPercent ?? null,
+      ambient_temp_f: data.ambientTempF ?? null,
+      ambient_temp_c: data.ambientTempC ?? null,
+      starter_stage: data.starterStage ?? null,
+      condition_notes: data.conditionNotes ?? "",
+      rise_time_hours: data.riseTimeHours ?? null,
+      rise_time_minutes: data.riseTimeMinutes ?? null,
+      discard_used: data.discardUsed ?? false,
+      discard_recipe: data.discardRecipe ?? "",
+      peak_activity: data.peakActivity ?? false,
     };
     
     console.log('Formatted data for mutation:', formattedData);
