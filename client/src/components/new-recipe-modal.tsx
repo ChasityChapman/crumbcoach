@@ -162,7 +162,7 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
           <DialogTitle className="font-display text-sourdough-800">Create New Recipe</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 flex-1 overflow-y-auto">
+        <div className="space-y-6 flex-1 overflow-y-auto min-h-0 pr-2">
           {/* Basic Info */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -216,7 +216,7 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
               </Button>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3 min-h-0">
               {ingredients.map((ingredient, index) => (
                 <div key={ingredient.id} className="border border-sourdough-200 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
