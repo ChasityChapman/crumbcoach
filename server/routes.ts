@@ -865,14 +865,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // CRITICAL: Verify the password before allowing account deletion
-      if (!supabase) {
-        console.error('Supabase client not initialized for password verification');
+      // Create a temporary supabase client for password verification
+      const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+      const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseAnonKey) {
+        console.error('Supabase credentials not available for password verification');
         return res.status(500).json({ message: "Authentication service unavailable" });
       }
 
       // Verify the password by attempting to sign in with provided credentials
       try {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
+        const { createClient } = await import("@supabase/supabase-js");
+        const tempSupabase = createClient(supabaseUrl, supabaseAnonKey);
+        
+        const { error: signInError } = await tempSupabase.auth.signInWithPassword({
           email: user.email,
           password: password
         });

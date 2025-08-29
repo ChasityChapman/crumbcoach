@@ -41,11 +41,12 @@ async function comparePasswords(supplied: string, stored: string) {
 export function setupAuth(app: Express) {
   console.log('=== SETTING UP PROPER AUTH WITH NAMES ===');
   
-  // Log ALL requests 
+  // Log API requests WITHOUT sensitive data 
   app.use((req, res, next) => {
     if (req.path.startsWith('/api/')) {
       console.log(`🚀 API REQUEST: ${req.method} ${req.path}`);
-      console.log(`🚀 Body:`, req.body);
+      // SECURITY: Never log request bodies as they may contain passwords, tokens, etc.
+      console.log(`🚀 Body: <REDACTED - contains sensitive data>`);
     }
     next();
   });
@@ -69,7 +70,8 @@ export function setupAuth(app: Express) {
   app.post("/api/register", async (req, res) => {
     try {
       console.log('🔥 REGISTRATION with name capture');
-      console.log('Registration data:', req.body);
+      // SECURITY: Never log request body as it contains sensitive password data
+      console.log('Registration attempt for username:', req.body.username, 'email:', req.body.email);
       
       const { username, email, password, firstName, lastName } = req.body;
       
@@ -138,7 +140,7 @@ export function setupAuth(app: Express) {
   // Login endpoint 
   app.post("/api/login", async (req, res) => {
     try {
-      console.log('🔥 LOGIN attempt');
+      console.log('🔥 LOGIN attempt - user:', req.body.username?.substring(0, 3) + '***');
       
       const { username, password } = req.body;
       
@@ -158,10 +160,10 @@ export function setupAuth(app: Express) {
         console.log('Found user by email instead:', userByEmail.email);
         // Use the user found by email
         const validPassword = await comparePasswords(password, userByEmail.password);
-        console.log('Password comparison result (email login):', validPassword);
+        console.log('Password verification completed for email login');
         
         if (!validPassword) {
-          console.log('Password validation failed for email login:', username);
+          console.log('Password validation failed for email login - user attempted:', username.substring(0, 3) + '***');
           return res.status(401).json({ message: "Invalid credentials" });
         }
         
@@ -186,13 +188,14 @@ export function setupAuth(app: Express) {
       }
       
       console.log('Found user:', user.email, 'stored password hash length:', user.password.length);
-      console.log('Attempting to compare with password:', password);
+      // SECURITY: Never log raw passwords - only log that verification is being attempted
+      console.log('Attempting password verification for user:', user.email);
       
       const validPassword = await comparePasswords(password, user.password);
-      console.log('Password comparison result:', validPassword);
+      console.log('Password verification completed for username login');
       
       if (!validPassword) {
-        console.log('Password validation failed for user:', username);
+        console.log('Password validation failed for username login - user attempted:', username.substring(0, 3) + '***');
         return res.status(401).json({ message: "Invalid credentials" });
       }
       
