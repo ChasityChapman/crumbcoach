@@ -69,16 +69,40 @@
         <key>LSApplicationCategoryType</key>
         <string>public.app-category.food-and-drink</string>
         
-        <!-- Background Modes for notifications -->
+        <!-- Background Modes for notifications and data sync -->
         <key>UIBackgroundModes</key>
         <array>
             <string>background-processing</string>
+            <string>background-fetch</string>
         </array>
         
-        <!-- File Sharing -->
+        <!-- Performance and Storage -->
         <key>UIFileSharingEnabled</key>
         <false/>
         <key>LSSupportsOpeningDocumentsInPlace</key>
         <false/>
+        <key>UIRequiresFullScreen</key>
+        <false/>
+        
+        <!-- Network and Security -->
+        <key>NSAppTransportSecurity</key>
+        <dict>
+            <key>NSAllowsArbitraryLoads</key>
+            <false/>
+            <key>NSExceptionDomains</key>
+            <dict>
+                <key>supabase.co</key>
+                <dict>
+                    <key>NSIncludesSubdomains</key>
+                    <true/>
+                    <key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
+                    <false/>
+                </dict>
+            </dict>
+        </dict>
+        
+        <!-- Additional Privacy -->
+        <key>NSLocationWhenInUseUsageDescription</key>
+        <string>Crumb Coach may use location for temperature and humidity data to optimize your baking timeline.</string>
 </dict>
 </plist>

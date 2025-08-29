@@ -1,0 +1,25 @@
+{
+  "name": "Crumb Coach",
+  "short_name": "Crumb Coach",
+  "description": "Your smart sourdough baking companion with timeline tracking and environmental monitoring",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#d97706",
+  "background_color": "#fdf6f3",
+  "orientation": "portrait-primary",
+  "categories": ["food", "productivity", "lifestyle"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png", 
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -5,7 +5,13 @@ const config: CapacitorConfig = {
   appName: 'Crumb Coach',
   webDir: 'dist/public',
   server: {
-    androidScheme: 'https'
+    androidScheme: 'https',
+    cleartext: false, // Force HTTPS for security
+    allowNavigation: [
+      'https://*.supabase.co',
+      'https://api.openai.com',
+      'https://replit.com'
+    ]
   },
   android: {
     buildOptions: {
@@ -13,34 +19,53 @@ const config: CapacitorConfig = {
       keystorePassword: undefined,
       keystoreAlias: undefined,
       keystoreAliasPassword: undefined,
-      releaseType: 'APK'
+      releaseType: 'AAB', // Use AAB for Google Play Store
+      signingType: 'apksigner'
     },
-    backgroundColor: '#fdf6f3'
+    backgroundColor: '#fdf6f3',
+    allowMixedContent: false,
+    captureInput: true,
+    webContentsDebuggingEnabled: false // Disable for production
   },
   ios: {
     contentInset: 'automatic',
     scrollEnabled: true,
-    backgroundColor: '#fdf6f3', // sourdough-50 color
-    allowsLinkPreview: false
+    backgroundColor: '#fdf6f3',
+    allowsLinkPreview: false,
+    preferredContentMode: 'mobile',
+    allowsInlineMediaPlayback: true,
+    allowsBackForwardNavigationGestures: true
   },
   plugins: {
     PushNotifications: {
       presentationOptions: ["badge", "sound", "alert"]
     },
     Camera: {
-      permissions: ['camera', 'photos']
+      permissions: ['camera', 'photos'],
+      source: 'camera'
     },
     Device: {},
     StatusBar: {
       style: 'light',
-      backgroundColor: '#d97706' // sourdough-600
+      backgroundColor: '#d97706',
+      overlay: false
     },
     SplashScreen: {
-      launchShowDuration: 2000,
+      launchShowDuration: 3000, // Slightly longer for branding
       backgroundColor: '#d97706',
       androidSplashResourceName: 'splash',
       androidScaleType: 'CENTER_CROP',
-      showSpinner: false
+      showSpinner: false,
+      splashFullScreen: true,
+      splashImmersive: true
+    },
+    Keyboard: {
+      resize: 'body',
+      style: 'dark',
+      resizeOnFullScreen: true
+    },
+    App: {
+      appendUserAgent: 'CrumbCoach/1.0.0'
     }
   }
 };
