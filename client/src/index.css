@@ -122,6 +122,10 @@
     @apply border-border;
   }
 
+  html, body, #root, #__next {
+    height: 100%;
+  }
+
   body {
     @apply font-sans antialiased text-foreground;
     font-family: var(--font-sans);
