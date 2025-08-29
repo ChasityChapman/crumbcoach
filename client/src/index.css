@@ -163,3 +163,8 @@
     background-color: #c19960;
   }
 }
+
+/* Prevent body scroll when dialog is open */
+html:has([data-state="open"][data-radix-dialog-content]) {
+  overflow: hidden;
+}
