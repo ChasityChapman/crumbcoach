@@ -226,6 +226,9 @@ export default function StarterLogPage() {
       ambientTempC: data.ambientTempC ?? null,
       riseTimeHours: data.riseTimeHours ?? null,
       riseTimeMinutes: data.riseTimeMinutes ?? null,
+      starterStage: data.starterStage ?? null,
+      conditionNotes: data.conditionNotes ?? "",
+      discardRecipe: data.discardRecipe ?? "",
     };
     
     console.log('Formatted data for mutation:', formattedData);
@@ -840,6 +843,11 @@ export default function StarterLogPage() {
                       type="submit" 
                       disabled={createLogMutation.isPending}
                       data-testid="button-save-log"
+                      onClick={(e) => {
+                        console.log('Save button clicked!', e);
+                        console.log('Form errors:', form.formState.errors);
+                        console.log('Form values:', form.getValues());
+                      }}
                     >
                       {createLogMutation.isPending ? "Saving..." : "Save Log Entry"}
                     </Button>
