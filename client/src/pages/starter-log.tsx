@@ -217,18 +217,23 @@ export default function StarterLogPage() {
   const onSubmit = (data: StarterLogFormData) => {
     console.log('Form submitted with data:', data);
     
-    // Ensure all fields are properly formatted for the mutation
+    // Map form data to actual database column names (based on SQL query results)
     const formattedData = {
-      ...data,
       logDate: data.logDate || new Date(),
+      flourTypes: data.flourTypes,
+      feedRatio: data.feedRatio,
+      feedAmountGrams: data.feedAmountGrams,
       hydrationPercent: data.hydrationPercent ?? null,
-      ambientTempF: data.ambientTempF ?? null,
-      ambientTempC: data.ambientTempC ?? null,
+      // Use the actual column names from the database
+      starterStage: data.starterStage ?? null, 
+      conditionNotes: data.conditionNotes ?? "", 
       riseTimeHours: data.riseTimeHours ?? null,
       riseTimeMinutes: data.riseTimeMinutes ?? null,
-      starterStage: data.starterStage ?? null,
-      conditionNotes: data.conditionNotes ?? "",
+      ambientTempF: data.ambientTempF ?? null,
+      ambientTempC: data.ambientTempC ?? null,
+      discardUsed: data.discardUsed ?? false,
       discardRecipe: data.discardRecipe ?? "",
+      peakActivity: data.peakActivity ?? false,
     };
     
     console.log('Formatted data for mutation:', formattedData);
