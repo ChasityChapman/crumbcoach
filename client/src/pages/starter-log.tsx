@@ -14,7 +14,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { CalendarIcon, Camera, Plus, Thermometer, FlaskConical, Clock, TrendingUp, FileText, BookOpen } from "lucide-react";
+import { CalendarIcon, Camera, Plus, Thermometer, FlaskConical, Clock, TrendingUp, FileText, BookOpen, Settings } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { insertStarterLogSchema, type StarterLog, type Recipe } from "@shared/schema";
 import { format } from "date-fns";
 import BottomNavigation from "@/components/bottom-navigation";
@@ -63,6 +64,7 @@ export default function StarterLogPage() {
   const [recipeModalOpen, setRecipeModalOpen] = useState(false);
 
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   // Load temperature unit preference from settings
   useEffect(() => {
@@ -118,6 +120,21 @@ export default function StarterLogPage() {
     }
   }, [watchedFeedRatio?.flour, watchedFeedRatio?.water, form]);
 
+  // Load starter defaults from settings after form is initialized
+  useEffect(() => {
+    const saved = localStorage.getItem('crumbCoachSettings');
+    if (saved) {
+      const settings = JSON.parse(saved);
+      if (settings.starterDefaults) {
+        const defaults = settings.starterDefaults;
+        if (defaults.flourTypes) form.setValue("flourTypes", defaults.flourTypes);
+        if (defaults.feedRatio) form.setValue("feedRatio", defaults.feedRatio);
+        if (defaults.feedAmountGrams) form.setValue("feedAmountGrams", defaults.feedAmountGrams);
+        if (defaults.starterStage) form.setValue("starterStage", defaults.starterStage);
+      }
+    }
+  }, []);
+
   // Create starter log mutation
   const createLogMutation = useMutation({
     mutationFn: starterLogQueries.create,
@@ -130,6 +147,31 @@ export default function StarterLogPage() {
       setSelectedRecipeId("");
     },
   });
+
+  // Save current form values as defaults
+  const saveAsDefaults = () => {
+    const currentSettings = JSON.parse(localStorage.getItem('crumbCoachSettings') || '{}');
+    const starterDefaults = {
+      flourTypes: form.getValues("flourTypes"),
+      feedRatio: form.getValues("feedRatio"),
+      feedAmountGrams: form.getValues("feedAmountGrams"),
+      starterStage: form.getValues("starterStage"),
+    };
+    
+    const updatedSettings = {
+      ...currentSettings,
+      starterDefaults
+    };
+    
+    localStorage.setItem('crumbCoachSettings', JSON.stringify(updatedSettings));
+    
+    // Show success toast notification
+    toast({
+      title: "Settings Saved",
+      description: "Your feeding preferences have been saved as defaults for future entries.",
+      duration: 3000,
+    });
+  };
 
   const onSubmit = (data: StarterLogFormData) => {
     createLogMutation.mutate(data);
@@ -708,6 +750,16 @@ export default function StarterLogPage() {
                       data-testid="button-reset-form"
                     >
                       Reset
+                    </Button>
+                    <Button 
+                      type="button"
+                      variant="secondary"
+                      onClick={saveAsDefaults}
+                      data-testid="button-save-defaults"
+                      className="flex items-center gap-2"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Save as Defaults
                     </Button>
                     <Button 
                       type="submit" 
