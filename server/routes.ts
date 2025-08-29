@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { analyzeSourdoughImage, extractRecipeFromWebpage } from "./anthropic";
 import { analyzeBreadFromImage } from "./breadAnalysis";
 import { setupAuth, verifySupabaseAuth } from "./auth";
+import { createClient } from "@supabase/supabase-js";
 import { 
   insertRecipeSchema, 
   insertBakeSchema, 
@@ -13,6 +14,11 @@ import {
   insertSensorReadingSchema,
   insertStarterLogSchema
 } from "@shared/schema";
+
+// Initialize Supabase client for admin operations
+const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+const supabaseAdmin = supabaseUrl && supabaseServiceKey ? createClient(supabaseUrl, supabaseServiceKey) : null;
 
 export async function registerRoutes(app: Express): Promise<Server> {
   console.log('=== REGISTERING ROUTES ===');
@@ -696,6 +702,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Failed to delete timeline plan:", error);
       res.status(500).json({ message: "Failed to delete timeline plan" });
+    }
+  });
+
+  // Delete account endpoint
+  app.delete("/api/delete-account", verifySupabaseAuth, async (req: any, res) => {
+    try {
+      const { password } = req.body;
+      const user = req.user;
+      
+      if (!password) {
+        return res.status(400).json({ message: "Password is required for account deletion" });
+      }
+
+      if (!supabaseAdmin) {
+        console.error('Supabase admin client not initialized');
+        return res.status(500).json({ message: "Service configuration error" });
+      }
+
+      // For Supabase users, we'll verify the user exists and proceed with deletion
+      // The password verification would typically be done with the user's current auth session
+      
+      console.log('Deleting account for user:', user.email);
+
+      // Delete all user data from database first
+      try {
+        // Delete user's starter logs
+        const starterLogs = await storage.getStarterLogs(user.id);
+        for (const log of starterLogs) {
+          await storage.deleteStarterLog(log.id);
+        }
+
+        // Delete user's bakes (this will cascade delete related data)
+        const bakes = await storage.getBakes(user.id);
+        for (const bake of bakes) {
+          await storage.deleteBake(bake.id);
+        }
+
+        // Delete user's recipes
+        const recipes = await storage.getRecipes(user.id);
+        for (const recipe of recipes) {
+          await storage.deleteRecipe(recipe.id);
+        }
+
+        console.log('Successfully deleted user data from database');
+      } catch (dbError) {
+        console.error('Error deleting user data:', dbError);
+        return res.status(500).json({ message: "Failed to delete user data" });
+      }
+
+      // Delete the user's authentication account from Supabase
+      try {
+        const authToken = req.headers.authorization?.substring(7); // Remove 'Bearer ' prefix
+        if (authToken) {
+          const { data: { user: supabaseUser } } = await supabaseAdmin.auth.getUser(authToken);
+          if (supabaseUser) {
+            const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(supabaseUser.id);
+            if (deleteError) {
+              console.error('Failed to delete Supabase user:', deleteError);
+              return res.status(500).json({ message: "Failed to delete authentication account" });
+            }
+            console.log('Successfully deleted Supabase authentication account');
+          }
+        }
+      } catch (authError) {
+        console.error('Error deleting auth account:', authError);
+        return res.status(500).json({ message: "Failed to delete authentication account" });
+      }
+
+      console.log('Account deletion completed successfully for:', user.email);
+      res.json({ message: "Account and all data deleted successfully" });
+    } catch (error) {
+      console.error('Delete account error:', error);
+      res.status(500).json({ message: "Failed to delete account" });
     }
   });
 

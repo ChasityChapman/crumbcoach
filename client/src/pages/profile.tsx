@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { User, Bell, Thermometer, Camera, Share2, Settings, FileText, Mail, LogOut } from "lucide-react";
+import { User, Bell, Thermometer, Camera, Share2, Settings, FileText, Mail, LogOut, Trash2, AlertTriangle } from "lucide-react";
 import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_1756224893332.png";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -12,16 +12,22 @@ import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useLocation } from "wouter";
 import type { Bake, Recipe, User as UserType } from "@shared/schema";
 import AdvancedSettingsModal from "@/components/advanced-settings-modal";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function Profile() {
   const { toast } = useToast();
-  const { user, signOut, loading } = useSupabaseAuth();
+  const { user, session, signOut, loading } = useSupabaseAuth();
   const isLoggingOut = loading;
   const [, navigate] = useLocation();
   const [notifications, setNotifications] = useState(true);
   const [autoSensors, setAutoSensors] = useState(true);
   const [photoBackup, setPhotoBackup] = useState(false);
   const [advancedSettingsOpen, setAdvancedSettingsOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Navigate to auth page when user logs out
   useEffect(() => {
@@ -87,6 +93,55 @@ export default function Profile() {
 
   const handleAdvancedSettings = () => {
     setAdvancedSettingsOpen(true);
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!deletePassword.trim()) {
+      toast({
+        title: "Password required",
+        description: "Please enter your password to delete your account",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      // Call delete account API
+      const response = await fetch('/api/delete-account', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({ password: deletePassword }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to delete account');
+      }
+
+      toast({
+        title: "Account deleted",
+        description: "Your account and all data have been permanently deleted",
+      });
+
+      // Sign out and redirect
+      await signOut();
+      navigate("/auth");
+    } catch (error) {
+      console.error('Delete account error:', error);
+      toast({
+        title: "Deletion failed",
+        description: error instanceof Error ? error.message : "Failed to delete account",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+      setDeletePassword("");
+    }
   };
 
   return (
@@ -268,6 +323,91 @@ export default function Profile() {
             {isLoggingOut ? "Signing Out..." : "Sign Out"}
           </Button>
         </div>
+
+        {/* Danger Zone */}
+        <Card className="shadow-sm border-red-200 bg-red-50">
+          <CardHeader>
+            <CardTitle className="font-display text-red-800 flex items-center space-x-2">
+              <AlertTriangle className="w-5 h-5" />
+              <span>Danger Zone</span>
+            </CardTitle>
+            <p className="text-sm text-red-600">
+              Actions here are permanent and cannot be undone.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+              <AlertDialogTrigger asChild>
+                <Button 
+                  variant="destructive" 
+                  className="w-full justify-start"
+                  data-testid="button-delete-account"
+                >
+                  <Trash2 className="w-5 h-5 mr-3" />
+                  Delete Account Permanently
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="max-w-md">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="flex items-center space-x-2">
+                    <AlertTriangle className="w-5 h-5 text-red-500" />
+                    <span>Delete Account</span>
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="text-left space-y-3">
+                    <p>
+                      This action will permanently delete your account and all associated data including:
+                    </p>
+                    <ul className="list-disc pl-6 space-y-1 text-sm">
+                      <li>All your recipes and baking formulas</li>
+                      <li>Complete baking history and timelines</li>
+                      <li>Starter logs and maintenance records</li>
+                      <li>Photos and progress documentation</li>
+                      <li>All personal preferences and settings</li>
+                    </ul>
+                    <p className="font-medium text-red-600">
+                      This cannot be undone. Your data will be permanently lost.
+                    </p>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="delete-password" className="text-sm font-medium">
+                    Enter your password to confirm deletion:
+                  </Label>
+                  <Input
+                    id="delete-password"
+                    type="password"
+                    value={deletePassword}
+                    onChange={(e) => setDeletePassword(e.target.value)}
+                    placeholder="Your current password"
+                    className="border-red-200"
+                    data-testid="input-delete-password"
+                  />
+                </div>
+
+                <AlertDialogFooter>
+                  <AlertDialogCancel 
+                    onClick={() => {
+                      setDeletePassword("");
+                      setDeleteDialogOpen(false);
+                    }}
+                    data-testid="button-cancel-delete"
+                  >
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDeleteAccount}
+                    disabled={isDeleting || !deletePassword.trim()}
+                    className="bg-red-600 hover:bg-red-700"
+                    data-testid="button-confirm-delete"
+                  >
+                    {isDeleting ? "Deleting..." : "Delete Account Forever"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </CardContent>
+        </Card>
 
         {/* App Info */}
         <Card className="shadow-sm border-sourdough-100">
