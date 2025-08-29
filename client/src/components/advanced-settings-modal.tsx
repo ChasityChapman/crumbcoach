@@ -84,21 +84,37 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
   const [starterName, setStarterName] = useState(savedSettings?.starterName || 'My Starter');
 
   // Get current user data
-  const { data: currentUser } = useQuery({
+  const { data: currentUser, error: userQueryError } = useQuery({
     queryKey: ['current-user'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
+      if (!user) {
+        console.log('No authenticated user found');
+        return null;
+      }
       
-      const { data } = await supabase
+      console.log('Fetching user data for ID:', user.id);
+      
+      const { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('id', user.id)
         .single();
       
+      if (error) {
+        console.error('Error fetching user data:', error);
+        throw error;
+      }
+      
+      console.log('User data loaded:', data);
       return data;
     }
   });
+
+  // Log any user query errors
+  if (userQueryError) {
+    console.error('User query error:', userQueryError);
+  }
 
   // Populate form fields when user data loads
   useEffect(() => {
@@ -111,8 +127,12 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
   // Update user profile mutation
   const updateUserMutation = useMutation({
     mutationFn: async ({ firstName, lastName }: { firstName: string; lastName: string }) => {
+      console.log('Updating user profile:', { firstName, lastName });
+      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
+      
+      console.log('Current user ID:', user.id);
 
       const { data, error } = await supabase
         .from('users')
@@ -124,7 +144,12 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Update error:', error);
+        throw error;
+      }
+      
+      console.log('Update successful:', data);
       return data;
     },
     onSuccess: () => {
@@ -135,6 +160,7 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
       });
     },
     onError: (error) => {
+      console.error('Profile update failed:', error);
       toast({
         title: "Update Failed",
         description: "Failed to update your profile. Please try again.",
