@@ -157,7 +157,7 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl w-[90vw] h-[90vh] max-h-[90vh] p-0 flex flex-col">
+      <DialogContent className="max-w-4xl w-[90vw] max-h-[85vh] p-0 flex flex-col m-4">
         <DialogHeader className="p-6 pb-0 flex-shrink-0">
           <DialogTitle className="font-display text-sourdough-800">Create New Recipe</DialogTitle>
         </DialogHeader>
