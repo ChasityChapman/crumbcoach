@@ -217,17 +217,22 @@ export default function StarterLogPage() {
   const onSubmit = (data: StarterLogFormData) => {
     console.log('Form submitted with data:', data);
     
-    // Use actual database column names (snake_case as they appear in PostgreSQL)
+    // Use exact schema column names from shared/schema.ts
     const formattedData = {
-      log_date: data.logDate || new Date(),
-      flour_types: data.flourTypes,
-      feed_ratio: data.feedRatio,
-      feed_amount_grams: data.feedAmountGrams,
-      hydration_percent: data.hydrationPercent ?? null,
-      environmental_temp: data.ambientTempC || data.ambientTempF || null,
-      rise_time_minutes: (data.riseTimeHours || 0) * 60 + (data.riseTimeMinutes || 0) || null,
-      starter_health: data.starterStage ?? null,
-      texture_notes: data.conditionNotes ?? "",
+      logDate: data.logDate || new Date(),
+      flourTypes: data.flourTypes,
+      feedRatio: data.feedRatio,
+      feedAmountGrams: data.feedAmountGrams,
+      hydrationPercent: data.hydrationPercent ?? null,
+      ambientTempF: data.ambientTempF ?? null,
+      ambientTempC: data.ambientTempC ?? null,
+      starterStage: data.starterStage ?? null,
+      conditionNotes: data.conditionNotes ?? "",
+      riseTimeHours: data.riseTimeHours ?? null,
+      riseTimeMinutes: data.riseTimeMinutes ?? null,
+      discardUsed: data.discardUsed ?? false,
+      discardRecipe: data.discardRecipe ?? "",
+      peakActivity: data.peakActivity ?? false,
     };
     
     console.log('Formatted data for mutation:', formattedData);
