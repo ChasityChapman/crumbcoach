@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -57,6 +58,7 @@ const starterStageOptions = [
 ];
 
 export default function StarterLogPage() {
+  const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState("new-log");
   const [tempUnit, setTempUnit] = useState<'celsius' | 'fahrenheit'>('celsius');
   const [discardUsageType, setDiscardUsageType] = useState<"notes" | "existing-recipe" | "new-recipe">("notes");
@@ -258,9 +260,13 @@ export default function StarterLogPage() {
               </div>
             </div>
             <div className="text-right">
-              <p className="text-xs text-amber-600 dark:text-amber-400">
+              <button 
+                onClick={() => navigate('/profile')}
+                className="text-xs text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 underline cursor-pointer transition-colors"
+                data-testid="link-advanced-settings"
+              >
                 Customize this name in Advanced Settings
-              </p>
+              </button>
             </div>
           </div>
         </CardContent>
