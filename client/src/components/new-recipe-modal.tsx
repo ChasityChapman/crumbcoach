@@ -175,7 +175,7 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
           "h-[100svh] md:h-auto md:max-h-[85svh]"
         )}
       >
-        <div className="sticky top-0 z-10 bg-white/90 backdrop-blur px-6 pt-6 pb-4 border-b">
+        <div className="flex-shrink-0 sticky top-0 z-10 bg-white/90 backdrop-blur px-6 pt-6 pb-4 border-b">
           <DialogTitle className="font-display text-sourdough-800">Create New Recipe</DialogTitle>
         </div>
 
@@ -374,7 +374,7 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
           </div>
         </div>
 
-        <div className="sticky bottom-0 z-10 bg-white/90 backdrop-blur px-6 py-4 border-t">
+        <div className="flex-shrink-0 sticky bottom-0 z-10 bg-white/90 backdrop-blur px-6 py-4 border-t">
           <div className="flex justify-end gap-3">
             <Button 
               variant="outline" 
