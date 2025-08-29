@@ -166,7 +166,7 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
 
         <div className="px-6 py-4 max-h-[65vh] overflow-y-auto space-y-6">
           {/* Basic Info */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="recipeName">Recipe Name *</Label>
               <Input
