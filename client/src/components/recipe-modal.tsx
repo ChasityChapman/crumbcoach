@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { X, Plus, Trash2, Droplets, Link, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import HydrationDisplay from "@/components/hydration-display";
 
 interface RecipeModalProps {
   isOpen: boolean;
@@ -440,6 +441,13 @@ export default function RecipeModal({ isOpen, onClose, recipe }: RecipeModalProp
                   </Button>
                 </div>
               ))}
+              
+              {/* Real-time Hydration Display */}
+              {ingredients.length > 0 && (
+                <div className="mt-4 pt-3 border-t border-sourdough-200">
+                  <HydrationDisplay ingredients={ingredients} />
+                </div>
+              )}
             </CardContent>
           </Card>
 
