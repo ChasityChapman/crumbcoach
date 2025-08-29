@@ -157,7 +157,7 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       {/* FIX: grid shell + fixed height + hidden outer overflow */}
-      <DialogContent className="w-[calc(100vw-2rem)] max-w-3xl h-[90vh] p-0 overflow-hidden grid grid-rows-[auto,1fr,auto]">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-3xl h-[90vh] p-0 overflow-hidden !grid grid-rows-[auto,1fr,auto] !gap-0">
         <DialogHeader className="p-6 pb-4 border-b">
           <DialogTitle className="font-display text-sourdough-800">Create New Recipe</DialogTitle>
         </DialogHeader>
