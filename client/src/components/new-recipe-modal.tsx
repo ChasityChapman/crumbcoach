@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -153,6 +153,16 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
     });
   };
 
+  useEffect(() => {
+    const handler = (e: FocusEvent) => {
+      const el = e.target as HTMLElement
+      el?.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" })
+    }
+    const container = document.querySelector("[data-new-recipe-scroll]")
+    container?.addEventListener("focusin", handler as any)
+    return () => container?.removeEventListener("focusin", handler as any)
+  }, [])
+
   if (!isOpen) return null;
 
   return (
@@ -169,7 +179,7 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
           <DialogTitle className="font-display text-sourdough-800">Create New Recipe</DialogTitle>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-6">
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-6" data-new-recipe-scroll>
           {/* Basic Info */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
