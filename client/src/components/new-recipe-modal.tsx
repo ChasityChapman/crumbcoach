@@ -157,13 +157,23 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       {/* FIX: grid shell + fixed height + hidden outer overflow */}
-      <DialogContent className="w-[calc(100vw-2rem)] max-w-3xl h-[90vh] p-0 overflow-hidden !grid grid-rows-[auto,1fr,auto] !gap-0">
-        <DialogHeader className="p-6 pb-4 border-b">
+      <DialogContent
+        className="
+          w-[calc(100vw-2rem)]
+          max-w-3xl
+          h-[90vh]
+          p-0
+          overflow-hidden
+          flex flex-col
+        "
+      >
+        {/* Header (fixed height) */}
+        <DialogHeader className="p-6 pb-4 border-b flex-shrink-0">
           <DialogTitle className="font-display text-sourdough-800">Create New Recipe</DialogTitle>
         </DialogHeader>
 
-        {/* FIX: min-h-0 allows this row to shrink; overflow-y-auto makes it scroll */}
-        <div className="min-h-0 overflow-y-auto p-6 space-y-6">
+        {/* Middle section (scrollable) */}
+        <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-6">
           {/* Basic Info */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -217,17 +227,7 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
               </Button>
             </div>
 
-            {/* 👇 make JUST the list scrollable */}
-            <div
-              className="
-                space-y-3
-                max-h-[45vh]
-                overflow-y-auto
-                min-h-0
-                pr-1
-                overscroll-contain
-              "
-            >
+            <div className="space-y-3">
               {ingredients.map((ingredient, index) => (
                 <div key={ingredient.id} className="border border-sourdough-200 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
@@ -313,16 +313,7 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
               </Button>
             </div>
 
-            <div
-              className="
-                space-y-3
-                max-h-[40vh]
-                overflow-y-auto
-                min-h-0
-                pr-1
-                overscroll-contain
-              "
-            >
+            <div className="space-y-3">
               {steps.map((step, index) => (
                 <div key={step.id} className="border border-sourdough-200 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
@@ -377,8 +368,8 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex space-x-3 p-6 pt-4 border-t">
+        {/* Footer (fixed height) */}
+        <div className="flex space-x-3 p-6 pt-4 border-t flex-shrink-0">
           <Button
             variant="outline"
             onClick={onClose}
