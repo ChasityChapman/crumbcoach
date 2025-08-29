@@ -22,12 +22,25 @@ interface RecipeStep {
   description: string;
 }
 
+interface RecipeIngredient {
+  id: string;
+  name: string;
+  amount: number;
+  unit: string;
+}
+
 export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps) {
   const [recipeName, setRecipeName] = useState("");
   const [description, setDescription] = useState("");
   const [difficulty, setDifficulty] = useState("");
   const [steps, setSteps] = useState<RecipeStep[]>([
     { id: "1", name: "", duration: 30, description: "" }
+  ]);
+  const [ingredients, setIngredients] = useState<RecipeIngredient[]>([
+    { id: "1", name: "Bread Flour", amount: 500, unit: "g" },
+    { id: "2", name: "Water", amount: 350, unit: "g" },
+    { id: "3", name: "Sourdough Starter", amount: 100, unit: "g" },
+    { id: "4", name: "Salt", amount: 10, unit: "g" }
   ]);
   const { toast } = useToast();
 
@@ -56,6 +69,12 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
     setDescription("");
     setDifficulty("");
     setSteps([{ id: "1", name: "", duration: 30, description: "" }]);
+    setIngredients([
+      { id: "1", name: "Bread Flour", amount: 500, unit: "g" },
+      { id: "2", name: "Water", amount: 350, unit: "g" },
+      { id: "3", name: "Sourdough Starter", amount: 100, unit: "g" },
+      { id: "4", name: "Salt", amount: 10, unit: "g" }
+    ]);
   };
 
   const addStep = () => {
@@ -80,8 +99,30 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
     ));
   };
 
+  const addIngredient = () => {
+    const newIngredient: RecipeIngredient = {
+      id: (ingredients.length + 1).toString(),
+      name: "",
+      amount: 0,
+      unit: "g"
+    };
+    setIngredients([...ingredients, newIngredient]);
+  };
+
+  const removeIngredient = (id: string) => {
+    if (ingredients.length > 1) {
+      setIngredients(ingredients.filter(ingredient => ingredient.id !== id));
+    }
+  };
+
+  const updateIngredient = (id: string, field: keyof RecipeIngredient, value: string | number) => {
+    setIngredients(ingredients.map(ingredient => 
+      ingredient.id === id ? { ...ingredient, [field]: value } : ingredient
+    ));
+  };
+
   const handleSubmit = () => {
-    if (!recipeName.trim() || !difficulty || steps.some(step => !step.name.trim())) {
+    if (!recipeName.trim() || !difficulty || steps.some(step => !step.name.trim()) || ingredients.some(ing => !ing.name.trim() || ing.amount <= 0)) {
       toast({
         title: "Missing information",
         description: "Please fill in all required fields.",
@@ -103,7 +144,12 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
         duration: step.duration,
         description: step.description.trim() || null
       })),
-      ingredients: [], // Could be added later
+      ingredients: ingredients.map(ingredient => ({
+        id: ingredient.id,
+        name: ingredient.name.trim(),
+        amount: ingredient.amount,
+        unit: ingredient.unit
+      })),
     });
   };
 
@@ -156,6 +202,84 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
               className="border-sourdough-200"
               rows={3}
             />
+          </div>
+
+          {/* Ingredients */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label className="text-base font-medium">Ingredients *</Label>
+              <Button
+                onClick={addIngredient}
+                size="sm"
+                className="bg-sourdough-500 hover:bg-sourdough-600 text-white"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Add Ingredient
+              </Button>
+            </div>
+
+            <div className="space-y-3">
+              {ingredients.map((ingredient, index) => (
+                <div key={ingredient.id} className="border border-sourdough-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-medium text-sourdough-800">Ingredient {index + 1}</h4>
+                    {ingredients.length > 1 && (
+                      <Button
+                        onClick={() => removeIngredient(ingredient.id)}
+                        size="sm"
+                        variant="outline"
+                        className="border-red-200 text-red-600 hover:bg-red-50"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                  
+                  <div className="grid grid-cols-5 gap-3">
+                    <div className="col-span-3 space-y-2">
+                      <Label>Name *</Label>
+                      <Input
+                        value={ingredient.name}
+                        onChange={(e) => updateIngredient(ingredient.id, 'name', e.target.value)}
+                        placeholder="e.g., Bread Flour"
+                        className="border-sourdough-200"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Amount *</Label>
+                      <Input
+                        type="number"
+                        value={ingredient.amount}
+                        onChange={(e) => updateIngredient(ingredient.id, 'amount', parseInt(e.target.value) || 0)}
+                        min="0"
+                        step="0.1"
+                        className="border-sourdough-200"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Unit *</Label>
+                      <Select 
+                        value={ingredient.unit} 
+                        onValueChange={(value) => updateIngredient(ingredient.id, 'unit', value)}
+                      >
+                        <SelectTrigger className="border-sourdough-200">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="g">g</SelectItem>
+                          <SelectItem value="kg">kg</SelectItem>
+                          <SelectItem value="ml">ml</SelectItem>
+                          <SelectItem value="l">l</SelectItem>
+                          <SelectItem value="cup">cup</SelectItem>
+                          <SelectItem value="tbsp">tbsp</SelectItem>
+                          <SelectItem value="tsp">tsp</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Steps */}
@@ -238,7 +362,7 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={!recipeName.trim() || !difficulty || steps.some(step => !step.name.trim()) || createRecipeMutation.isPending}
+            disabled={!recipeName.trim() || !difficulty || steps.some(step => !step.name.trim()) || ingredients.some(ing => !ing.name.trim() || ing.amount <= 0) || createRecipeMutation.isPending}
             className="flex-1 bg-sourdough-500 hover:bg-sourdough-600 text-white"
           >
             {createRecipeMutation.isPending ? "Creating..." : "Create Recipe"}
