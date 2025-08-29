@@ -201,7 +201,12 @@ export default function StarterLogPage() {
   };
 
   const onSubmit = (data: StarterLogFormData) => {
-    createLogMutation.mutate(data);
+    // Ensure logDate is properly formatted for the mutation
+    const formattedData = {
+      ...data,
+      logDate: data.logDate || new Date(),
+    };
+    createLogMutation.mutate(formattedData);
   };
 
   return (
