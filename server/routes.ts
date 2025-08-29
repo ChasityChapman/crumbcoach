@@ -864,10 +864,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: "Service configuration error" });
       }
 
-      // For Supabase users, we'll verify the user exists and proceed with deletion
-      // The password verification would typically be done with the user's current auth session
+      // CRITICAL: Verify the password before allowing account deletion
+      if (!supabase) {
+        console.error('Supabase client not initialized for password verification');
+        return res.status(500).json({ message: "Authentication service unavailable" });
+      }
+
+      // Verify the password by attempting to sign in with provided credentials
+      try {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: user.email,
+          password: password
+        });
+
+        if (signInError) {
+          console.log('Password verification failed for account deletion:', signInError.message);
+          return res.status(401).json({ message: "Invalid password. Account deletion requires your current password." });
+        }
+
+        console.log('Password verified successfully for account deletion');
+      } catch (passwordError) {
+        console.error('Password verification error:', passwordError);
+        return res.status(500).json({ message: "Failed to verify password" });
+      }
       
-      console.log('Deleting account for user:', user.email);
+      console.log('Proceeding with account deletion for user:', user.email);
 
       // Delete all user data from database first
       try {
