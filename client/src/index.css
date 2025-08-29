@@ -126,6 +126,7 @@
     @apply font-sans antialiased text-foreground;
     font-family: var(--font-sans);
     background-color: hsl(60 12% 98%);
+    overflow: auto; /* Override any hidden overflow */
   }
   
   .safe-area-pb {
