@@ -12,12 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { CalendarIcon, Camera, Plus, Thermometer, FlaskConical, Clock, TrendingUp } from "lucide-react";
-import { insertStarterLogSchema, type StarterLog } from "@shared/schema";
+import { CalendarIcon, Camera, Plus, Thermometer, FlaskConical, Clock, TrendingUp, FileText, BookOpen } from "lucide-react";
+import { insertStarterLogSchema, type StarterLog, type Recipe } from "@shared/schema";
 import { format } from "date-fns";
 import BottomNavigation from "@/components/bottom-navigation";
-import { starterLogQueries } from "@/lib/supabaseQueries";
+import { starterLogQueries, recipeQueries } from "@/lib/supabaseQueries";
+import RecipeModal from "@/components/recipe-modal";
 
 // Form schema with validation
 const starterLogFormSchema = insertStarterLogSchema.extend({
@@ -56,6 +58,27 @@ const starterStageOptions = [
 export default function StarterLogPage() {
   const [activeTab, setActiveTab] = useState("new-log");
   const [tempUnit, setTempUnit] = useState<'celsius' | 'fahrenheit'>('celsius');
+  const [discardUsageType, setDiscardUsageType] = useState<"notes" | "existing-recipe" | "new-recipe">("notes");
+  const [selectedRecipeId, setSelectedRecipeId] = useState<string>("");
+  const [recipeModalOpen, setRecipeModalOpen] = useState(false);
+
+  // Track recipe count to detect when new recipes are created
+  const [previousRecipeCount, setPreviousRecipeCount] = useState(0);
+
+  // Watch for new recipes being created and auto-select them for discard usage
+  useEffect(() => {
+    if (recipes.length > previousRecipeCount && recipeModalOpen) {
+      // A new recipe was created
+      const newestRecipe = recipes[0]; // Recipes are ordered by created_at desc
+      if (newestRecipe && discardUsageType === "new-recipe") {
+        setSelectedRecipeId(newestRecipe.id);
+        setDiscardUsageType("existing-recipe");
+        form.setValue("discardRecipe", newestRecipe.name);
+        setRecipeModalOpen(false);
+      }
+    }
+    setPreviousRecipeCount(recipes.length);
+  }, [recipes.length, recipeModalOpen, discardUsageType, previousRecipeCount, form]);
   const queryClient = useQueryClient();
 
   // Load temperature unit preference from settings
@@ -75,6 +98,12 @@ export default function StarterLogPage() {
     queryFn: starterLogQueries.getAll,
   });
 
+  // Fetch recipes for selection
+  const { data: recipes = [] } = useQuery<Recipe[]>({
+    queryKey: ["recipes"],
+    queryFn: recipeQueries.getAll,
+  });
+
   // Create starter log mutation
   const createLogMutation = useMutation({
     mutationFn: starterLogQueries.create,
@@ -82,6 +111,9 @@ export default function StarterLogPage() {
       queryClient.invalidateQueries({ queryKey: ["starter-logs"] });
       setActiveTab("history");
       form.reset();
+      // Reset discard usage state
+      setDiscardUsageType("notes");
+      setSelectedRecipeId("");
     },
   });
 
@@ -557,24 +589,110 @@ export default function StarterLogPage() {
                     />
 
                     {form.watch("discardUsed") && (
-                      <FormField
-                        control={form.control}
-                        name="discardRecipe"
-                        render={({ field }) => (
+                      <div className="space-y-4">
+                        <FormItem>
+                          <FormLabel>How would you like to record what you made?</FormLabel>
+                          <FormControl>
+                            <RadioGroup
+                              value={discardUsageType}
+                              onValueChange={(value: "notes" | "existing-recipe" | "new-recipe") => setDiscardUsageType(value)}
+                              className="space-y-2"
+                            >
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="notes" id="notes" />
+                                <Label htmlFor="notes" className="flex items-center space-x-2 cursor-pointer">
+                                  <FileText className="w-4 h-4" />
+                                  <span>Add notes</span>
+                                </Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="existing-recipe" id="existing-recipe" />
+                                <Label htmlFor="existing-recipe" className="flex items-center space-x-2 cursor-pointer">
+                                  <BookOpen className="w-4 h-4" />
+                                  <span>Select saved recipe</span>
+                                </Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="new-recipe" id="new-recipe" />
+                                <Label htmlFor="new-recipe" className="flex items-center space-x-2 cursor-pointer">
+                                  <Plus className="w-4 h-4" />
+                                  <span>Add new recipe</span>
+                                </Label>
+                              </div>
+                            </RadioGroup>
+                          </FormControl>
+                        </FormItem>
+
+                        {discardUsageType === "notes" && (
+                          <FormField
+                            control={form.control}
+                            name="discardRecipe"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>What did you make?</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="e.g., pancakes, crackers, focaccia"
+                                    value={field.value ?? ""}
+                                    onChange={field.onChange}
+                                    data-testid="input-discard-recipe"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        )}
+
+                        {discardUsageType === "existing-recipe" && (
                           <FormItem>
-                            <FormLabel>What did you make?</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="e.g., pancakes, crackers, focaccia"
-                                value={field.value ?? ""}
-                                onChange={field.onChange}
-                                data-testid="input-discard-recipe"
-                              />
-                            </FormControl>
-                            <FormMessage />
+                            <FormLabel>Select Recipe</FormLabel>
+                            <Select
+                              value={selectedRecipeId}
+                              onValueChange={(value) => {
+                                setSelectedRecipeId(value);
+                                const selectedRecipe = recipes.find(r => r.id === value);
+                                if (selectedRecipe) {
+                                  form.setValue("discardRecipe", selectedRecipe.name);
+                                }
+                              }}
+                            >
+                              <SelectTrigger data-testid="select-existing-recipe">
+                                <SelectValue placeholder="Choose a saved recipe" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {recipes.length === 0 ? (
+                                  <SelectItem value="no-recipes" disabled>
+                                    No recipes found - create one first
+                                  </SelectItem>
+                                ) : (
+                                  recipes.map((recipe) => (
+                                    <SelectItem key={recipe.id} value={recipe.id}>
+                                      {recipe.name}
+                                    </SelectItem>
+                                  ))
+                                )}
+                              </SelectContent>
+                            </Select>
                           </FormItem>
                         )}
-                      />
+
+                        {discardUsageType === "new-recipe" && (
+                          <div className="space-y-2">
+                            <Label>Create New Recipe</Label>
+                            <Button
+                              type="button"
+                              onClick={() => setRecipeModalOpen(true)}
+                              className="w-full border border-dashed border-sourdough-300 bg-sourdough-50 hover:bg-sourdough-100 text-sourdough-700"
+                              variant="outline"
+                              data-testid="button-create-recipe-from-discard"
+                            >
+                              <Plus className="w-4 h-4 mr-2" />
+                              Create Recipe for This Discard
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
 
@@ -708,6 +826,15 @@ export default function StarterLogPage() {
 
       {/* Bottom Navigation */}
       <BottomNavigation currentPath="/starter-log" />
+      
+      <RecipeModal
+        isOpen={recipeModalOpen}
+        onClose={() => {
+          setRecipeModalOpen(false);
+        }}
+        recipe={null}
+        initialTab="manual"
+      />
     </div>
   );
 }
