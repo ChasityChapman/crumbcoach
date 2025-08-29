@@ -157,12 +157,12 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
+        <DialogHeader className="pb-4">
           <DialogTitle className="font-display text-sourdough-800">Create New Recipe</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 mt-4">
+        <div className="space-y-6 flex-1 overflow-y-auto">
           {/* Basic Info */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -350,7 +350,7 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
         </div>
 
         {/* Action Buttons */}
-        <div className="flex space-x-3 pt-6 border-t mt-6">
+        <div className="flex space-x-3 pt-4 border-t">
           <Button
             variant="outline"
             onClick={onClose}
