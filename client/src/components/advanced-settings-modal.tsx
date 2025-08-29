@@ -22,10 +22,13 @@ import {
   Wifi,
   Bell,
   Eye,
-  Volume2
+  Volume2,
+  User
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 
 interface AdvancedSettingsModalProps {
   isOpen: boolean;
@@ -74,6 +77,69 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
   // Debug Settings
   const [debugMode, setDebugMode] = useState(false);
   const [showRawData, setShowRawData] = useState(false);
+
+  // Profile Settings
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [starterName, setStarterName] = useState(savedSettings?.starterName || 'My Starter');
+
+  // Get current user data
+  const { data: currentUser } = useQuery({
+    queryKey: ['current-user'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      
+      const { data } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      
+      return data;
+    },
+    onSuccess: (userData) => {
+      if (userData) {
+        setFirstName(userData.first_name || '');
+        setLastName(userData.last_name || '');
+      }
+    }
+  });
+
+  // Update user profile mutation
+  const updateUserMutation = useMutation({
+    mutationFn: async ({ firstName, lastName }: { firstName: string; lastName: string }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { data, error } = await supabase
+        .from('users')
+        .update({ 
+          first_name: firstName,
+          last_name: lastName 
+        })
+        .eq('id', user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['current-user'] });
+      toast({
+        title: "Profile Updated",
+        description: "Your name has been updated successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Update Failed",
+        description: "Failed to update your profile. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
   
   const handleExportData = () => {
     toast({
@@ -112,9 +178,9 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
     });
   };
   
-  // Auto-save settings when temperature values change
+  // Auto-save settings when values change
   useEffect(() => {
-    // Save temperature settings to localStorage immediately
+    // Save settings to localStorage immediately
     const settings = {
       tempUnit,
       defaultTemp,
@@ -123,13 +189,14 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
       sensorOverride,
       recalibrationSensitivity,
       timeAdjustment,
-      autoNotifications
+      autoNotifications,
+      starterName
     };
     localStorage.setItem('crumbCoachSettings', JSON.stringify(settings));
     
     // Invalidate sensor queries to refresh with new settings
     queryClient.invalidateQueries({ queryKey: ['/api/sensors/latest'] });
-  }, [tempUnit, defaultTemp, sensorPolling, autoCalibrate, sensorOverride, recalibrationSensitivity, timeAdjustment, autoNotifications]);
+  }, [tempUnit, defaultTemp, sensorPolling, autoCalibrate, sensorOverride, recalibrationSensitivity, timeAdjustment, autoNotifications, starterName]);
 
   const saveSettings = () => {
     onClose();
@@ -147,14 +214,74 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
           </DialogTitle>
         </DialogHeader>
         
-        <Tabs defaultValue="sensors" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+        <Tabs defaultValue="profile" className="w-full">
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="sensors">Sensors</TabsTrigger>
             <TabsTrigger value="timing">Timing</TabsTrigger>
             <TabsTrigger value="baking">Baking</TabsTrigger>
             <TabsTrigger value="interface">Interface</TabsTrigger>
             <TabsTrigger value="debug">Debug</TabsTrigger>
           </TabsList>
+          
+          {/* Profile Settings */}
+          <TabsContent value="profile" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <User className="w-5 h-5" />
+                  <span>User Profile</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label>First Name</Label>
+                    <Input
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder="Enter your first name"
+                      data-testid="input-first-name"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Last Name</Label>
+                    <Input
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder="Enter your last name"
+                      data-testid="input-last-name"
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex justify-start">
+                  <Button 
+                    onClick={() => updateUserMutation.mutate({ firstName, lastName })}
+                    disabled={updateUserMutation.isPending}
+                    data-testid="button-update-profile"
+                  >
+                    {updateUserMutation.isPending ? "Updating..." : "Update Name"}
+                  </Button>
+                </div>
+                
+                <Separator />
+                
+                <div className="space-y-2">
+                  <Label>Starter Name</Label>
+                  <p className="text-sm text-muted-foreground">Give your sourdough starter a personal name</p>
+                  <Input
+                    value={starterName}
+                    onChange={(e) => setStarterName(e.target.value)}
+                    placeholder="My Starter"
+                    data-testid="input-starter-name"
+                  />
+                  <p className="text-xs text-muted-foreground">This name will appear in your starter logs and timeline</p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
           
           {/* Sensor Configuration */}
           <TabsContent value="sensors" className="space-y-6">
