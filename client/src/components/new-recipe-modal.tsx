@@ -223,20 +223,10 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
                 <div key={ingredient.id} className="border border-sourdough-200 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="font-medium text-sourdough-800">Ingredient {index + 1}</h4>
-                    {ingredients.length > 1 && (
-                      <Button
-                        onClick={() => removeIngredient(ingredient.id)}
-                        size="sm"
-                        variant="outline"
-                        className="border-red-200 text-red-600 hover:bg-red-50"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    )}
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-                    <div className="md:col-span-3 space-y-2">
+                  <div className="flex flex-wrap gap-3">
+                    <div className="min-w-[160px] flex-1">
                       <Label>Name *</Label>
                       <Input
                         value={ingredient.name}
@@ -245,7 +235,7 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
                         className="border-sourdough-200"
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className="w-28">
                       <Label>Amount *</Label>
                       <Input
                         type="number"
@@ -264,7 +254,7 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
                         className="border-sourdough-200"
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className="w-28">
                       <Label>Unit *</Label>
                       <Select
                         value={ingredient.unit}
@@ -284,6 +274,16 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
                         </SelectContent>
                       </Select>
                     </div>
+                    {ingredients.length > 1 && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeIngredient(ingredient.id)}
+                        className="self-end text-red-500 hover:text-red-700"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
