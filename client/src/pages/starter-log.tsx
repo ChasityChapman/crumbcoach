@@ -217,20 +217,18 @@ export default function StarterLogPage() {
   const onSubmit = (data: StarterLogFormData) => {
     console.log('Form submitted with data:', data);
     
-    // Map form data to actual database column names (from database query)
+    // Map only to columns that exist in the database (from SQL query: starter_logs table)
     const formattedData = {
       logDate: data.logDate || new Date(),
       flourTypes: data.flourTypes,
       feedRatio: data.feedRatio,
       feedAmountGrams: data.feedAmountGrams,
       hydrationPercent: data.hydrationPercent ?? null,
-      // Map to the actual database columns that exist
-      environmentalTemp: data.ambientTempC || data.ambientTempF || null, // Maps to environmental_temp
-      riseTimeMinutes: (data.riseTimeHours || 0) * 60 + (data.riseTimeMinutes || 0) || null, // Combine into rise_time_minutes
-      starterHealth: data.starterStage ?? null, // Maps to starter_health
-      textureNotes: data.conditionNotes ?? "", // Maps to texture_notes
-      discardAmountGrams: data.discardUsed ? (data.feedAmountGrams || 50) : null, // Maps to discard_amount_grams
-      // Note: peakActivity doesn't seem to have a corresponding column in the database
+      environmentalTemp: data.ambientTempC || data.ambientTempF || null,
+      riseTimeMinutes: (data.riseTimeHours || 0) * 60 + (data.riseTimeMinutes || 0) || null,
+      starterHealth: data.starterStage ?? null,
+      textureNotes: data.conditionNotes ?? "",
+      // Only include actual database columns - removing discardAmountGrams since it doesn't exist
     };
     
     console.log('Formatted data for mutation:', formattedData);
