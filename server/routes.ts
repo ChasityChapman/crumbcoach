@@ -54,11 +54,19 @@ const authenticateUser = async (req: Request, res: Response, next: any) => {
     }
 
     const token = authHeader.substring(7);
-    // In a real app, you'd verify the JWT token here
-    // For now, we'll extract the user ID from the token (simplified)
-    req.userId = token; // This should be properly decoded from JWT
-    next();
+    
+    // Decode JWT token to extract user ID
+    try {
+      const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+      req.userId = payload.sub; // Extract user ID from 'sub' field
+      console.log('Authenticated user ID:', req.userId);
+      next();
+    } catch (decodeError) {
+      console.error('Failed to decode JWT token:', decodeError);
+      return res.status(401).json({ error: 'Invalid token format' });
+    }
   } catch (error) {
+    console.error('Authentication error:', error);
     res.status(401).json({ error: 'Invalid token' });
   }
 };
