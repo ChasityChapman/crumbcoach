@@ -8,13 +8,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Clock, Users, Plus, Filter } from "lucide-react";
+import { Clock, Users, Plus, Filter, Link } from "lucide-react";
 import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_1756224893332.png";
 
 export default function Recipes() {
   const [recipeModalOpen, setRecipeModalOpen] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [sortOrder, setSortOrder] = useState<string>("a-z");
+  const [modalTab, setModalTab] = useState<"manual" | "url">("manual");
   
   const { data: recipes, isLoading } = useQuery<Recipe[]>({
     queryKey: ["recipes"],
@@ -68,6 +69,7 @@ export default function Recipes() {
           <Button 
             onClick={() => {
               setSelectedRecipe(null);
+              setModalTab("manual");
               setRecipeModalOpen(true);
             }}
             className="bg-sourdough-500 hover:bg-sourdough-600 text-white"
@@ -106,6 +108,7 @@ export default function Recipes() {
                 className="shadow-sm border-sourdough-100 cursor-pointer hover:shadow-md transition-shadow duration-200"
                 onClick={() => {
                   setSelectedRecipe(recipe);
+                  setModalTab("manual");
                   setRecipeModalOpen(true);
                 }}
                 data-testid={`recipe-card-${recipe.id}`}
@@ -147,17 +150,34 @@ export default function Recipes() {
             <h3 className="font-display font-semibold text-lg text-sourdough-800 mb-2">
               No Recipes Yet
             </h3>
-            <p className="text-sourdough-600 mb-4">Start by creating your first sourdough recipe.</p>
-            <Button 
-              onClick={() => {
-                setSelectedRecipe(null);
-                setRecipeModalOpen(true);
-              }}
-              className="bg-sourdough-500 hover:bg-sourdough-600 text-white"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Create Your First Recipe
-            </Button>
+            <p className="text-sourdough-600 mb-6">Start by creating your first sourdough recipe or add one from a website.</p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button 
+                onClick={() => {
+                  setSelectedRecipe(null);
+                  setModalTab("manual");
+                  setRecipeModalOpen(true);
+                }}
+                className="bg-sourdough-500 hover:bg-sourdough-600 text-white"
+                data-testid="button-create-first-recipe"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create New Recipe
+              </Button>
+              <Button 
+                onClick={() => {
+                  setSelectedRecipe(null);
+                  setModalTab("url");
+                  setRecipeModalOpen(true);
+                }}
+                variant="outline"
+                className="border-sourdough-300 text-sourdough-700 hover:bg-sourdough-50"
+                data-testid="button-add-saved-recipe"
+              >
+                <Link className="w-4 h-4 mr-2" />
+                Add from Website
+              </Button>
+            </div>
           </div>
         )}
       </div>
@@ -171,6 +191,7 @@ export default function Recipes() {
           setSelectedRecipe(null);
         }}
         recipe={selectedRecipe}
+        initialTab={modalTab}
       />
     </div>
   );

@@ -18,6 +18,7 @@ interface RecipeModalProps {
   isOpen: boolean;
   onClose: () => void;
   recipe?: any | null; // Recipe to edit, null for new recipe
+  initialTab?: "manual" | "url";
 }
 
 interface Ingredient {
@@ -39,8 +40,8 @@ const HYDRATION_PRESETS = [
   { name: "Very High Hydration", percentage: 95, description: "Extremely wet, artisan style" },
 ];
 
-export default function RecipeModal({ isOpen, onClose, recipe }: RecipeModalProps) {
-  const [activeTab, setActiveTab] = useState("manual");
+export default function RecipeModal({ isOpen, onClose, recipe, initialTab = "manual" }: RecipeModalProps) {
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [recipeUrl, setRecipeUrl] = useState("");
   const [hasExtractedData, setHasExtractedData] = useState(false);
   const [recipeName, setRecipeName] = useState("");
@@ -63,6 +64,13 @@ export default function RecipeModal({ isOpen, onClose, recipe }: RecipeModalProp
   const [selectedHydration, setSelectedHydration] = useState<number | null>(null);
 
   const { toast } = useToast();
+
+  // Set the initial tab when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab(initialTab);
+    }
+  }, [isOpen, initialTab]);
 
   // Populate form when editing an existing recipe
   useEffect(() => {
