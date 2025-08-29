@@ -732,7 +732,7 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
             Cancel
           </Button>
           <Button onClick={saveSettings}>
-            Close
+            Save
           </Button>
         </div>
       </DialogContent>
