@@ -18,7 +18,7 @@ export const starterLogQueries = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
-    // Map camelCase form fields to snake_case database columns
+    // Map camelCase form fields to snake_case database columns (only essential ones)
     const { data, error } = await supabase
       .from('starter_logs')
       .insert({
@@ -33,13 +33,6 @@ export const starterLogQueries = {
         starter_health: starterLog.starterStage,
         texture_notes: starterLog.conditionNotes,
         discard_amount_grams: starterLog.discardUsed ? (starterLog.feedAmountGrams || 50) : null,
-        photos: null, // Not implemented yet
-        aroma_notes: null, // Not implemented yet  
-        environmental_humidity: null, // Not implemented yet
-        peak_height_cm: null, // Not implemented yet
-        ph_level: null, // Not implemented yet
-        feeding_schedule: null, // Not implemented yet
-        weather_data: starterLog.weatherData,
       })
       .select()
       .single();
