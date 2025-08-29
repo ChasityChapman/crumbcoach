@@ -179,7 +179,7 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
           <DialogTitle className="font-display text-sourdough-800">Create New Recipe</DialogTitle>
         </div>
 
-        <div data-new-recipe-scroll className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-6">
+        <div data-new-recipe-scroll className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 py-4 space-y-6">
           {/* Basic Info */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
