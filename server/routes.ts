@@ -55,11 +55,29 @@ const authenticateUser = async (req: Request, res: Response, next: any) => {
 
     const token = authHeader.substring(7);
     
-    // Decode JWT token to extract user ID
+    // Decode JWT token to extract user ID and metadata
     try {
       const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-      req.userId = payload.sub; // Extract user ID from 'sub' field
-      console.log('Authenticated user ID:', req.userId);
+      const userId = payload.sub;
+      console.log('Authenticated user ID:', userId);
+      
+      // Check if user exists in our database, create if not
+      const existingUser = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+      
+      if (existingUser.length === 0) {
+        console.log('User not found in database, creating user record');
+        const userMetadata = payload.user_metadata || {};
+        const newUser = await db.insert(users).values({
+          id: userId,
+          email: payload.email || userMetadata.email,
+          username: userMetadata.email?.split('@')[0] || `user_${userId.slice(0, 8)}`,
+          firstName: userMetadata.firstName || userMetadata.first_name,
+          lastName: userMetadata.lastName || userMetadata.last_name,
+        }).returning();
+        console.log('Created new user:', newUser[0]);
+      }
+      
+      req.userId = userId;
       next();
     } catch (decodeError) {
       console.error('Failed to decode JWT token:', decodeError);
