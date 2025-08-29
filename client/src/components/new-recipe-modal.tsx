@@ -135,14 +135,14 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
 
     createRecipeMutation.mutate({
       name: recipeName.trim(),
-      description: description.trim() || null,
+      ...(description.trim() && { description: description.trim() }),
       difficulty,
       totalTimeHours,
       steps: steps.map(step => ({
         id: step.id,
         name: step.name.trim(),
         duration: step.duration,
-        description: step.description.trim() || null
+        ...(step.description.trim() && { description: step.description.trim() })
       })),
       ingredients: ingredients.map(ing => ({
         id: ing.id,
