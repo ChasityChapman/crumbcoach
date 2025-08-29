@@ -217,22 +217,24 @@ export default function StarterLogPage() {
   const onSubmit = (data: StarterLogFormData) => {
     console.log('Form submitted with data:', data);
     
-    // Use actual Supabase column names (snake_case)
+    // Use camelCase field names that the mutation expects
     const formattedData = {
-      log_date: data.logDate || new Date(),
-      flour_types: data.flourTypes,
-      feed_ratio: data.feedRatio,
-      feed_amount_grams: data.feedAmountGrams,
-      hydration_percent: data.hydrationPercent ?? null,
-      ambient_temp_f: data.ambientTempF ?? null,
-      ambient_temp_c: data.ambientTempC ?? null,
-      starter_stage: data.starterStage ?? null,
-      condition_notes: data.conditionNotes ?? "",
-      rise_time_hours: data.riseTimeHours ?? null,
-      rise_time_minutes: data.riseTimeMinutes ?? null,
-      discard_used: data.discardUsed ?? false,
-      discard_recipe: data.discardRecipe ?? "",
-      peak_activity: data.peakActivity ?? false,
+      logDate: data.logDate || new Date(),
+      flourTypes: data.flourTypes,
+      feedRatio: data.feedRatio,
+      feedAmountGrams: data.feedAmountGrams,
+      hydrationPercent: data.hydrationPercent ?? null,
+      ambientTempF: data.ambientTempF ?? null,
+      ambientTempC: data.ambientTempC ?? null,
+      starterStage: data.starterStage ?? null,
+      conditionNotes: data.conditionNotes ?? "",
+      riseTimeHours: data.riseTimeHours ?? null,
+      riseTimeMinutes: data.riseTimeMinutes ?? null,
+      discardUsed: data.discardUsed ?? false,
+      discardRecipe: data.discardRecipe ?? "",
+      peakActivity: data.peakActivity ?? false,
+      photoUrl: null, // Optional field
+      weatherData: null, // Optional field
     };
     
     console.log('Formatted data for mutation:', formattedData);
@@ -883,7 +885,7 @@ export default function StarterLogPage() {
                     <div key={log.id} className="border rounded-lg p-4 space-y-3" data-testid={`starter-log-${log.id}`}>
                       <div className="flex items-center justify-between">
                         <h3 className="font-semibold">
-                          {format(new Date(log.logDate!), "PPP 'at' p")}
+                          {log.logDate ? format(new Date(log.logDate), "PPP 'at' p") : "No date"}
                         </h3>
                         <Badge variant={log.starterStage === "peak" ? "default" : "secondary"}>
                           {log.starterStage?.replace("_", " ")}
