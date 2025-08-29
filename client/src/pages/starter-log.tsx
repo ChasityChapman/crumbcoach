@@ -22,8 +22,8 @@ import BottomNavigation from "@/components/bottom-navigation";
 import { starterLogQueries, recipeQueries } from "@/lib/supabaseQueries";
 import RecipeModal from "@/components/recipe-modal";
 
-// Form schema with validation
-const starterLogFormSchema = insertStarterLogSchema.extend({
+// Form schema with validation - exclude userId since it's added automatically
+const starterLogFormSchema = insertStarterLogSchema.omit({ userId: true }).extend({
   flourTypes: z.array(z.object({
     type: z.string().min(1, "Flour type is required"),
     percentage: z.number().min(1).max(100)
