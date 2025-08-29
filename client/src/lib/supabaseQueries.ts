@@ -18,7 +18,7 @@ export const starterLogQueries = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
-    // Use only the absolutely essential required fields
+    // Map to actual database column names
     const { data, error } = await supabase
       .from('starter_logs')
       .insert({
@@ -28,6 +28,15 @@ export const starterLogQueries = {
         feed_ratio: starterLog.feedRatio,
         feed_amount_grams: starterLog.feedAmountGrams,
         hydration_percent: starterLog.hydrationPercent,
+        ambient_temp_f: starterLog.ambientTempF || null,
+        ambient_temp_c: starterLog.ambientTempC || null,
+        starter_stage: starterLog.starterStage || null,
+        condition_notes: starterLog.conditionNotes || "",
+        rise_time_hours: starterLog.riseTimeHours || null,
+        rise_time_minutes: starterLog.riseTimeMinutes || null,
+        discard_used: starterLog.discardUsed || false,
+        discard_recipe: starterLog.discardRecipe || "",
+        peak_activity: starterLog.peakActivity || false,
       })
       .select()
       .single();
