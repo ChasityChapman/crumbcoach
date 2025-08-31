@@ -4,8 +4,6 @@
         <domain includeSubdomains="true">supabase.co</domain>
         <domain includeSubdomains="true">api.openai.com</domain>
         <domain includeSubdomains="true">replit.com</domain>
-        <domain includeSubdomains="true">fonts.googleapis.com</domain>
-        <domain includeSubdomains="true">fonts.gstatic.com</domain>
     </domain-config>
     
     <!-- Prevent cleartext traffic for security -->

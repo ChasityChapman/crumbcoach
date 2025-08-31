@@ -8,12 +8,14 @@ const config: CapacitorConfig = {
   webDir: 'dist/public',
   bundledWebRuntime: false,
   server: {
-    androidScheme: 'https',
-    cleartext: false,
+    androidScheme: 'http',
+    cleartext: true,
+    url: 'http://192.168.1.150:5000',
     allowNavigation: [
       'https://*.supabase.co',
       'https://api.openai.com',
-      'https://replit.com'
+      'https://replit.com',
+      'http://192.168.1.150:5000'
     ]
   }
 }
