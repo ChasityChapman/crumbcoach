@@ -50,6 +50,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  upsertUser(user: InsertUser): Promise<User>;
   updateUser(id: string, userData: Partial<InsertUser>): Promise<User | undefined>;
 
   // Recipe operations
@@ -147,6 +148,16 @@ export class DatabaseStorage implements IStorage {
   async createUser(userData: InsertUser): Promise<User> {
     const [user] = await db.insert(users).values(userData).returning();
     return user;
+  }
+
+  async upsertUser(userData: InsertUser): Promise<User> {
+    const existingUser = await this.getUser(userData.id);
+    if (existingUser) {
+      const updated = await this.updateUser(userData.id, userData);
+      return updated || existingUser;
+    } else {
+      return await this.createUser(userData);
+    }
   }
 
   async updateUser(id: string, userData: Partial<InsertUser>): Promise<User | undefined> {

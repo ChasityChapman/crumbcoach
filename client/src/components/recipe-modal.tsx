@@ -41,7 +41,7 @@ const HYDRATION_PRESETS = [
 ];
 
 export default function RecipeModal({ isOpen, onClose, recipe, initialTab = "manual" }: RecipeModalProps) {
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const [activeTab, setActiveTab] = useState<"url" | "manual">(initialTab);
   const [recipeUrl, setRecipeUrl] = useState("");
   const [hasExtractedData, setHasExtractedData] = useState(false);
   const [recipeName, setRecipeName] = useState("");
@@ -298,7 +298,7 @@ export default function RecipeModal({ isOpen, onClose, recipe, initialTab = "man
           </div>
 
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "url" | "manual")} className="h-full">
             <div className="p-6 space-y-4">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="url" className="flex items-center space-x-2" data-testid="tab-url-import">

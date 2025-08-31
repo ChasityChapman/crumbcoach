@@ -48,7 +48,7 @@ export function trackScreenView(screenName: string, screenClass?: string) {
   if (!isInitialized || !analytics) return;
 
   try {
-    logEvent(analytics as any, 'screen_view', {
+    logEvent(analytics as any, 'screen_view' as any, {
       screen_name: screenName,
       screen_class: screenClass || screenName,
     });

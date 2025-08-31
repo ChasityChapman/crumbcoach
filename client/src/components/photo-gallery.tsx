@@ -70,13 +70,15 @@ export default function PhotoGallery({ bakeId, className = "" }: PhotoGalleryPro
       </div>
       
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        {photos.map((photo: BakePhotoWithUrl) => (
-          <Card key={photo.id} className="overflow-hidden border-sourdough-200">
+        {photos.map((photo) => {
+          const photoWithUrl = photo as BakePhotoWithUrl;
+          return (
+          <Card key={photoWithUrl.id} className="overflow-hidden border-sourdough-200">
             <CardContent className="p-0">
               <div className="aspect-square relative group">
                 <img
-                  src={photo.url}
-                  alt={photo.caption || "Bake progress photo"}
+                  src={photoWithUrl.url}
+                  alt={photoWithUrl.caption || "Bake progress photo"}
                   className="w-full h-full object-cover transition-transform group-hover:scale-105"
                   onError={(e) => {
                     // Fallback if image fails to load
@@ -88,18 +90,19 @@ export default function PhotoGallery({ bakeId, className = "" }: PhotoGalleryPro
                 {/* Overlay with photo info */}
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
                   <div className="text-white text-xs">
-                    {photo.caption && (
-                      <p className="font-medium truncate">{photo.caption}</p>
+                    {photoWithUrl.caption && (
+                      <p className="font-medium truncate">{photoWithUrl.caption}</p>
                     )}
                     <p className="opacity-75">
-                      {new Date(photo.createdAt).toLocaleDateString()}
+                      {photoWithUrl.createdAt ? new Date(photoWithUrl.createdAt).toLocaleDateString() : 'Unknown date'}
                     </p>
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

@@ -283,6 +283,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { password } = req.body;
       const userId = req.userId;
 
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
       // Verify password before deletion
       const userResults = await db.select().from(users)
         .where(eq(users.id, userId))
@@ -312,6 +316,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/recipes', authenticateUser, async (req, res) => {
     try {
       const userId = req.userId;
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
       const userRecipes = await db.select().from(recipes)
         .where(eq(recipes.userId, userId))
         .orderBy(desc(recipes.createdAt));

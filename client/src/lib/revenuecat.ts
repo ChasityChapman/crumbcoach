@@ -12,7 +12,7 @@ class RevenueCatService {
     if (this.initialized) return;
 
     try {
-      await Purchases.setLogLevel(LOG_LEVEL.DEBUG);
+      await Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG });
       await Purchases.configure({ 
         apiKey: config.apiKey,
         appUserID: config.appUserID 
@@ -62,8 +62,8 @@ class RevenueCatService {
 
   async getCustomerInfo(): Promise<CustomerInfo | null> {
     try {
-      const customerInfo = await Purchases.getCustomerInfo();
-      return customerInfo;
+      const result = await Purchases.getCustomerInfo();
+      return result.customerInfo;
     } catch (error) {
       console.error('Failed to get customer info:', error);
       return null;

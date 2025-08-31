@@ -92,12 +92,12 @@ export class BakeNotifications {
           badge: notificationData.badge,
           tag: notificationData.tag,
           requireInteraction: notificationData.requireInteraction,
-          vibrate: notificationData.vibrate,
+          // vibrate: notificationData.vibrate, // Not supported in standard NotificationOptions
           data: notificationData.data,
-          actions: [
-            { action: 'view', title: '👀 View Bake' },
-            { action: 'dismiss', title: '✋ Dismiss' }
-          ]
+          // actions: [ // Not supported in standard NotificationOptions
+          //   { action: 'view', title: '👀 View Bake' },
+          //   { action: 'dismiss', title: '✋ Dismiss' }
+          // ]
         });
         console.log('Service worker notification sent');
       } catch (error) {

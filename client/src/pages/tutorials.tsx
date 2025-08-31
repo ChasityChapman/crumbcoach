@@ -171,11 +171,11 @@ export default function Tutorials() {
                 <p className="text-sourdough-700">{selectedTutorial.description}</p>
               )}
               
-              {selectedTutorial.steps && (selectedTutorial.steps as any[]).length > 0 && (
+              {selectedTutorial.steps && Array.isArray(selectedTutorial.steps) && selectedTutorial.steps.length > 0 && (
                 <div className="space-y-3">
                   <h3 className="font-semibold text-lg">Tutorial Steps:</h3>
                   <div className="space-y-2">
-                    {(selectedTutorial.steps as any[]).map((step: any, index: number) => (
+                    {selectedTutorial.steps.map((step: any, index: number) => (
                       <div key={index} className="flex space-x-3 p-3 bg-sourdough-50 rounded-lg">
                         <div className="w-6 h-6 bg-sourdough-500 text-white rounded-full flex items-center justify-center text-sm font-medium">
                           {index + 1}

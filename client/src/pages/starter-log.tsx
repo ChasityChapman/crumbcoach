@@ -229,6 +229,9 @@ export default function StarterLogPage() {
       logDate: data.logDate || new Date(),
       photoUrl: null, // Optional field
       weatherData: null, // Optional field
+      hydrationPercent: data.hydrationPercent ?? null,
+      ambientTempF: data.ambientTempF ?? null,
+      ambientHumidityPercent: data.ambientHumidityPercent ?? null,
     });
   };
 

@@ -395,7 +395,7 @@ export default function TimelinePlanner() {
             </Card>
           </div>
         </div>
-        <BottomNavigation />
+        <BottomNavigation currentPath="/timeline-planner" />
       </div>
     );
   }

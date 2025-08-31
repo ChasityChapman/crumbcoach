@@ -8,23 +8,70 @@ export function useSupabaseAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    console.log('Initializing authentication...')
+    
+    // Check if we're in demo mode immediately
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+    
+    if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('your-project') || supabaseAnonKey.includes('your-anon-key')) {
+      console.warn('Missing or placeholder Supabase credentials - skipping auth initialization')
+      setSession(null)
+      setUser(null)
+      setLoading(false)
+      return
+    }
+
+    // Set a very short timeout to prevent hanging
+    const timeoutId = setTimeout(() => {
+      console.warn('Authentication timeout - assuming no session')
+      setSession(null)
+      setUser(null)
+      setLoading(false)
+    }, 1000) // Reduced to 1 second
+
+    // Try to get initial session with immediate fallback
+    Promise.race([
+      supabase.auth.getSession(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 500))
+    ]).then(({ data: { session } }: any) => {
+      clearTimeout(timeoutId)
+      console.log('Got session:', !!session)
       setSession(session)
       setUser(session?.user ?? null)
       setLoading(false)
-    })
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-      setUser(session?.user ?? null)
+    }).catch((error) => {
+      clearTimeout(timeoutId)
+      console.warn('Failed to get initial session, assuming no auth:', error.message)
+      setSession(null)
+      setUser(null)
       setLoading(false)
     })
 
-    return () => subscription.unsubscribe()
+    // Skip auth state change listener in demo mode to avoid hanging
+    let subscription: any = null
+    try {
+      const result = supabase.auth.onAuthStateChange((_event: any, session: Session | null) => {
+        console.log('Auth state changed:', !!session)
+        setSession(session)
+        setUser(session?.user ?? null)
+        setLoading(false)
+      })
+      subscription = result.data.subscription
+    } catch (error) {
+      console.warn('Failed to setup auth state listener:', error)
+    }
+
+    return () => {
+      clearTimeout(timeoutId)
+      if (subscription) {
+        try {
+          subscription.unsubscribe()
+        } catch (error) {
+          console.warn('Failed to unsubscribe from auth changes:', error)
+        }
+      }
+    }
   }, [])
 
   const signIn = async (email: string, password: string) => {
@@ -61,6 +108,10 @@ export function useSupabaseAuth() {
         token_type: 'bearer',
         user: mockUser
       }
+      
+      // Set state directly here instead of returning for external setting
+      setUser(mockUser as any)
+      setSession(mockSession as any)
       
       console.log('Demo user session created successfully')
       return { 
@@ -109,6 +160,10 @@ export function useSupabaseAuth() {
         user: mockUser
       }
       
+      // Set state directly here instead of returning for external setting
+      setUser(mockUser as any)
+      setSession(mockSession as any)
+      
       console.log('Demo user account created successfully')
       return { 
         data: { user: mockUser, session: mockSession }, 
@@ -128,12 +183,6 @@ export function useSupabaseAuth() {
     return { data, error }
   }
 
-  const setDemoSession = (user: any, session: any) => {
-    setUser(user)
-    setSession(session)
-    setLoading(false)
-  }
-
   return {
     user,
     session,
@@ -142,6 +191,5 @@ export function useSupabaseAuth() {
     signUp,
     signOut,
     resetPassword,
-    setDemoSession,
   }
 }
