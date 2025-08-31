@@ -5,7 +5,7 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 let supabase
 
-if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('your-project') || supabaseAnonKey.includes('your-anon-key')) {
+if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('your-project') || supabaseAnonKey.includes('your-anon-key') || true) {
   console.warn('⚠️ Using placeholder Supabase credentials - database features will not work')
   // Use demo values to prevent app crash during development
   const demoUrl = 'https://demo.supabase.co'

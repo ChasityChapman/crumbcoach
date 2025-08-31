@@ -25,7 +25,7 @@ interface RegisterData {
 export default function AuthPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { signIn, signUp, user } = useSupabaseAuth();
+  const { signIn, signUp, user, setDemoSession } = useSupabaseAuth();
 
   // Redirect if already authenticated
   if (user) {
@@ -62,18 +62,27 @@ export default function AuthPage() {
 
     setIsLoading(true);
     try {
-      const { error } = await signIn(loginData.email, loginData.password);
-      if (error) {
+      const result = await signIn(loginData.email, loginData.password);
+      if (result.error) {
         toast({
           title: "Login failed",
-          description: error.message,
+          description: result.error.message,
           variant: "destructive",
         });
       } else {
-        toast({
-          title: "Welcome back!",
-          description: "You've successfully logged in.",
-        });
+        if ((result as any).isDemoMode) {
+          // Set demo session in hook state
+          setDemoSession(result.data?.user, result.data?.session);
+          toast({
+            title: "Welcome to Demo Mode!",
+            description: "You're using offline mode - all data is local.",
+          });
+        } else {
+          toast({
+            title: "Welcome back!",
+            description: "You've successfully logged in.",
+          });
+        }
         setLocation("/");
       }
     } catch (error) {
@@ -105,18 +114,27 @@ export default function AuthPage() {
         lastName: registerData.lastName,
       };
       
-      const { error } = await signUp(registerData.email, registerData.password, metadata);
-      if (error) {
+      const result = await signUp(registerData.email, registerData.password, metadata);
+      if (result.error) {
         toast({
           title: "Registration failed",
-          description: error.message,
+          description: result.error.message,
           variant: "destructive",
         });
       } else {
-        toast({
-          title: "Welcome to Crumb Coach!",
-          description: "Your account has been created successfully.",
-        });
+        if ((result as any).isDemoMode) {
+          // Set demo session in hook state
+          setDemoSession(result.data?.user, result.data?.session);
+          toast({
+            title: "Welcome to Demo Mode!",
+            description: "Your demo account has been created - all data is local.",
+          });
+        } else {
+          toast({
+            title: "Welcome to Crumb Coach!",
+            description: "Your account has been created successfully.",
+          });
+        }
         setLocation("/");
       }
     } catch (error) {
