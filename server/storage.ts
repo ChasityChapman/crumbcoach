@@ -151,6 +151,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertUser(userData: InsertUser): Promise<User> {
+    if (!userData.id) {
+      return await this.createUser(userData);
+    }
+    
     const existingUser = await this.getUser(userData.id);
     if (existingUser) {
       const updated = await this.updateUser(userData.id, userData);
@@ -537,10 +541,10 @@ export class DatabaseStorage implements IStorage {
       console.log('GDPR: Starting complete data deletion for user:', userId);
       
       // Delete user data in order of dependencies (child records first)
-      await db.delete(sensorReadings).where(eq(sensorReadings.userId, userId));
-      await db.delete(bakePhotos).where(eq(bakePhotos.userId, userId));
-      await db.delete(bakeNotes).where(eq(bakeNotes.userId, userId));
-      await db.delete(timelineSteps).where(sql`${timelineSteps.bakeId} IN (SELECT id FROM bakes WHERE userId = ${userId})`);
+      await db.delete(sensorReadings).where(sql`${sensorReadings.bakeId} IN (SELECT id FROM bakes WHERE user_id = ${userId})`);
+      await db.delete(bakePhotos).where(sql`${bakePhotos.bakeId} IN (SELECT id FROM bakes WHERE user_id = ${userId})`);
+      await db.delete(bakeNotes).where(sql`${bakeNotes.bakeId} IN (SELECT id FROM bakes WHERE user_id = ${userId})`);
+      await db.delete(timelineSteps).where(sql`${timelineSteps.bakeId} IN (SELECT id FROM bakes WHERE user_id = ${userId})`);
       await db.delete(timelinePlans).where(eq(timelinePlans.userId, userId));
       await db.delete(bakes).where(eq(bakes.userId, userId));
       await db.delete(recipes).where(eq(recipes.userId, userId));
@@ -562,15 +566,15 @@ export class DatabaseStorage implements IStorage {
       const [user] = await db.select().from(users).where(eq(users.id, userId));
       const userRecipes = await db.select().from(recipes).where(eq(recipes.userId, userId));
       const userBakes = await db.select().from(bakes).where(eq(bakes.userId, userId));
-      const userNotes = await db.select().from(bakeNotes).where(eq(bakeNotes.userId, userId));
-      const userPhotos = await db.select().from(bakePhotos).where(eq(bakePhotos.userId, userId));
-      const userSensors = await db.select().from(sensorReadings).where(eq(sensorReadings.userId, userId));
+      const userNotes = await db.select().from(bakeNotes).where(sql`${bakeNotes.bakeId} IN (SELECT id FROM bakes WHERE user_id = ${userId})`);
+      const userPhotos = await db.select().from(bakePhotos).where(sql`${bakePhotos.bakeId} IN (SELECT id FROM bakes WHERE user_id = ${userId})`);
+      const userSensors = await db.select().from(sensorReadings).where(sql`${sensorReadings.bakeId} IN (SELECT id FROM bakes WHERE user_id = ${userId})`);
       const userLogs = await db.select().from(starterLogs).where(eq(starterLogs.userId, userId));
       const userPlans = await db.select().from(timelinePlans).where(eq(timelinePlans.userId, userId));
       
       // Get timeline steps for user's bakes
       const bakeIds = userBakes.map(bake => bake.id);
-      let userTimeline = [];
+      let userTimeline: any[] = [];
       if (bakeIds.length > 0) {
         userTimeline = await db.select().from(timelineSteps)
           .where(sql`${timelineSteps.bakeId} IN (${sql.join(bakeIds.map(id => sql`${id}`), sql`, `)})`);

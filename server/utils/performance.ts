@@ -39,14 +39,14 @@ export class PerformanceMonitor {
     }
 
     const allMetrics: any = {};
-    for (const [op, values] of this.metrics) {
+    this.metrics.forEach((values: number[], op: string) => {
       allMetrics[op] = {
         count: values.length,
-        avg: values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0,
+        avg: values.length > 0 ? values.reduce((a: number, b: number) => a + b, 0) / values.length : 0,
         min: values.length > 0 ? Math.min(...values) : 0,
         max: values.length > 0 ? Math.max(...values) : 0
       };
-    }
+    });
     return allMetrics;
   }
 

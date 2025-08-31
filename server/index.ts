@@ -61,15 +61,17 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
-  app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
+  app.use((err: Error | unknown, req: Request, res: Response, _next: NextFunction) => {
     console.error('=== GLOBAL ERROR HANDLER ===');
     console.error('URL:', req.method, req.path);
     console.error('Error:', err);
-    console.error('Error message:', err.message);
-    console.error('Error stack:', err.stack);
+    console.error('Error message:', err instanceof Error ? err.message : 'Unknown error');
+    console.error('Error stack:', err instanceof Error ? err.stack : undefined);
     
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    const status = (err && typeof err === 'object' && ('status' in err || 'statusCode' in err))
+      ? (err as any).status || (err as any).statusCode || 500
+      : 500;
+    const message = err instanceof Error ? err.message : "Internal Server Error";
 
     res.status(status).json({ message });
   });

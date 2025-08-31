@@ -109,15 +109,13 @@ export function useSupabaseAuth() {
         user: mockUser
       }
       
-      // Set state directly here instead of returning for external setting
-      setUser(mockUser as any)
-      setSession(mockSession as any)
-      
       console.log('Demo user session created successfully')
       return { 
         data: { user: mockUser, session: mockSession }, 
         error: null,
-        isDemoMode: true
+        isDemoMode: true,
+        mockUser,
+        mockSession
       }
     }
   }
@@ -160,15 +158,13 @@ export function useSupabaseAuth() {
         user: mockUser
       }
       
-      // Set state directly here instead of returning for external setting
-      setUser(mockUser as any)
-      setSession(mockSession as any)
-      
       console.log('Demo user account created successfully')
       return { 
         data: { user: mockUser, session: mockSession }, 
         error: null,
-        isDemoMode: true
+        isDemoMode: true,
+        mockUser,
+        mockSession
       }
     }
   }
@@ -183,6 +179,11 @@ export function useSupabaseAuth() {
     return { data, error }
   }
 
+  const setDemoMode = (mockUser: any, mockSession: any) => {
+    setUser(mockUser)
+    setSession(mockSession)
+  }
+
   return {
     user,
     session,
@@ -191,5 +192,6 @@ export function useSupabaseAuth() {
     signUp,
     signOut,
     resetPassword,
+    setDemoMode,
   }
 }

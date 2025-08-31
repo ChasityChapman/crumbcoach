@@ -11,7 +11,7 @@ export default defineConfig(async ({ mode }) => {
   const isDev = mode !== 'production'
   const isReplit = isDev && process.env.REPL_ID !== undefined
 
-  const plugins = [react()]
+  const plugins: any[] = [react()]
 
   if (isReplit) {
     const { default: runtimeErrorOverlay } = await import('@replit/vite-plugin-runtime-error-modal')

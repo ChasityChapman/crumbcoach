@@ -171,7 +171,7 @@ export default function Tutorials() {
                 <p className="text-sourdough-700">{selectedTutorial.description}</p>
               )}
               
-              {selectedTutorial.steps && Array.isArray(selectedTutorial.steps) && selectedTutorial.steps.length > 0 && (
+              {selectedTutorial.steps && Array.isArray(selectedTutorial.steps) && selectedTutorial.steps.length > 0 ? (
                 <div className="space-y-3">
                   <h3 className="font-semibold text-lg">Tutorial Steps:</h3>
                   <div className="space-y-2">
@@ -196,7 +196,7 @@ export default function Tutorials() {
                     ))}
                   </div>
                 </div>
-              )}
+              ) : null}
               
               <div className="flex justify-end space-x-2 pt-4">
                 <Button variant="outline" onClick={() => setTutorialOpen(false)}>

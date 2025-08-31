@@ -27,7 +27,7 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
 };
 
 // Error tracking middleware
-export const errorHandler = (error: any, req: Request, res: Response, next: NextFunction) => {
+export const errorHandler = (error: Error | unknown, req: Request, res: Response, next: NextFunction) => {
   const timestamp = new Date().toISOString();
   const errorId = `err_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   
@@ -35,8 +35,8 @@ export const errorHandler = (error: any, req: Request, res: Response, next: Next
   console.error(JSON.stringify({
     errorId,
     timestamp,
-    message: error.message,
-    stack: error.stack,
+    message: error instanceof Error ? error.message : 'Unknown error',
+    stack: error instanceof Error ? error.stack : undefined,
     url: req.url,
     method: req.method,
     userAgent: req.get('User-Agent'),
@@ -48,12 +48,14 @@ export const errorHandler = (error: any, req: Request, res: Response, next: Next
     return next(error);
   }
 
-  const status = error.status || error.statusCode || 500;
+  const status = (error && typeof error === 'object' && ('status' in error || 'statusCode' in error))
+    ? (error as any).status || (error as any).statusCode || 500
+    : 500;
   
   res.status(status).json({
     error: process.env.NODE_ENV === 'production' 
       ? 'Internal server error'
-      : error.message,
+      : (error instanceof Error ? error.message : 'Unknown error'),
     errorId: process.env.NODE_ENV === 'production' ? errorId : undefined,
     timestamp
   });

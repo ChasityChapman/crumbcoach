@@ -25,7 +25,7 @@ interface RegisterData {
 export default function AuthPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { signIn, signUp, user } = useSupabaseAuth();
+  const { signIn, signUp, user, setDemoMode } = useSupabaseAuth();
 
   // Redirect if already authenticated
   if (user) {
@@ -71,6 +71,7 @@ export default function AuthPage() {
         });
       } else {
         if ((result as any).isDemoMode) {
+          setDemoMode((result as any).mockUser, (result as any).mockSession);
           toast({
             title: "Welcome to Demo Mode!",
             description: "You're using offline mode - all data is local.",
@@ -121,6 +122,7 @@ export default function AuthPage() {
         });
       } else {
         if ((result as any).isDemoMode) {
+          setDemoMode((result as any).mockUser, (result as any).mockSession);
           toast({
             title: "Welcome to Demo Mode!",
             description: "Your demo account has been created - all data is local.",

@@ -231,7 +231,14 @@ export default function StarterLogPage() {
       weatherData: null, // Optional field
       hydrationPercent: data.hydrationPercent ?? null,
       ambientTempF: data.ambientTempF ?? null,
-      ambientHumidityPercent: data.ambientHumidityPercent ?? null,
+      ambientTempC: data.ambientTempC ?? null,
+      starterStage: data.starterStage ?? null,
+      conditionNotes: data.conditionNotes ?? null,
+      riseTimeHours: data.riseTimeHours ?? null,
+      riseTimeMinutes: data.riseTimeMinutes ?? null,
+      discardRecipe: data.discardRecipe ?? null,
+      peakActivity: data.peakActivity ?? null,
+      discardUsed: data.discardUsed ?? null,
     });
   };
 
