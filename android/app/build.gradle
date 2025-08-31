@@ -1,5 +1,6 @@
 plugins {
     id 'com.android.application'
+    id 'com.google.gms.google-services'
     // id 'org.jetbrains.kotlin.android' // uncomment only if you actually have Kotlin code in android/
 }
 

@@ -20,8 +20,9 @@ export async function initializeCapacitor() {
       console.warn('RevenueCat API key not found - skipping initialization');
     }
 
-    // Initialize push notifications
-    await initializePushNotifications();
+    // Initialize push notifications - disabled until Firebase is properly configured
+    console.log('Push notifications disabled - configure Firebase to enable');
+    // await initializePushNotifications();
     
   } catch (error) {
     console.error('Error initializing Capacitor features:', error);
