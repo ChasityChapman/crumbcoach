@@ -19,7 +19,7 @@ export const apiRateLimit = rateLimit({
   // Skip rate limiting for trusted IPs (optional)
   skip: (req: Request) => {
     const trustedIPs = process.env.TRUSTED_IPS?.split(',') || [];
-    return trustedIPs.includes(req.ip);
+    return trustedIPs.includes(req.ip || '');
   }
 });
 
@@ -127,7 +127,7 @@ export const requestSizeLimit = (req: Request, res: Response, next: NextFunction
  * IP whitelist/blacklist middleware
  */
 export const ipFilter = (req: Request, res: Response, next: NextFunction) => {
-  const clientIP = req.ip;
+  const clientIP = req.ip || '';
   
   // Check blacklist
   const blacklistedIPs = process.env.BLACKLISTED_IPS?.split(',').filter(Boolean) || [];

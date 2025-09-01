@@ -372,7 +372,7 @@ export function setupSupabaseAuthRoutes(router: Router) {
       res.json({
         message: 'Account deletion has been requested. This will be processed within 7 days.',
         deletionToken: deletionRequest.confirmationToken,
-        scheduledDeletion: deletionRequest.scheduledDeletion,
+        expiresAt: deletionRequest.expiresAt,
         success: true
       });
     } catch (error) {

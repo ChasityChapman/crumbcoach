@@ -6,6 +6,9 @@ export function useSupabaseAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  
+  // Only allow demo mode if explicitly enabled via environment variable
+  const isDemoModeAllowed = import.meta.env.VITE_ENABLE_DEMO_MODE === 'true'
 
   useEffect(() => {
     console.log('Initializing authentication...')
@@ -87,8 +90,21 @@ export function useSupabaseAuth() {
       
       return { data, error }
     } catch (networkError: any) {
-      console.warn('Network/connection error during sign in, using demo mode:', networkError.message || networkError)
+      console.error('Network/connection error during sign in:', networkError.message || networkError)
       
+      // Only fallback to demo mode if explicitly enabled
+      if (!isDemoModeAllowed) {
+        console.error('Authentication service unavailable. Demo mode is disabled in production.')
+        return {
+          data: null,
+          error: {
+            message: 'Authentication service temporarily unavailable. Please try again later.',
+            details: 'Network connection failed and demo mode is disabled for security.'
+          }
+        }
+      }
+      
+      console.warn('Using demo mode (enabled via VITE_ENABLE_DEMO_MODE)')
       const mockUser = {
         id: 'demo-user-123',
         email: email,
@@ -136,8 +152,21 @@ export function useSupabaseAuth() {
       
       return { data, error }
     } catch (networkError: any) {
-      console.warn('Network/connection error during sign up, using demo mode:', networkError.message || networkError)
+      console.error('Network/connection error during sign up:', networkError.message || networkError)
       
+      // Only fallback to demo mode if explicitly enabled
+      if (!isDemoModeAllowed) {
+        console.error('Authentication service unavailable. Demo mode is disabled in production.')
+        return {
+          data: null,
+          error: {
+            message: 'Authentication service temporarily unavailable. Please try again later.',
+            details: 'Network connection failed and demo mode is disabled for security.'
+          }
+        }
+      }
+      
+      console.warn('Using demo mode for sign up (enabled via VITE_ENABLE_DEMO_MODE)')
       const mockUser = {
         id: 'demo-user-' + Date.now(),
         email: email,

@@ -1,7 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import type { Bake, Recipe, SensorReading, TimelineStep } from "@shared/schema";
-import { bakeQueries, sensorQueries, recipeQueries } from "@/lib/supabaseQueries";
+import { bakeQueries, sensorQueries, recipeQueries, timelineStepQueries } from "@/lib/supabaseQueries";
 import type { User } from "@supabase/supabase-js";
 import ActiveBakeCard from "@/components/active-bake-card";
 import SensorWidget from "@/components/sensor-widget";
@@ -120,14 +120,87 @@ export default function Home() {
 
   // Timeline data is now handled individually by each ActiveBakeCard
 
+  // Mutation for creating timeline steps
+  const createTimelineStepsMutation = useMutation({
+    mutationFn: async ({ bake, recipe }: { bake: Bake; recipe?: Recipe }) => {
+      if (!recipe) {
+        throw new Error('Recipe is required to create timeline steps');
+      }
+      
+      // Generate timeline steps based on recipe steps
+      const timelineSteps = recipe.steps?.map((step, index) => ({
+        bakeId: bake.id,
+        stepIndex: index,
+        name: step.name || `Step ${index + 1}`,
+        description: step.instructions || step.description || '',
+        estimatedDuration: step.durationMinutes || 60, // Default 1 hour if not specified
+        actualDuration: null,
+        startTime: null,
+        endTime: null,
+        status: 'pending' as const,
+        autoAdjustments: {}
+      })) || [];
+
+      // Create each timeline step in Supabase
+      const createdSteps = [];
+      for (const stepData of timelineSteps) {
+        const created = await timelineStepQueries.create(stepData);
+        createdSteps.push(created);
+      }
+      
+      return createdSteps;
+    },
+    onSuccess: (steps) => {
+      // Invalidate and refetch timeline data for the bake
+      queryClient.invalidateQueries({ 
+        queryKey: ["timeline", steps[0]?.bakeId] 
+      });
+      
+      toast({
+        title: "Timeline Created",
+        description: `Created ${steps.length} timeline steps for your bake`,
+      });
+    },
+    onError: (error) => {
+      console.error('Error creating timeline steps:', error);
+      toast({
+        title: "Timeline Creation Failed",
+        description: error instanceof Error ? error.message : "Failed to create timeline steps",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Helper function to create timeline steps for existing bake
-  // TODO: Migrate this to use Supabase timeline queries
   const createTimelineSteps = async (bake: Bake) => {
-    console.log('Timeline creation temporarily disabled during Supabase migration');
-    toast({
-      title: "Feature Coming Soon",
-      description: "Timeline creation will be available after migration",
-    });
+    try {
+      // Find the recipe for this bake
+      const recipe = recipes?.find(r => r.id === bake.recipeId);
+      if (!recipe) {
+        throw new Error('Recipe not found for this bake');
+      }
+
+      // Check if timeline steps already exist for this bake
+      const existingSteps = await timelineStepQueries.getByBakeId(bake.id);
+      if (existingSteps && existingSteps.length > 0) {
+        toast({
+          title: "Timeline Already Exists",
+          description: "This bake already has timeline steps",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create the timeline steps
+      createTimelineStepsMutation.mutate({ bake, recipe });
+    } catch (error) {
+      console.error('Error in createTimelineSteps:', error);
+      toast({
+        title: "Timeline Creation Failed",
+        description: error instanceof Error ? error.message : "Failed to create timeline",
+        variant: "destructive",
+      });
+    }
   };
 
   // Timeline creation is now handled by individual ActiveBakeCard components

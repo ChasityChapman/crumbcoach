@@ -29,7 +29,7 @@ describe('Authentication Routes', () => {
     expect(response.body.version).toBe('1.0.0');
   });
 
-  test('POST /api/register creates new user with valid data', async () => {
+  test('POST /api/auth/register creates new user with valid data', async () => {
     const userData = {
       email: 'test@example.com',
       password: 'password123',
@@ -39,17 +39,16 @@ describe('Authentication Routes', () => {
     };
 
     const response = await request(app)
-      .post('/api/register')
+      .post('/api/auth/register')
       .send(userData)
       .expect(201);
 
     expect(response.body.user).toBeDefined();
     expect(response.body.user.email).toBe(userData.email);
-    expect(response.body.user.username).toBe(userData.username);
-    expect(response.body.user.password).toBeUndefined(); // Password should not be returned
+    expect(response.body.message).toBe('User created successfully. Please check your email to verify your account.');
   });
 
-  test('POST /api/register rejects duplicate email', async () => {
+  test('POST /api/auth/register rejects duplicate email', async () => {
     const userData = {
       email: 'test@example.com',
       password: 'password123',
@@ -57,63 +56,65 @@ describe('Authentication Routes', () => {
     };
 
     await request(app)
-      .post('/api/register')
+      .post('/api/auth/register')
       .send(userData)
       .expect(400);
   });
 
-  test('POST /api/register validates required fields', async () => {
+  test('POST /api/auth/register validates required fields', async () => {
     const incompleteData = {
       email: 'invalid-email',
       password: '123' // Too short
     };
 
     const response = await request(app)
-      .post('/api/register')
+      .post('/api/auth/register')
       .send(incompleteData)
       .expect(400);
 
     expect(response.body.error).toBeDefined();
   });
 
-  test('POST /api/login authenticates valid user', async () => {
+  test('POST /api/auth/login authenticates valid user', async () => {
     const loginData = {
       email: 'test@example.com',
       password: 'password123'
     };
 
     const response = await request(app)
-      .post('/api/login')
+      .post('/api/auth/login')
       .send(loginData)
       .expect(200);
 
-    expect(response.body.token).toBeDefined();
+    expect(response.body.session).toBeDefined();
+    expect(response.body.session.access_token).toBeDefined();
     expect(response.body.user).toBeDefined();
     expect(response.body.user.email).toBe(loginData.email);
   });
 
-  test('POST /api/login rejects invalid credentials', async () => {
+  test('POST /api/auth/login rejects invalid credentials', async () => {
     const invalidLogin = {
       email: 'test@example.com',
       password: 'wrongpassword'
     };
 
     await request(app)
-      .post('/api/login')
+      .post('/api/auth/login')
       .send(invalidLogin)
       .expect(401);
   });
 
-  test('POST /api/forgot-password accepts valid email', async () => {
+  test('POST /api/auth/forgot-password accepts valid email', async () => {
     const resetData = {
       email: 'test@example.com'
     };
 
     const response = await request(app)
-      .post('/api/forgot-password')
+      .post('/api/auth/forgot-password')
       .send(resetData)
       .expect(200);
 
-    expect(response.body.message).toBe('Password reset email sent');
+    expect(response.body.message).toBe('If an account with that email exists, password reset instructions have been sent.');
+    expect(response.body.success).toBe(true);
   });
 });

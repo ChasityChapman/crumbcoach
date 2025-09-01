@@ -12,22 +12,24 @@ beforeAll(async () => {
   app.use(express.json());
   server = await registerRoutes(app);
 
-  // Create a test user and get token
+  // Create a test user and get Supabase session token
   const userData = {
     email: 'recipetest@example.com',
     password: 'password123',
-    username: 'recipeuser'
+    username: 'recipeuser',
+    firstName: 'Recipe',
+    lastName: 'User'
   };
 
   await request(app)
-    .post('/api/register')
+    .post('/api/auth/register')
     .send(userData);
 
   const loginResponse = await request(app)
-    .post('/api/login')
+    .post('/api/auth/login')
     .send({ email: userData.email, password: userData.password });
 
-  userToken = loginResponse.body.token;
+  userToken = loginResponse.body.session.access_token;
 });
 
 afterAll(async () => {

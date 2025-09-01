@@ -8,6 +8,9 @@
     "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "cross-env NODE_ENV=production node dist/index.js",
     "check": "tsc",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "db:push": "drizzle-kit push",
     "mobile:dev": "cross-env CAPACITOR_DEV_SERVER=true npx cap run android",
     "mobile:build": "npm run build && npx cap sync android && npx cap run android"

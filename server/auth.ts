@@ -51,14 +51,21 @@ export function setupAuth(app: Express) {
     next();
   });
 
-  // Configure sessions
+  // Enforce real session secret
+  if (!process.env.SESSION_SECRET) {
+    throw new Error('SESSION_SECRET environment variable is required and must be set to a secure random string');
+  }
+  
+  // Configure sessions with secure defaults
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || 'dev-secret-change-this',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false, // Set to true in production with HTTPS
+      secure: process.env.NODE_ENV === 'production', // Enforce HTTPS cookies in production
+      httpOnly: true, // Prevent XSS access to cookies
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: 'strict', // Prevent CSRF attacks
     },
   };
 
