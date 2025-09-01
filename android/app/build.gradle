@@ -14,11 +14,11 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace "com.crumbcoach.app"
+    namespace "com.crumbcoach.com"
     compileSdkVersion 35
 
     defaultConfig {
-        applicationId "com.crumbcoach.app"
+        applicationId "com.crumbcoach.com"
         minSdkVersion 23
         targetSdkVersion 35
         versionCode 1

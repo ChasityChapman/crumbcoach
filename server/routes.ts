@@ -1,7 +1,12 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { Router } from "express";
-import { requestLogger, errorHandler } from "./middleware/monitoring";
+import { requestLogger, errorHandler, getMetrics } from "./middleware/monitoring";
+import { 
+  authRateLimit, 
+  passwordResetRateLimit, 
+  registrationRateLimit 
+} from "./middleware/security";
 
 // Import route modules
 import { setupHealthRoutes } from "./routes/health";
@@ -18,8 +23,11 @@ export function registerRoutes(app: Express): Server {
   // Create a router instance
   const router = Router();
   
-  // Apply middleware
-  app.use(requestLogger);
+  // Apply specific rate limiting to sensitive endpoints
+  router.use('/api/login', authRateLimit);
+  router.use('/api/register', registrationRateLimit);
+  router.use('/api/forgot-password', passwordResetRateLimit);
+  router.use('/api/reset-password', passwordResetRateLimit);
   
   // Register all route modules
   setupHealthRoutes(router);
@@ -32,11 +40,21 @@ export function registerRoutes(app: Express): Server {
   setupUserEntitlementsRoutes(router);
   setupAnalyticsRoutes(router);
   
+  // Add metrics endpoint
+  router.get('/api/metrics', (req, res) => {
+    // In production, you might want to protect this endpoint
+    if (process.env.NODE_ENV === 'production') {
+      const authHeader = req.headers.authorization;
+      if (authHeader !== `Bearer ${process.env.METRICS_TOKEN}`) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+    }
+    
+    res.json(getMetrics());
+  });
+  
   // Mount the router
   app.use('/', router);
-  
-  // Apply error handling middleware last
-  app.use(errorHandler);
 
   const httpServer = createServer(app);
   return httpServer;

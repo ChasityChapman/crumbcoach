@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import { eq } from "drizzle-orm";
 import { db } from "../db";
 import { authenticateUser } from "../middleware/auth";
+import { JWTService, type AuthenticatedRequest } from "../services/jwt";
 import { 
   users, 
   userEntitlements,
@@ -45,8 +46,12 @@ export function setupAuthRoutes(router: Router) {
       // Remove password from response
       const { password: _, ...userWithoutPassword } = newUser[0];
       
+      // Generate JWT tokens for immediate login
+      const tokens = JWTService.generateTokenPair(userWithoutPassword);
+      
       res.status(201).json({
         user: userWithoutPassword,
+        tokens,
         message: 'User created successfully'
       });
     } catch (error) {
@@ -85,10 +90,12 @@ export function setupAuthRoutes(router: Router) {
       // Remove password from response
       const { password: _, ...userWithoutPassword } = user;
       
+      // Generate JWT tokens
+      const tokens = JWTService.generateTokenPair(userWithoutPassword);
+      
       res.json({
         user: userWithoutPassword,
-        // TODO: Generate and return actual JWT token
-        token: 'placeholder-jwt-token',
+        tokens,
         message: 'Login successful'
       });
     } catch (error) {
@@ -112,6 +119,66 @@ export function setupAuthRoutes(router: Router) {
     } catch (error) {
       console.error('Forgot password error:', error);
       res.status(400).json({ error: error instanceof Error ? error.message : 'Failed to process request' });
+    }
+  });
+
+  // Refresh Token
+  router.post('/api/refresh-token', async (req, res) => {
+    try {
+      const { refreshToken } = req.body;
+      
+      if (!refreshToken) {
+        return res.status(400).json({ 
+          error: 'Refresh token is required',
+          code: 'MISSING_REFRESH_TOKEN'
+        });
+      }
+      
+      try {
+        const payload = JWTService.verifyRefreshToken(refreshToken);
+        
+        // Get user from database to ensure they still exist
+        const [user] = await db.select().from(users)
+          .where(eq(users.id, payload.userId))
+          .limit(1);
+          
+        if (!user) {
+          return res.status(401).json({ 
+            error: 'User not found',
+            code: 'USER_NOT_FOUND'
+          });
+        }
+        
+        // Remove password from user object
+        const { password: _, ...userWithoutPassword } = user;
+        
+        // Generate new tokens
+        const tokens = JWTService.generateTokenPair(userWithoutPassword);
+        
+        res.json({
+          tokens,
+          user: userWithoutPassword,
+          message: 'Tokens refreshed successfully'
+        });
+      } catch (jwtError: any) {
+        if (jwtError.name === 'TokenExpiredError') {
+          return res.status(401).json({
+            error: 'Refresh token expired. Please login again.',
+            code: 'REFRESH_TOKEN_EXPIRED'
+          });
+        } else {
+          return res.status(401).json({
+            error: 'Invalid refresh token',
+            code: 'INVALID_REFRESH_TOKEN'
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Token refresh error:', error);
+      res.status(500).json({ 
+        error: 'Token refresh service error',
+        code: 'REFRESH_ERROR'
+      });
     }
   });
 
