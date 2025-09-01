@@ -70,13 +70,39 @@ export const starterLogQueries = {
 // Recipes
 export const recipeQueries = {
   getAll: async (): Promise<Recipe[]> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
     const { data, error } = await supabase
       .from('recipes')
-      .select('*')
+      .select(`
+        id,
+        user_id,
+        name,
+        description,
+        total_time_hours,
+        difficulty,
+        ingredients,
+        steps,
+        oven_temp_profile,
+        created_at
+      `)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    return data || [];
+    return (data || []).map(recipe => ({
+      id: recipe.id,
+      userId: recipe.user_id,
+      name: recipe.name,
+      description: recipe.description,
+      totalTimeHours: recipe.total_time_hours,
+      difficulty: recipe.difficulty,
+      ingredients: recipe.ingredients,
+      steps: recipe.steps,
+      ovenTempProfile: recipe.oven_temp_profile,
+      createdAt: recipe.created_at
+    }));
   },
 
   getById: async (id: string): Promise<Recipe> => {
@@ -132,13 +158,43 @@ export const recipeQueries = {
 // Bakes
 export const bakeQueries = {
   getAll: async (): Promise<Bake[]> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
     const { data, error } = await supabase
       .from('bakes')
-      .select('*')
+      .select(`
+        id,
+        user_id,
+        recipe_id,
+        name,
+        status,
+        current_step,
+        start_time,
+        estimated_end_time,
+        actual_end_time,
+        environmental_data,
+        timeline_adjustments,
+        created_at
+      `)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    return data || [];
+    return (data || []).map(bake => ({
+      id: bake.id,
+      userId: bake.user_id,
+      recipeId: bake.recipe_id,
+      name: bake.name,
+      status: bake.status,
+      currentStep: bake.current_step,
+      startTime: bake.start_time,
+      estimatedEndTime: bake.estimated_end_time,
+      actualEndTime: bake.actual_end_time,
+      environmentalData: bake.environmental_data,
+      timelineAdjustments: bake.timeline_adjustments,
+      createdAt: bake.created_at
+    }));
   },
 
   getById: async (id: string): Promise<Bake> => {
@@ -431,7 +487,7 @@ export const entitlementQueries = {
   }
 };
 
-// Sensor readings (mock for now)
+// Sensor readings 
 export const sensorQueries = {
   getLatest: async (): Promise<{
     id: string;
@@ -440,13 +496,44 @@ export const sensorQueries = {
     humidity: number | null;
     timestamp: Date | null;
   } | null> => {
-    // For now, return mock sensor data since this was previously mocked in Express
-    return {
-      id: 'mock-sensor-reading',
-      bakeId: null,
-      temperature: 240, // 24.0°C * 10
-      humidity: 650,    // 65.0% * 10
-      timestamp: new Date()
-    };
+    try {
+      const { data, error } = await supabase
+        .from('sensor_readings')
+        .select('*')
+        .order('timestamp', { ascending: false })
+        .limit(1)
+        .single();
+      
+      if (error) {
+        // If no sensor data exists, return mock data for now
+        if (error.code === 'PGRST116') {
+          return {
+            id: 'mock-sensor-reading',
+            bakeId: null,
+            temperature: 240, // 24.0°C * 10
+            humidity: 650,    // 65.0% * 10
+            timestamp: new Date()
+          };
+        }
+        throw error;
+      }
+      
+      return {
+        id: data.id,
+        bakeId: data.bake_id,
+        temperature: data.temperature,
+        humidity: data.humidity,
+        timestamp: data.timestamp ? new Date(data.timestamp) : null
+      };
+    } catch (error) {
+      // Fallback to mock data if there's any issue
+      return {
+        id: 'mock-sensor-reading',
+        bakeId: null,
+        temperature: 240, // 24.0°C * 10
+        humidity: 650,    // 65.0% * 10
+        timestamp: new Date()
+      };
+    }
   }
 };

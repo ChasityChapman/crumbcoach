@@ -1,7 +1,7 @@
 import type { Router } from "express";
 import { eq, and, desc } from "drizzle-orm";
 import { db } from "../db";
-import { authenticateUser } from "../middleware/auth";
+import { authenticateUser, type AuthenticatedRequest } from "../middleware/supabaseAuth";
 import { 
   recipes,
   insertRecipeSchema,
@@ -12,14 +12,14 @@ export function setupRecipesRoutes(router: Router) {
   // Get all recipes for authenticated user
   router.get('/api/recipes', authenticateUser, async (req, res) => {
     try {
-      const userId = req.userId;
+      const user = (req as AuthenticatedRequest).user;
       
-      if (!userId) {
+      if (!user) {
         return res.status(401).json({ error: 'User not authenticated' });
       }
       
       const userRecipes = await db.select().from(recipes)
-        .where(eq(recipes.userId, userId))
+        .where(eq(recipes.userId, user.id))
         .orderBy(desc(recipes.createdAt));
         
       res.json(userRecipes);
@@ -32,16 +32,16 @@ export function setupRecipesRoutes(router: Router) {
   // Create new recipe
   router.post('/api/recipes', authenticateUser, async (req, res) => {
     try {
-      const userId = req.userId;
+      const user = (req as AuthenticatedRequest).user;
       const validatedData = insertRecipeSchema.parse(req.body);
       
-      if (!userId) {
+      if (!user) {
         return res.status(401).json({ error: 'User not authenticated' });
       }
       
       const newRecipe = await db.insert(recipes).values({
         ...validatedData,
-        userId
+        userId: user.id
       }).returning();
       
       res.status(201).json(newRecipe[0]);

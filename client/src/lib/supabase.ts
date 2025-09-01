@@ -1,18 +1,15 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://uwddmnpmmmxhbktnyesx.supabase.co'
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3ZGRtbnBtbW14aGJrdG55ZXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYzMjkwNTMsImV4cCI6MjA3MTkwNTA1M30.yfHi8KtHsRollZ5IoLpWJVSYaVraPPea1KETW8dto7Q'
 
-let supabase: SupabaseClient
-
-if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('your-project') || supabaseAnonKey.includes('your-anon-key') || true) {
-  console.warn('⚠️ Using placeholder Supabase credentials - database features will not work')
-  // Use demo values to prevent app crash during development
-  const demoUrl = 'https://demo.supabase.co'
-  const demoKey = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRlbW8iLCJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MDk5NTIwMH0.demo-key-placeholder'
-  supabase = createClient(demoUrl, demoKey)
-} else {
-  supabase = createClient(supabaseUrl, supabaseAnonKey)
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables')
 }
 
-export { supabase }
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true
+  }
+})

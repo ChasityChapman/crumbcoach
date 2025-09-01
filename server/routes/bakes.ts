@@ -1,7 +1,7 @@
 import type { Router } from "express";
 import { eq, and, desc } from "drizzle-orm";
 import { db } from "../db";
-import { authenticateUser } from "../middleware/auth";
+import { authenticateUser, type AuthenticatedRequest } from "../middleware/supabaseAuth";
 import { 
   bakes,
   timelineSteps,
@@ -18,14 +18,14 @@ export function setupBakesRoutes(router: Router) {
   // Get all bakes for authenticated user
   router.get('/api/bakes', authenticateUser, async (req, res) => {
     try {
-      const userId = req.userId;
+      const user = (req as AuthenticatedRequest).user;
       
-      if (!userId) {
+      if (!user) {
         return res.status(401).json({ error: 'User not authenticated' });
       }
       
       const userBakes = await db.select().from(bakes)
-        .where(eq(bakes.userId, userId))
+        .where(eq(bakes.userId, user.id))
         .orderBy(desc(bakes.createdAt));
       
       res.json(userBakes);
@@ -38,16 +38,16 @@ export function setupBakesRoutes(router: Router) {
   // Create new bake
   router.post('/api/bakes', authenticateUser, async (req, res) => {
     try {
-      const userId = req.userId;
+      const user = (req as AuthenticatedRequest).user;
       const validatedData = insertBakeSchema.parse(req.body);
       
-      if (!userId) {
+      if (!user) {
         return res.status(401).json({ error: 'User not authenticated' });
       }
       
       const newBake = await db.insert(bakes).values({
         ...validatedData,
-        userId
+        userId: user.id
       }).returning();
       
       res.status(201).json(newBake[0]);
@@ -60,16 +60,16 @@ export function setupBakesRoutes(router: Router) {
   // Update bake
   router.patch('/api/bakes/:id', authenticateUser, async (req, res) => {
     try {
-      const userId = req.userId;
+      const user = (req as AuthenticatedRequest).user;
       const bakeId = req.params.id;
       
-      if (!userId) {
+      if (!user) {
         return res.status(401).json({ error: 'User not authenticated' });
       }
       
       // Verify ownership
       const existingBake = await db.select().from(bakes)
-        .where(and(eq(bakes.id, bakeId), eq(bakes.userId, userId)))
+        .where(and(eq(bakes.id, bakeId), eq(bakes.userId, user.id)))
         .limit(1);
       
       if (existingBake.length === 0) {
@@ -91,16 +91,16 @@ export function setupBakesRoutes(router: Router) {
   // Delete bake
   router.delete('/api/bakes/:id', authenticateUser, async (req, res) => {
     try {
-      const userId = req.userId;
+      const user = (req as AuthenticatedRequest).user;
       const bakeId = req.params.id;
       
-      if (!userId) {
+      if (!user) {
         return res.status(401).json({ error: 'User not authenticated' });
       }
       
       // Verify ownership
       const existingBake = await db.select().from(bakes)
-        .where(and(eq(bakes.id, bakeId), eq(bakes.userId, userId)))
+        .where(and(eq(bakes.id, bakeId), eq(bakes.userId, user.id)))
         .limit(1);
       
       if (existingBake.length === 0) {

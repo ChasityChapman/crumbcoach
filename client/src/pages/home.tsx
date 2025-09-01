@@ -20,6 +20,7 @@ import { Bell, LogOut, User as UserIcon, Sparkles } from "lucide-react";
 import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_1756224893332.png";
 import { useToast } from "@/hooks/use-toast";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { testSupabaseConnection, testDatabaseTables } from "@/lib/testSupabase";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
@@ -70,7 +71,7 @@ export default function Home() {
     return "U";
   };
   
-  // Clear any stale bake cache data on component mount
+  // Clear any stale bake cache data on component mount and test Supabase connection
   useEffect(() => {
     // Clear all bake-related cache on mount to ensure fresh data
     queryClient.removeQueries({ 
@@ -79,7 +80,19 @@ export default function Home() {
         return key?.includes('/api/bakes/') && (key?.includes('/timeline') || key?.includes('/notes') || key?.includes('/photos'));
       }
     });
-  }, []);
+    
+    // Test Supabase connection
+    if (user) {
+      testSupabaseConnection().then(result => {
+        console.log('Supabase connection test result:', result);
+        if (result.success) {
+          testDatabaseTables().then(tableResult => {
+            console.log('Database tables test result:', tableResult);
+          });
+        }
+      });
+    }
+  }, [user]);
 
   // Get all bakes and filter for active ones
   const { data: allBakes } = useQuery<Bake[]>({
