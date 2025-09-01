@@ -12,7 +12,7 @@ export function setupUserEntitlementsRoutes(router: Router) {
   // Get user entitlements
   router.get('/api/user-entitlements', authenticateUser, async (req, res) => {
     try {
-      const userId = req.userId;
+      const userId = req.user?.id;
       
       if (!userId) {
         return res.status(401).json({ error: 'User not authenticated' });
@@ -32,7 +32,7 @@ export function setupUserEntitlementsRoutes(router: Router) {
   // Create or update user entitlements
   router.post('/api/user-entitlements', authenticateUser, async (req, res) => {
     try {
-      const userId = req.userId;
+      const userId = req.user?.id;
       const validatedData = insertUserEntitlementSchema.parse(req.body);
       
       if (!userId) {

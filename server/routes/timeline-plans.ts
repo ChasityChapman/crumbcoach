@@ -12,7 +12,7 @@ export function setupTimelinePlansRoutes(router: Router) {
   // Get all timeline plans for authenticated user
   router.get('/api/timeline-plans', authenticateUser, async (req, res) => {
     try {
-      const userId = req.userId;
+      const userId = req.user?.id;
       
       if (!userId) {
         return res.status(401).json({ error: 'User not authenticated' });
@@ -32,7 +32,7 @@ export function setupTimelinePlansRoutes(router: Router) {
   // Create new timeline plan
   router.post('/api/timeline-plans', authenticateUser, async (req, res) => {
     try {
-      const userId = req.userId;
+      const userId = req.user?.id;
       const validatedData = insertTimelinePlanSchema.parse(req.body);
       
       if (!userId) {
@@ -54,7 +54,7 @@ export function setupTimelinePlansRoutes(router: Router) {
   // Delete timeline plan
   router.delete('/api/timeline-plans/:id', authenticateUser, async (req, res) => {
     try {
-      const userId = req.userId;
+      const userId = req.user?.id;
       const planId = req.params.id;
       
       if (!userId) {

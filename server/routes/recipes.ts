@@ -54,7 +54,7 @@ export function setupRecipesRoutes(router: Router) {
   // Update recipe
   router.put('/api/recipes/:id', authenticateUser, async (req, res) => {
     try {
-      const userId = req.userId;
+      const userId = req.user?.id;
       const recipeId = req.params.id;
       const validatedData = insertRecipeSchema.parse(req.body);
       
@@ -86,7 +86,7 @@ export function setupRecipesRoutes(router: Router) {
   // Delete recipe
   router.delete('/api/recipes/:id', authenticateUser, async (req, res) => {
     try {
-      const userId = req.userId;
+      const userId = req.user?.id;
       const recipeId = req.params.id;
       
       if (!userId) {

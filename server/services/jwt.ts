@@ -26,8 +26,8 @@ if (!process.env.JWT_REFRESH_SECRET) {
   throw new Error('JWT_REFRESH_SECRET environment variable is required and must be set to a different cryptographically secure random string (minimum 256 bits)');
 }
 
-const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET! as string;
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET! as string;
 const JWT_EXPIRY = process.env.JWT_EXPIRY || '15m';
 const JWT_REFRESH_EXPIRY = process.env.JWT_REFRESH_EXPIRY || '7d';
 
@@ -36,7 +36,7 @@ export class JWTService {
    * Generate access token
    */
   static generateAccessToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string {
-    return jwt.sign(payload as object, JWT_SECRET, {
+    return (jwt.sign as any)(payload, JWT_SECRET, {
       expiresIn: JWT_EXPIRY,
       issuer: 'crumbcoach',
       audience: 'crumbcoach-app',
@@ -47,7 +47,7 @@ export class JWTService {
    * Generate refresh token
    */
   static generateRefreshToken(payload: { userId: string, tokenVersion?: number }): string {
-    return jwt.sign(payload as object, JWT_REFRESH_SECRET, {
+    return (jwt.sign as any)(payload, JWT_REFRESH_SECRET, {
       expiresIn: JWT_REFRESH_EXPIRY,
       issuer: 'crumbcoach',
       audience: 'crumbcoach-app',

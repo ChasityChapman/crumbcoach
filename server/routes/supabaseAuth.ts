@@ -397,14 +397,7 @@ export function setupSupabaseAuthRoutes(router: Router) {
       }
 
       // Process the deletion confirmation
-      const deletionResult = await GDPRService.confirmDataDeletion(confirmationToken, req);
-
-      if (!deletionResult.success) {
-        return res.status(400).json({
-          error: deletionResult.error || 'Invalid or expired confirmation token',
-          code: 'INVALID_DELETION_TOKEN'
-        });
-      }
+      const deletionResult = await GDPRService.confirmDataDeletion(confirmationToken);
 
       // Delete user from Supabase Auth
       if (deletionResult.userId) {
@@ -416,7 +409,11 @@ export function setupSupabaseAuthRoutes(router: Router) {
 
       res.json({
         message: 'Your account and all associated data have been permanently deleted.',
-        deletedAt: deletionResult.deletedAt,
+        deletionSummary: {
+          totalRecordsDeleted: deletionResult.totalRecordsDeleted,
+          recordsDeleted: deletionResult.recordsDeleted,
+          dataSize: deletionResult.dataSize
+        },
         success: true
       });
     } catch (error) {
@@ -438,7 +435,13 @@ export function setupSupabaseAuthRoutes(router: Router) {
       }
 
       // Generate data export
-      const exportData = await GDPRService.exportUserData(user.id, req);
+      const exportOptions = {
+        format: (req.query.format as 'json' | 'csv' | 'zip') || 'json',
+        includeAnalytics: req.query.includeAnalytics !== 'false',
+        includeSensors: req.query.includeSensors !== 'false',
+        includePhotos: req.query.includePhotos !== 'false'
+      };
+      const exportData = await GDPRService.exportUserData(user.id, exportOptions);
 
       res.json({
         message: 'Data export completed',
@@ -475,8 +478,6 @@ export function setupSupabaseAuthRoutes(router: Router) {
 
       res.json({
         user: {
-          id: user.id,
-          email: user.email,
           ...user,
           ...(dbUser && {
             username: dbUser.username,

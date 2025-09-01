@@ -121,8 +121,14 @@ export function setupAuthRoutes(router: Router) {
       // Remove password from response
       const { password: _, ...userWithoutPassword } = user;
       
-      // Generate JWT tokens
-      const tokens = JWTService.generateTokenPair(userWithoutPassword);
+      // Generate JWT tokens - convert null to undefined for JWT service
+      const tokens = JWTService.generateTokenPair({
+        id: userWithoutPassword.id,
+        email: userWithoutPassword.email,
+        username: userWithoutPassword.username,
+        firstName: userWithoutPassword.firstName || undefined,
+        lastName: userWithoutPassword.lastName || undefined
+      });
       
       // Log successful login
       await GDPRService.logAuditEvent(
@@ -212,7 +218,7 @@ export function setupAuthRoutes(router: Router) {
       }
 
       // Generate secure reset token
-      const tokenData = TokenService.generatePasswordResetToken();
+      const tokenData = TokenService.generatePasswordResetToken({ userId: user.id, email: user.email });
       
       // Store hashed token in database
       const resetTokenRecord: InsertPasswordResetToken = {
@@ -288,11 +294,7 @@ export function setupAuthRoutes(router: Router) {
 
       // Check each token to find match (timing-safe comparison)
       for (const tokenRecord of resetTokens) {
-        const validation = TokenService.validateTokenWithExpiry(
-          token,
-          tokenRecord.token,
-          tokenRecord.expiresAt
-        );
+        const validation = TokenService.validateTokenWithExpiry(token);
 
         if (validation.isValid) {
           validTokenRecord = tokenRecord;
@@ -410,8 +412,14 @@ export function setupAuthRoutes(router: Router) {
         // Remove password from user object
         const { password: _, ...userWithoutPassword } = user;
         
-        // Generate new tokens
-        const tokens = JWTService.generateTokenPair(userWithoutPassword);
+        // Generate new tokens - convert null to undefined for JWT service
+        const tokens = JWTService.generateTokenPair({
+          id: userWithoutPassword.id,
+          email: userWithoutPassword.email,
+          username: userWithoutPassword.username,
+          firstName: userWithoutPassword.firstName || undefined,
+          lastName: userWithoutPassword.lastName || undefined
+        });
         
         res.json({
           tokens,
@@ -443,7 +451,7 @@ export function setupAuthRoutes(router: Router) {
   // Request Account Deletion (GDPR-compliant)
   router.post('/api/account/request-deletion', authenticateUser, async (req, res) => {
     try {
-      const userId = req.userId;
+      const userId = req.user?.id;
       
       if (!userId) {
         return res.status(401).json({ error: 'User not authenticated' });
@@ -471,7 +479,7 @@ export function setupAuthRoutes(router: Router) {
       res.json({
         message: 'Account deletion has been requested. You will receive a confirmation email with further instructions.',
         deletionToken: deletionRequest.confirmationToken,
-        scheduledDeletion: deletionRequest.scheduledDeletion,
+        expiresAt: deletionRequest.expiresAt,
         success: true
       });
     } catch (error) {
@@ -496,18 +504,15 @@ export function setupAuthRoutes(router: Router) {
       }
 
       // Process the deletion confirmation
-      const deletionResult = await GDPRService.confirmDataDeletion(confirmationToken, req);
-
-      if (!deletionResult.success) {
-        return res.status(400).json({
-          error: deletionResult.error || 'Invalid or expired confirmation token',
-          code: 'INVALID_DELETION_TOKEN'
-        });
-      }
+      const deletionResult = await GDPRService.confirmDataDeletion(confirmationToken);
 
       res.json({
         message: 'Your account and all associated data have been permanently deleted.',
-        deletedAt: deletionResult.deletedAt,
+        deletionSummary: {
+          totalRecordsDeleted: deletionResult.totalRecordsDeleted,
+          recordsDeleted: deletionResult.recordsDeleted,
+          dataSize: deletionResult.dataSize
+        },
         success: true
       });
     } catch (error) {
@@ -522,14 +527,20 @@ export function setupAuthRoutes(router: Router) {
   // Export User Data (GDPR Right to Data Portability)
   router.get('/api/account/export-data', authenticateUser, async (req, res) => {
     try {
-      const userId = req.userId;
+      const userId = req.user?.id;
       
       if (!userId) {
         return res.status(401).json({ error: 'User not authenticated' });
       }
 
       // Generate data export
-      const exportData = await GDPRService.exportUserData(userId, req);
+      const exportOptions = {
+        format: (req.query.format as 'json' | 'csv' | 'zip') || 'json',
+        includeAnalytics: req.query.includeAnalytics !== 'false',
+        includeSensors: req.query.includeSensors !== 'false',
+        includePhotos: req.query.includePhotos !== 'false'
+      };
+      const exportData = await GDPRService.exportUserData(userId, exportOptions);
 
       res.json({
         message: 'Data export completed',
@@ -550,7 +561,7 @@ export function setupAuthRoutes(router: Router) {
   router.post('/api/account/change-password', authenticateUser, async (req, res) => {
     try {
       const { currentPassword, newPassword } = req.body;
-      const userId = req.userId;
+      const userId = req.user?.id;
       
       if (!userId) {
         return res.status(401).json({ error: 'User not authenticated' });
@@ -626,7 +637,7 @@ export function setupAuthRoutes(router: Router) {
   // Update Profile Information
   router.patch('/api/account/profile', authenticateUser, async (req, res) => {
     try {
-      const userId = req.userId;
+      const userId = req.user?.id;
       const { firstName, lastName, username } = req.body;
       
       if (!userId) {
@@ -701,7 +712,7 @@ export function setupAuthRoutes(router: Router) {
   // Get Account Information
   router.get('/api/account/info', authenticateUser, async (req, res) => {
     try {
-      const userId = req.userId;
+      const userId = req.user?.id;
       
       if (!userId) {
         return res.status(401).json({ error: 'User not authenticated' });

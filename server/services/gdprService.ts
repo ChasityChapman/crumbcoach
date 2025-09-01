@@ -124,6 +124,7 @@ export interface DeletionSummary {
   totalRecordsDeleted: number;
   dataSize: string;
   deletionTime: number;
+  userId?: string;
 }
 
 export interface ComplianceReport {
@@ -283,7 +284,9 @@ export class GDPRService {
           recipes: userRecipes,
           bakes: userBakes,
           timelinePlans: userTimelinePlans,
-          starterLogs: userStarterLogs
+          starterLogs: userStarterLogs,
+          bakeNotes: allNotes,
+          bakePhotos: allPhotos
         },
         activityData: {
           bakeNotes: allNotes,
@@ -319,6 +322,18 @@ export class GDPRService {
           totalNotes: allNotes.length,
           totalPhotos: allPhotos.length,
           accountAge: user.createdAt ? Math.floor((Date.now() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24)) + ' days' : 'Unknown'
+        },
+        legalData: {
+          consentRecords: [],
+          legalBasis: "Consent (GDPR Article 6.1.a) and Legitimate Interest (GDPR Article 6.1.f)",
+          dataRetentionPolicy: "Personal data is retained for 7 years after account closure",
+          rightsInformation: {
+            rightToAccess: "You have the right to access your personal data",
+            rightToRectification: "You have the right to correct inaccurate data",
+            rightToErasure: "You have the right to request deletion of your data",
+            rightToPortability: "You have the right to receive your data in a portable format",
+            rightToObject: "You have the right to object to processing of your data"
+          }
         },
         auditTrail
       };
@@ -415,13 +430,13 @@ Note: This action cannot be undone. All your baking data, recipes, and account i
    * Confirm and process data deletion request
    */
   static async confirmDataDeletion(
-    requestId: string,
     confirmationToken: string,
     req?: Request
   ): Promise<DeletionSummary> {
+    // Find the deletion request by token
     const [request] = await db.select()
       .from(dataDeletionRequests)
-      .where(eq(dataDeletionRequests.id, requestId));
+      .where(eq(dataDeletionRequests.requestToken, confirmationToken));
 
     if (!request) {
       throw new Error('Deletion request not found');
@@ -445,7 +460,7 @@ Note: This action cannot be undone. All your baking data, recipes, and account i
         confirmedAt: new Date(),
         updatedAt: new Date()
       })
-      .where(eq(dataDeletionRequests.id, requestId));
+      .where(eq(dataDeletionRequests.id, request.id));
 
     const user = await storage.getUser(request.userId);
     if (!user) {
@@ -458,7 +473,7 @@ Note: This action cannot be undone. All your baking data, recipes, and account i
       request.userEmail,
       'data_deletion_confirmed',
       'compliance',
-      { requestId, requestType: request.requestType },
+      { requestId: request.id, requestType: request.requestType },
       req
     );
 
@@ -474,7 +489,7 @@ Note: This action cannot be undone. All your baking data, recipes, and account i
           processedAt: new Date(),
           updatedAt: new Date()
         })
-        .where(eq(dataDeletionRequests.id, requestId));
+        .where(eq(dataDeletionRequests.id, request.id));
 
       if (request.requestType === 'full_deletion') {
         deletionSummary = await this.performFullDeletion(request.userId);
@@ -498,7 +513,7 @@ Note: This action cannot be undone. All your baking data, recipes, and account i
             deletionSummary
           }
         })
-        .where(eq(dataDeletionRequests.id, requestId));
+        .where(eq(dataDeletionRequests.id, request.id));
 
       // Send confirmation email
       await emailService.sendAccountDeletionEmail({
@@ -514,7 +529,7 @@ Note: This action cannot be undone. All your baking data, recipes, and account i
         'data_deletion_completed',
         'compliance',
         {
-          requestId,
+          requestId: request.id,
           requestType: request.requestType,
           recordsDeleted: deletionSummary.totalRecordsDeleted,
           processingTimeMs: processingTime
@@ -523,6 +538,7 @@ Note: This action cannot be undone. All your baking data, recipes, and account i
       );
 
       deletionSummary.deletionTime = processingTime;
+      deletionSummary.userId = request.userId;
       return deletionSummary;
 
     } catch (error) {
@@ -533,7 +549,7 @@ Note: This action cannot be undone. All your baking data, recipes, and account i
           failureReason: error instanceof Error ? error.message : 'Unknown error',
           updatedAt: new Date()
         })
-        .where(eq(dataDeletionRequests.id, requestId));
+        .where(eq(dataDeletionRequests.id, request.id));
 
       await this.logAuditEvent(
         request.userId,
@@ -541,7 +557,7 @@ Note: This action cannot be undone. All your baking data, recipes, and account i
         'data_deletion_failed',
         'compliance',
         {
-          requestId,
+          requestId: request.id,
           error: error instanceof Error ? error.message : 'Unknown error'
         },
         req,

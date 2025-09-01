@@ -12,7 +12,7 @@ export function setupStarterLogsRoutes(router: Router) {
   // Get all starter logs for authenticated user
   router.get('/api/starter-logs', authenticateUser, async (req, res) => {
     try {
-      const userId = req.userId;
+      const userId = req.user?.id;
       
       if (!userId) {
         return res.status(401).json({ error: 'User not authenticated' });
@@ -32,7 +32,7 @@ export function setupStarterLogsRoutes(router: Router) {
   // Create new starter log
   router.post('/api/starter-logs', authenticateUser, async (req, res) => {
     try {
-      const userId = req.userId;
+      const userId = req.user?.id;
       const validatedData = insertStarterLogSchema.parse(req.body);
       
       if (!userId) {
@@ -54,7 +54,7 @@ export function setupStarterLogsRoutes(router: Router) {
   // Update starter log
   router.patch('/api/starter-logs/:id', authenticateUser, async (req, res) => {
     try {
-      const userId = req.userId;
+      const userId = req.user?.id;
       const logId = req.params.id;
       
       if (!userId) {
