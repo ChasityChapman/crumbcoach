@@ -118,41 +118,74 @@ export class JWTService {
   /**
    * Generate password reset token
    */
-  static generatePasswordResetToken(payload: { userId: string, email: string }): string {
-    return jwt.sign(payload as object, JWT_SECRET, {
+  static generatePasswordResetToken(payload: { userId: string, email: string }): { token: string; hashedToken: string; expiresAt: Date } {
+    const token = jwt.sign(payload as object, JWT_SECRET, {
       expiresIn: '1h', // Password reset tokens expire in 1 hour
       issuer: 'crumbcoach',
       audience: 'crumbcoach-app',
     });
+    
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 1);
+    
+    return {
+      token,
+      hashedToken: token, // In a real implementation, you'd hash this
+      expiresAt
+    };
   }
 
   /**
    * Generate account deletion token
    */
-  static generateAccountDeletionToken(payload: { userId: string, email: string }): string {
-    return jwt.sign(payload as object, JWT_SECRET, {
+  static generateAccountDeletionToken(payload: { userId: string, email: string }): { token: string; hashedToken: string; expiresAt: Date } {
+    const token = jwt.sign(payload as object, JWT_SECRET, {
       expiresIn: '24h', // Account deletion tokens expire in 24 hours
       issuer: 'crumbcoach',
       audience: 'crumbcoach-app',
     });
+    
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24);
+    
+    return {
+      token,
+      hashedToken: token, // In a real implementation, you'd hash this
+      expiresAt
+    };
   }
 
   /**
    * Validate token with expiry check
    */
-  static validateTokenWithExpiry(token: string): { userId: string; email: string; exp: number } {
-    const decoded = jwt.verify(token, JWT_SECRET, {
-      issuer: 'crumbcoach',
-      audience: 'crumbcoach-app',
-    }) as { userId: string; email: string; exp: number };
+  static validateTokenWithExpiry(token: string): { isValid: boolean; userId?: string; email?: string; exp?: number; reason?: string } {
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET, {
+        issuer: 'crumbcoach',
+        audience: 'crumbcoach-app',
+      }) as { userId: string; email: string; exp: number };
 
-    // Check if token is expired
-    const now = Math.floor(Date.now() / 1000);
-    if (decoded.exp && decoded.exp < now) {
-      throw new Error('Token has expired');
+      // Check if token is expired
+      const now = Math.floor(Date.now() / 1000);
+      if (decoded.exp && decoded.exp < now) {
+        return {
+          isValid: false,
+          reason: 'Token has expired'
+        };
+      }
+
+      return {
+        isValid: true,
+        userId: decoded.userId,
+        email: decoded.email,
+        exp: decoded.exp
+      };
+    } catch (error) {
+      return {
+        isValid: false,
+        reason: error instanceof Error ? error.message : 'Invalid token'
+      };
     }
-
-    return decoded;
   }
 }
 

@@ -33,6 +33,84 @@ export interface DataExportOptions {
   includePhotos: boolean;
 }
 
+export interface DataSummary {
+  users: number;
+  recipes: number;
+  bakes: number;
+  notes: number;
+  photos: number;
+  analytics: number;
+  sensors: number;
+  sessions: number;
+  totalRecords: number;
+  estimatedSize: string;
+}
+
+export interface UserExportData {
+  exportMetadata: {
+    exportDate: string;
+    userId: string;
+    userEmail: string;
+    format: string;
+    gdprCompliant: boolean;
+    dataControllerInfo: {
+      name: string;
+      contact: string;
+      address: string;
+    };
+  };
+  personalData: {
+    profile: {
+      id: string;
+      username: string;
+      email: string;
+      firstName?: string | null;
+      lastName?: string | null;
+      profileImageUrl?: string | null;
+      createdAt: Date | null;
+      updatedAt: Date | null;
+    };
+    subscription: {
+      subscriptionStatus: string;
+      entitlements: any;
+      createdAt: Date | null;
+      updatedAt: Date | null;
+    } | null;
+  };
+  bakingData: {
+    recipes: any[];
+    bakes: any[];
+    timelinePlans: any[];
+    starterLogs: any[];
+    bakeNotes: any[];
+    bakePhotos: any[];
+  };
+  technicalData?: {
+    analyticsEvents: any[];
+    sensorReadings: any[];
+  };
+  legalData: {
+    consentRecords: any[];
+    legalBasis: string;
+    dataRetentionPolicy: string;
+    rightsInformation: {
+      rightToAccess: string;
+      rightToRectification: string;
+      rightToErasure: string;
+      rightToPortability: string;
+      rightToObject: string;
+    };
+  };
+  statistics: {
+    totalRecipes: number;
+    totalBakes: number;
+    totalNotes: number;
+    totalPhotos: number;
+    accountAge: string;
+  };
+  auditTrail: any[];
+}
+
 export interface DeletionSummary {
   recordsDeleted: {
     users: number;
@@ -114,7 +192,7 @@ export class GDPRService {
     includeAnalytics: true,
     includeSensors: true,
     includePhotos: true
-  }): Promise<any> {
+  }): Promise<UserExportData> {
     try {
       console.log(`📄 Starting GDPR data export for user: ${userId}`);
       
@@ -241,7 +319,8 @@ export class GDPRService {
           totalNotes: allNotes.length,
           totalPhotos: allPhotos.length,
           accountAge: user.createdAt ? Math.floor((Date.now() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24)) + ' days' : 'Unknown'
-        }
+        },
+        auditTrail
       };
 
       // Log the export
@@ -275,7 +354,7 @@ export class GDPRService {
     }
 
     // Generate secure confirmation token
-    const tokenData = TokenService.generateAccountDeletionToken();
+    const tokenData = TokenService.generateAccountDeletionToken({ userId, email: user.email });
     
     // Get data summary
     const dataSummary = await this.getDataSummary(userId);
@@ -353,11 +432,7 @@ Note: This action cannot be undone. All your baking data, recipes, and account i
     }
 
     // Validate token
-    const validation = TokenService.validateTokenWithExpiry(
-      confirmationToken,
-      request.requestToken,
-      request.confirmationExpiresAt
-    );
+    const validation = TokenService.validateTokenWithExpiry(confirmationToken);
 
     if (!validation.isValid) {
       throw new Error(validation.reason || 'Invalid confirmation token');
@@ -484,7 +559,22 @@ Note: This action cannot be undone. All your baking data, recipes, and account i
   private static async performFullDeletion(userId: string): Promise<DeletionSummary> {
     console.log(`🗑️ Starting full deletion for user: ${userId}`);
     
-    const recordsDeleted: any = {};
+    const recordsDeleted: {
+      users: number;
+      recipes: number;
+      bakes: number;
+      notes: number;
+      photos: number;
+      analytics: number;
+      [key: string]: number;
+    } = {
+      users: 0,
+      recipes: 0,
+      bakes: 0,
+      notes: 0,
+      photos: 0,
+      analytics: 0
+    };
     let totalDeleted = 0;
 
     // Get counts before deletion for summary
@@ -512,11 +602,32 @@ Note: This action cannot be undone. All your baking data, recipes, and account i
       try {
         const result = await db.delete(op.table).where(op.condition);
         const deleted = result.rowCount || 0;
-        recordsDeleted[op.name] = deleted;
+        
+        // Map operation names to interface keys
+        switch (op.name) {
+          case 'bakeNotes':
+            recordsDeleted.notes += deleted;
+            break;
+          case 'bakePhotos':
+            recordsDeleted.photos += deleted;
+            break;
+          case 'analyticsEvents':
+            recordsDeleted.analytics += deleted;
+            break;
+          case 'recipes':
+            recordsDeleted.recipes = deleted;
+            break;
+          case 'bakes':
+            recordsDeleted.bakes = deleted;
+            break;
+          default:
+            recordsDeleted[op.name] = deleted;
+            break;
+        }
+        
         totalDeleted += deleted;
       } catch (error) {
         console.error(`Failed to delete ${op.name}:`, error);
-        recordsDeleted[op.name] = 0;
       }
     }
 
@@ -575,17 +686,45 @@ Note: This action cannot be undone. All your baking data, recipes, and account i
   /**
    * Get summary of user data for deletion planning
    */
-  private static async getDataSummary(userId: string): Promise<any> {
-    const [recipeCount] = await db.select({ count: sql`count(*)` }).from(recipes).where(eq(recipes.userId, userId));
-    const [bakeCount] = await db.select({ count: sql`count(*)` }).from(bakes).where(eq(bakes.userId, userId));
-    const [analyticsCount] = await db.select({ count: sql`count(*)` }).from(analyticsEvents).where(eq(analyticsEvents.userId, userId));
+  private static async getDataSummary(userId: string): Promise<DataSummary> {
+    const [userCountResult] = await db.select({ count: sql`count(*)` }).from(users).where(eq(users.id, userId));
+    const [recipeCountResult] = await db.select({ count: sql`count(*)` }).from(recipes).where(eq(recipes.userId, userId));
+    const [bakeCountResult] = await db.select({ count: sql`count(*)` }).from(bakes).where(eq(bakes.userId, userId));
+    
+    // Get bake-related data counts using subqueries
+    const [notesCountResult] = await db.select({ count: sql`count(*)` }).from(bakeNotes)
+      .where(sql`${bakeNotes.bakeId} IN (SELECT id FROM ${bakes} WHERE user_id = ${userId})`);
+    const [photosCountResult] = await db.select({ count: sql`count(*)` }).from(bakePhotos)
+      .where(sql`${bakePhotos.bakeId} IN (SELECT id FROM ${bakes} WHERE user_id = ${userId})`);
+    
+    const [analyticsCountResult] = await db.select({ count: sql`count(*)` }).from(analyticsEvents).where(eq(analyticsEvents.userId, userId));
+    
+    // Sensor readings don't have userId, they're linked through bakes
+    const [sensorsCountResult] = await db.select({ count: sql`count(*)` }).from(sensorReadings)
+      .where(sql`${sensorReadings.bakeId} IN (SELECT id FROM ${bakes} WHERE user_id = ${userId})`);
+    const [sessionsCountResult] = await db.select({ count: sql`count(*)` }).from(userSessions).where(eq(userSessions.userId, userId));
+
+    const userCount = Number(userCountResult.count) || 0;
+    const recipeCount = Number(recipeCountResult.count) || 0;
+    const bakeCount = Number(bakeCountResult.count) || 0;
+    const notesCount = Number(notesCountResult.count) || 0;
+    const photosCount = Number(photosCountResult.count) || 0;
+    const analyticsCount = Number(analyticsCountResult.count) || 0;
+    const sensorsCount = Number(sensorsCountResult.count) || 0;
+    const sessionsCount = Number(sessionsCountResult.count) || 0;
+    const totalRecords = userCount + recipeCount + bakeCount + notesCount + photosCount + analyticsCount + sensorsCount + sessionsCount;
 
     return {
-      recipes: Number(recipeCount.count) || 0,
-      bakes: Number(bakeCount.count) || 0,
-      analytics: Number(analyticsCount.count) || 0,
-      estimatedDataSize: 'Variable',
-      dataCategories: ['Profile', 'Baking Data', 'Analytics', 'Photos', 'Notes']
+      users: userCount,
+      recipes: recipeCount,
+      bakes: bakeCount,
+      notes: notesCount,
+      photos: photosCount,
+      analytics: analyticsCount,
+      sensors: sensorsCount,
+      sessions: sessionsCount,
+      totalRecords,
+      estimatedSize: totalRecords < 100 ? 'Small' : totalRecords < 1000 ? 'Medium' : 'Large'
     };
   }
 
