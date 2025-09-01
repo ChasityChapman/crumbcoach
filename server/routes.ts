@@ -10,7 +10,7 @@ import {
 
 // Import route modules
 import { setupHealthRoutes } from "./routes/health";
-import { setupAuthRoutes } from "./routes/auth";
+import { setupSupabaseAuthRoutes } from "./routes/supabaseAuth";
 import { setupRecipesRoutes } from "./routes/recipes";
 import { setupBakesRoutes } from "./routes/bakes";
 import { setupTimelinePlansRoutes } from "./routes/timeline-plans";
@@ -23,15 +23,15 @@ export function registerRoutes(app: Express): Server {
   // Create a router instance
   const router = Router();
   
-  // Apply specific rate limiting to sensitive endpoints
-  router.use('/api/login', authRateLimit);
-  router.use('/api/register', registrationRateLimit);
-  router.use('/api/forgot-password', passwordResetRateLimit);
-  router.use('/api/reset-password', passwordResetRateLimit);
+  // Apply specific rate limiting to sensitive endpoints for Supabase auth
+  router.use('/api/auth/login', authRateLimit);
+  router.use('/api/auth/register', registrationRateLimit);
+  router.use('/api/auth/forgot-password', passwordResetRateLimit);
+  router.use('/api/auth/update-password', passwordResetRateLimit);
   
   // Register all route modules
   setupHealthRoutes(router);
-  setupAuthRoutes(router);
+  setupSupabaseAuthRoutes(router);
   setupRecipesRoutes(router);
   setupBakesRoutes(router);
   setupTimelinePlansRoutes(router);

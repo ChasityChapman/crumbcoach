@@ -170,6 +170,52 @@ export const analyticsEvents = pgTable("analytics_events", {
   index("IDX_analytics_events_timestamp").on(table.timestamp),
 ]);
 
+// Account audit trail for compliance and security
+export const accountAuditLog = pgTable("account_audit_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id"), // User ID (kept for audit even after user deletion)
+  userEmail: varchar("user_email"), // Email for identification
+  action: varchar("action").notNull(), // 'account_created', 'password_reset', 'data_export', 'account_deleted', etc.
+  actionCategory: varchar("action_category").notNull(), // 'auth', 'data_management', 'compliance', 'security'
+  details: jsonb("details"), // Additional action-specific data
+  ipAddress: varchar("ip_address"), // IP address where action originated
+  userAgent: text("user_agent"), // Browser/device information
+  success: boolean("success").notNull().default(true), // Whether the action succeeded
+  errorMessage: text("error_message"), // Error details if action failed
+  performedBy: varchar("performed_by"), // 'user', 'admin', 'system', 'automated'
+  timestamp: timestamp("timestamp").defaultNow(),
+  retentionDate: timestamp("retention_date"), // When this record should be deleted
+}, (table) => [
+  index("IDX_audit_log_user_id").on(table.userId),
+  index("IDX_audit_log_action").on(table.action),
+  index("IDX_audit_log_timestamp").on(table.timestamp),
+  index("IDX_audit_log_retention").on(table.retentionDate),
+]);
+
+// Data deletion requests for GDPR compliance
+export const dataDeletionRequests = pgTable("data_deletion_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(), // User requesting deletion
+  userEmail: varchar("user_email").notNull(), // Email for verification
+  requestToken: varchar("request_token").notNull().unique(), // Confirmation token
+  requestType: varchar("request_type").notNull(), // 'full_deletion', 'data_export', 'anonymization'
+  status: varchar("status").notNull().default("pending"), // 'pending', 'confirmed', 'processing', 'completed', 'failed'
+  confirmationExpiresAt: timestamp("confirmation_expires_at").notNull(),
+  confirmedAt: timestamp("confirmed_at"),
+  processedAt: timestamp("processed_at"),
+  completedAt: timestamp("completed_at"),
+  failureReason: text("failure_reason"),
+  dataSummary: jsonb("data_summary"), // Summary of data to be deleted
+  auditTrail: jsonb("audit_trail"), // Detailed audit information
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("IDX_deletion_requests_user_id").on(table.userId),
+  index("IDX_deletion_requests_token").on(table.requestToken),
+  index("IDX_deletion_requests_status").on(table.status),
+  index("IDX_deletion_requests_expires").on(table.confirmationExpiresAt),
+]);
+
 // User sessions table to track engagement
 export const userSessions = pgTable("user_sessions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -303,6 +349,17 @@ export const analyticsEventRelations = relations(analyticsEvents, ({ one }) => (
   }),
 }));
 
+export const accountAuditLogRelations = relations(accountAuditLog, ({ one }) => ({
+  // Note: No foreign key relation to users table since audit records persist after user deletion
+}));
+
+export const dataDeletionRequestRelations = relations(dataDeletionRequests, ({ one }) => ({
+  user: one(users, {
+    fields: [dataDeletionRequests.userId],
+    references: [users.id],
+  }),
+}));
+
 export const userSessionRelations = relations(userSessions, ({ one }) => ({
   user: one(users, {
     fields: [userSessions.userId],
@@ -351,6 +408,8 @@ export const insertPasswordResetTokenSchema = createInsertSchema(passwordResetTo
 export const insertTimelinePlanSchema = createInsertSchema(timelinePlans).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents).omit({ id: true, timestamp: true });
 export const insertUserSessionSchema = createInsertSchema(userSessions).omit({ id: true, sessionStart: true, lastActivity: true });
+export const insertAccountAuditLogSchema = createInsertSchema(accountAuditLog).omit({ id: true, timestamp: true });
+export const insertDataDeletionRequestSchema = createInsertSchema(dataDeletionRequests).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertStarterLogSchema = createInsertSchema(starterLogs)
   .omit({ id: true, createdAt: true, updatedAt: true })
   .extend({
@@ -381,6 +440,10 @@ export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
 export type InsertAnalyticsEvent = z.infer<typeof insertAnalyticsEventSchema>;
 export type UserSession = typeof userSessions.$inferSelect;
 export type InsertUserSession = z.infer<typeof insertUserSessionSchema>;
+export type AccountAuditLog = typeof accountAuditLog.$inferSelect;
+export type InsertAccountAuditLog = z.infer<typeof insertAccountAuditLogSchema>;
+export type DataDeletionRequest = typeof dataDeletionRequests.$inferSelect;
+export type InsertDataDeletionRequest = z.infer<typeof insertDataDeletionRequestSchema>;
 export type StarterLog = typeof starterLogs.$inferSelect;
 export type InsertStarterLog = z.infer<typeof insertStarterLogSchema>;
 export type UserEntitlement = typeof userEntitlements.$inferSelect;
