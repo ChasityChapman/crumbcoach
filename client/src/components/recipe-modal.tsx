@@ -13,11 +13,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { X, Plus, Trash2, Droplets, Link, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import HydrationDisplay from "@/components/hydration-display";
+import type { Recipe, InsertRecipe } from "@shared/schema";
 
 interface RecipeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  recipe?: any | null; // Recipe to edit, null for new recipe
+  recipe?: Recipe | null; // Recipe to edit, null for new recipe
   initialTab?: "manual" | "url";
 }
 
@@ -80,8 +81,8 @@ export default function RecipeModal({ isOpen, onClose, recipe, initialTab = "man
       setDescription(recipe.description || "");
       setDifficulty(recipe.difficulty || "");
       setTotalHours(recipe.totalTimeHours || 24);
-      setIngredients(recipe.ingredients || []);
-      setSteps(recipe.steps || []);
+      setIngredients(recipe.ingredients as Ingredient[] || []);
+      setSteps(recipe.steps as RecipeStep[] || []);
       setSelectedHydration(null);
       setRecipeUrl("");
       setHasExtractedData(false);
@@ -92,7 +93,7 @@ export default function RecipeModal({ isOpen, onClose, recipe, initialTab = "man
   }, [recipe, hasExtractedData]);
 
   const createRecipeMutation = useMutation({
-    mutationFn: (recipeData: any) => {
+    mutationFn: (recipeData: InsertRecipe) => {
       if (recipe?.id) {
         // Editing existing recipe
         return apiRequest("PUT", `/api/recipes/${recipe.id}`, recipeData);
@@ -132,7 +133,7 @@ export default function RecipeModal({ isOpen, onClose, recipe, initialTab = "man
       const data = await response.json();
       return data;
     },
-    onSuccess: (data: any) => {
+    onSuccess: (data: Partial<Recipe>) => {
       console.log('Extracted recipe data:', data);
       
       // Mark that we have extracted data to prevent form reset
@@ -164,7 +165,7 @@ export default function RecipeModal({ isOpen, onClose, recipe, initialTab = "man
         description: `Successfully imported "${data.name || 'recipe'}". Review and edit as needed.`,
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Recipe extraction error:', error);
       toast({
         title: "Failed to extract recipe",

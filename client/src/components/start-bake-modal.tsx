@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import type { Recipe } from "@shared/schema";
+import type { Recipe, Bake, InsertBake } from "@shared/schema";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,13 @@ import { Badge } from "@/components/ui/badge";
 import { X, Clock, Users, ChefHat } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSensors } from "@/hooks/use-sensors";
+
+interface RecipeStep {
+  id: string;
+  name: string;
+  duration: number;
+  description: string;
+}
 
 interface StartBakeModalProps {
   isOpen: boolean;
@@ -31,8 +38,11 @@ export default function StartBakeModal({ isOpen, onClose, onBakeStarted }: Start
   });
 
   const startBakeMutation = useMutation({
-    mutationFn: (bakeData: any) => apiRequest("POST", "/api/bakes", bakeData),
-    onSuccess: async (newBake: any) => {
+    mutationFn: async (bakeData: InsertBake) => {
+      const response = await apiRequest("POST", "/api/bakes", bakeData);
+      return response.json();
+    },
+    onSuccess: async (newBake: Bake) => {
       setIsSubmitting(false);
       console.log('New bake created:', newBake);
       // Create timeline steps for the new bake
@@ -41,7 +51,7 @@ export default function StartBakeModal({ isOpen, onClose, onBakeStarted }: Start
       console.log('Recipe steps:', recipe?.steps);
       
       if (recipe && recipe.steps && newBake && newBake.id) {
-        const steps = recipe.steps as any[];
+        const steps = recipe.steps as RecipeStep[];
         console.log('Creating', steps.length, 'timeline steps');
         
         for (let i = 0; i < steps.length; i++) {
@@ -133,13 +143,13 @@ export default function StartBakeModal({ isOpen, onClose, onBakeStarted }: Start
       name: bakeName.trim(),
       status: 'active',
       currentStep: 0,
-      startTime: now.toISOString(),
-      estimatedEndTime: estimatedEndTime.toISOString(),
+      startTime: now,
+      estimatedEndTime: estimatedEndTime,
       actualEndTime: null,
       environmentalData: sensorData ? {
         temperature: sensorData.temperature,
         humidity: sensorData.humidity,
-        timestamp: sensorData.timestamp.toISOString()
+        timestamp: sensorData.timestamp
       } : null,
       timelineAdjustments: null,
     });
@@ -219,7 +229,7 @@ export default function StartBakeModal({ isOpen, onClose, onBakeStarted }: Start
                   </div>
                   <div className="flex items-center space-x-1">
                     <Users className="w-4 h-4" />
-                    <span>{(selectedRecipe.steps as any[])?.length || 0} steps</span>
+                    <span>{(selectedRecipe.steps as RecipeStep[])?.length || 0} steps</span>
                   </div>
                 </div>
               </CardContent>

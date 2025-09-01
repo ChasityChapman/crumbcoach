@@ -22,6 +22,8 @@ export function useSensors() {
   });
 
   useEffect(() => {
+    let cleanupSimulation: (() => void) | null = null;
+
     // Check if device sensors are available
     const checkSensorSupport = () => {
       // Check for generic sensor API (limited browser support)
@@ -38,7 +40,7 @@ export function useSensors() {
 
       // Fallback: simulate sensor readings for demo
       setIsSupported(true);
-      startSimulatedReadings();
+      cleanupSimulation = startSimulatedReadings();
     };
 
     const startSimulatedReadings = () => {
@@ -70,6 +72,13 @@ export function useSensors() {
     };
 
     checkSensorSupport();
+
+    // Cleanup function for the useEffect
+    return () => {
+      if (cleanupSimulation) {
+        cleanupSimulation();
+      }
+    };
   }, []);
 
   const recordReading = (bakeId?: string) => {

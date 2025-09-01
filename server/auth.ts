@@ -6,7 +6,7 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 declare global {
   namespace Express {
@@ -20,7 +20,7 @@ const scryptAsync = promisify(scrypt);
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
-let supabase: any = null;
+let supabase: SupabaseClient | null = null;
 if (supabaseUrl && supabaseServiceKey) {
   supabase = createClient(supabaseUrl, supabaseServiceKey);
 }
@@ -239,7 +239,7 @@ export function setupAuth(app: Express) {
       return res.status(401).json({ message: "Not authenticated" });
     }
     
-    const user = req.user as any;
+    const user = req.user as SelectUser;
     const userResponse = {
       id: user.id,
       username: user.username,
@@ -353,7 +353,7 @@ export function setupAuth(app: Express) {
   });
 
   // Configure Passport serialization
-  passport.serializeUser((user: any, done) => {
+  passport.serializeUser((user: SelectUser, done) => {
     done(null, user.id);
   });
   
@@ -391,6 +391,10 @@ export const verifySupabaseAuth = async (req: Request, res: Response, next: Next
     }
 
     // Find or create user in our local database
+    if (!user.email) {
+      return res.status(401).json({ message: "User email not available from authentication provider" });
+    }
+
     let localUser = await storage.getUserByEmail(user.email);
     
     if (!localUser) {

@@ -7,6 +7,7 @@ import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { initSentry } from "@/lib/sentry";
 import { initializeCapacitor } from "@/lib/capacitor";
 import { useEffect } from "react";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import AuthPage from "@/pages/auth-page";
@@ -27,10 +28,21 @@ function Router() {
   const isAuthenticated = !!user;
   const isLoading = loading;
   
-  // Initialize mobile features
+  // Initialize mobile features with error handling
   useEffect(() => {
-    initSentry();
-    initializeCapacitor();
+    try {
+      initSentry();
+    } catch (error) {
+      console.error('Failed to initialize Sentry:', error);
+      // Continue execution - Sentry is not critical for app functionality
+    }
+
+    try {
+      initializeCapacitor();
+    } catch (error) {
+      console.error('Failed to initialize Capacitor:', error);
+      // Continue execution - app should work without Capacitor on web
+    }
   }, []);
 
   if (isLoading) {
@@ -79,12 +91,14 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
