@@ -49,7 +49,7 @@ export async function testDatabaseTables() {
       'timeline_plans'
     ]
     
-    const results = {}
+    const results: Record<string, { accessible: boolean; count?: any; error?: string }> = {}
     
     for (const table of tables) {
       try {

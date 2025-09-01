@@ -1,7 +1,7 @@
 import { db } from "../db";
 import { storage } from "../storage";
 import { emailService } from "./email";
-import { TokenService } from "./tokenService";
+import { TokenService } from "./jwt";
 import {
   users,
   recipes,
@@ -416,7 +416,7 @@ Note: This action cannot be undone. All your baking data, recipes, and account i
           completedAt: new Date(),
           updatedAt: new Date(),
           auditTrail: {
-            ...request.auditTrail,
+            ...(typeof request.auditTrail === 'object' && request.auditTrail !== null ? request.auditTrail as Record<string, any> : {}),
             processingStarted: new Date(startTime),
             processingCompleted: new Date(),
             processingTimeMs: processingTime,
@@ -560,7 +560,11 @@ Note: This action cannot be undone. All your baking data, recipes, and account i
     return {
       recordsDeleted: {
         users: 0, // Not deleted, just anonymized
-        personalData: 1
+        recipes: 0,
+        bakes: 0,
+        notes: 0,
+        photos: 0,
+        analytics: 0
       },
       totalRecordsDeleted: 1,
       dataSize: 'Personal identifiers only',

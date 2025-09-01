@@ -128,7 +128,8 @@ export default function Home() {
       }
       
       // Generate timeline steps based on recipe steps
-      const timelineSteps = recipe.steps?.map((step, index) => ({
+      const recipeSteps = Array.isArray(recipe.steps) ? recipe.steps : [];
+      const timelineSteps = recipeSteps.map((step, index) => ({
         bakeId: bake.id,
         stepIndex: index,
         name: step.name || `Step ${index + 1}`,

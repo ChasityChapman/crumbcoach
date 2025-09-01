@@ -1,12 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { supabase } from '../services/supabase';
+import type { User } from '../../shared/schema';
 
 export interface AuthenticatedRequest extends Request {
-  user?: {
-    id: string;
-    email: string;
-    [key: string]: any;
-  };
+  user?: User;
+  userId?: string;
 }
 
 /**
@@ -42,9 +40,16 @@ export const authenticateUser = async (
     // Attach user info to request object
     req.user = {
       id: user.id,
+      username: user.user_metadata?.username || user.email?.split('@')[0] || '',
       email: user.email || '',
-      ...user.user_metadata
-    };
+      password: '', // Not available from Supabase auth
+      firstName: user.user_metadata?.firstName || null,
+      lastName: user.user_metadata?.lastName || null,
+      profileImageUrl: user.user_metadata?.avatar_url || null,
+      createdAt: user.created_at ? new Date(user.created_at) : null,
+      updatedAt: user.updated_at ? new Date(user.updated_at) : null,
+    } as User;
+    req.userId = user.id;
 
     next();
   } catch (error) {
@@ -77,9 +82,16 @@ export const optionalAuth = async (
     if (!error && user) {
       req.user = {
         id: user.id,
+        username: user.user_metadata?.username || user.email?.split('@')[0] || '',
         email: user.email || '',
-        ...user.user_metadata
-      };
+        password: '', // Not available from Supabase auth
+        firstName: user.user_metadata?.firstName || null,
+        lastName: user.user_metadata?.lastName || null,
+        profileImageUrl: user.user_metadata?.avatar_url || null,
+        createdAt: user.created_at ? new Date(user.created_at) : null,
+        updatedAt: user.updated_at ? new Date(user.updated_at) : null,
+      } as User;
+      req.userId = user.id;
     }
 
     next();

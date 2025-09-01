@@ -49,7 +49,7 @@ export class EmailService {
     }
 
     try {
-      this.transporter = nodemailer.createTransporter(emailConfig);
+      this.transporter = nodemailer.createTransport(emailConfig);
       this.isConfigured = true;
       console.log('Email service initialized successfully');
     } catch (error) {

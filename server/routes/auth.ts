@@ -1,14 +1,19 @@
 import type { Router } from "express";
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { eq, and, lt, isNull } from "drizzle-orm";
+import bcrypt from "bcrypt";
 import { db } from "../db";
 import { authenticateUser, type AuthenticatedRequest } from "../middleware/supabaseAuth";
 import { supabase, supabaseAdmin } from "../services/supabase";
 import GDPRService from "../services/gdprService";
+import { JWTService, TokenService } from "../services/jwt";
+import { emailService } from "../services/email";
 import { 
   users, 
   userEntitlements,
-  insertUserSchema
+  insertUserSchema,
+  passwordResetTokens,
+  type InsertPasswordResetToken
 } from "../../shared/schema";
 
 export function setupAuthRoutes(router: Router) {

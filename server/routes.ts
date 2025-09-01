@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { Router } from "express";
-import { requestLogger, errorHandler, getMetrics } from "./middleware/monitoring";
+import { getMetrics } from "./middleware/monitoring";
 import { 
   authRateLimit, 
   passwordResetRateLimit, 

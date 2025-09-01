@@ -21,7 +21,6 @@ import {
   Wifi,
   Bell,
   Eye,
-  Volume2,
   User,
   Settings
 } from "lucide-react";

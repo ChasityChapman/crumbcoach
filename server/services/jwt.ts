@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
+import type { User } from '../../shared/schema';
 
 export interface JWTPayload {
   userId: string;
@@ -12,7 +13,7 @@ export interface JWTPayload {
 }
 
 export interface AuthenticatedRequest extends Request {
-  user?: JWTPayload;
+  user?: User;
   userId?: string;
 }
 
@@ -35,7 +36,7 @@ export class JWTService {
    * Generate access token
    */
   static generateAccessToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string {
-    return jwt.sign(payload, JWT_SECRET, {
+    return jwt.sign(payload as object, JWT_SECRET, {
       expiresIn: JWT_EXPIRY,
       issuer: 'crumbcoach',
       audience: 'crumbcoach-app',
@@ -46,7 +47,7 @@ export class JWTService {
    * Generate refresh token
    */
   static generateRefreshToken(payload: { userId: string, tokenVersion?: number }): string {
-    return jwt.sign(payload, JWT_REFRESH_SECRET, {
+    return jwt.sign(payload as object, JWT_REFRESH_SECRET, {
       expiresIn: JWT_REFRESH_EXPIRY,
       issuer: 'crumbcoach',
       audience: 'crumbcoach-app',
@@ -113,6 +114,46 @@ export class JWTService {
       return null;
     }
   }
+
+  /**
+   * Generate password reset token
+   */
+  static generatePasswordResetToken(payload: { userId: string, email: string }): string {
+    return jwt.sign(payload as object, JWT_SECRET, {
+      expiresIn: '1h', // Password reset tokens expire in 1 hour
+      issuer: 'crumbcoach',
+      audience: 'crumbcoach-app',
+    });
+  }
+
+  /**
+   * Generate account deletion token
+   */
+  static generateAccountDeletionToken(payload: { userId: string, email: string }): string {
+    return jwt.sign(payload as object, JWT_SECRET, {
+      expiresIn: '24h', // Account deletion tokens expire in 24 hours
+      issuer: 'crumbcoach',
+      audience: 'crumbcoach-app',
+    });
+  }
+
+  /**
+   * Validate token with expiry check
+   */
+  static validateTokenWithExpiry(token: string): { userId: string; email: string; exp: number } {
+    const decoded = jwt.verify(token, JWT_SECRET, {
+      issuer: 'crumbcoach',
+      audience: 'crumbcoach-app',
+    }) as { userId: string; email: string; exp: number };
+
+    // Check if token is expired
+    const now = Math.floor(Date.now() / 1000);
+    if (decoded.exp && decoded.exp < now) {
+      throw new Error('Token has expired');
+    }
+
+    return decoded;
+  }
 }
 
 /**
@@ -138,8 +179,18 @@ export const authenticateJWT = async (
     try {
       const payload = JWTService.verifyAccessToken(token);
       
-      // Attach user info to request
-      req.user = payload;
+      // Attach user info to request - convert JWTPayload to partial User
+      req.user = {
+        id: payload.userId,
+        username: payload.username || '',
+        email: payload.email,
+        password: '', // Not included in JWT
+        firstName: payload.firstName || null,
+        lastName: payload.lastName || null,
+        profileImageUrl: null,
+        createdAt: null,
+        updatedAt: null,
+      } as User;
       req.userId = payload.userId;
       
       next();
@@ -184,7 +235,17 @@ export const optionalJWT = async (
     
     try {
       const payload = JWTService.verifyAccessToken(token);
-      req.user = payload;
+      req.user = {
+        id: payload.userId,
+        username: payload.username || '',
+        email: payload.email,
+        password: '', // Not included in JWT
+        firstName: payload.firstName || null,
+        lastName: payload.lastName || null,
+        profileImageUrl: null,
+        createdAt: null,
+        updatedAt: null,
+      } as User;
       req.userId = payload.userId;
     } catch (error) {
       // Silently fail for optional auth
@@ -221,5 +282,8 @@ export const authorize = (roles: string[]) => {
     next();
   };
 };
+
+// Alias for backward compatibility
+export const TokenService = JWTService;
 
 export default JWTService;
