@@ -15,10 +15,14 @@ import NotesModal from "@/components/notes-modal";
 import StartBakeModal from "@/components/start-bake-modal";
 import RecipeModal from "@/components/recipe-modal";
 import BreadAnalysisModal from "@/components/bread-analysis-modal";
+import AskGemini from "@/components/ask-gemini";
 
-// Guard against undefined component
+// Guard against undefined components
 if (typeof BreadAnalysisModal !== 'function') {
   console.error('BreadAnalysisModal is not a function:', typeof BreadAnalysisModal, BreadAnalysisModal);
+}
+if (typeof AskGemini !== 'function') {
+  console.error('AskGemini is not a function:', typeof AskGemini, AskGemini);
 }
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Bell, LogOut, User as UserIcon, Sparkles } from "lucide-react";
@@ -43,6 +47,7 @@ export default function Home() {
   const [startBakeOpen, setStartBakeOpen] = useState(false);
   const [newRecipeOpen, setNewRecipeOpen] = useState(false);
   const [breadAnalysisOpen, setBreadAnalysisOpen] = useState(false);
+  const [askGeminiOpen, setAskGeminiOpen] = useState(false);
   const [isCreatingBake, setIsCreatingBake] = useState(false);
 
   const handleLogout = useCallback(async () => {
@@ -315,8 +320,9 @@ export default function Home() {
 
         {/* Note: Timeline view is now integrated into each ActiveBakeCard */}
 
-        {/* AI Bread Analysis Feature */}
-        <div className="px-4 mb-6">
+        {/* AI Features */}
+        <div className="px-4 mb-6 space-y-4">
+          {/* AI Bread Analysis Feature */}
           <div className="bg-gradient-to-r from-accent-orange-500 to-accent-orange-600 rounded-xl p-4 shadow-lg">
             <div className="flex items-center justify-between text-white">
               <div className="flex-1">
@@ -334,6 +340,28 @@ export default function Home() {
                 size="sm"
               >
                 Try Now
+              </Button>
+            </div>
+          </div>
+
+          {/* Ask Gemini Feature */}
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 shadow-lg">
+            <div className="flex items-center justify-between text-white">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="w-5 h-5" />
+                  <h3 className="font-semibold">Ask Gemini AI</h3>
+                </div>
+                <p className="text-sm text-blue-100 leading-relaxed">
+                  Get instant answers to your sourdough questions from Google's AI assistant.
+                </p>
+              </div>
+              <Button 
+                onClick={() => setAskGeminiOpen(true)}
+                className="bg-white text-blue-600 hover:bg-blue-50 ml-4 shadow-md"
+                size="sm"
+              >
+                Ask AI
               </Button>
             </div>
           </div>
@@ -384,6 +412,27 @@ export default function Home() {
               <p>AI Bread Analysis feature is temporarily unavailable.</p>
               <button 
                 onClick={() => setBreadAnalysisOpen(false)}
+                className="mt-4 px-4 py-2 bg-gray-500 text-white rounded"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )
+      )}
+      {typeof AskGemini === 'function' ? (
+        <AskGemini
+          open={askGeminiOpen}
+          onOpenChange={setAskGeminiOpen}
+          context={activeBakes.length > 0 ? `Active bake: ${activeBakes[0].recipeName}` : undefined}
+        />
+      ) : (
+        askGeminiOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg">
+              <p>Ask Gemini AI assistant is temporarily unavailable.</p>
+              <button 
+                onClick={() => setAskGeminiOpen(false)}
                 className="mt-4 px-4 py-2 bg-gray-500 text-white rounded"
               >
                 Close
