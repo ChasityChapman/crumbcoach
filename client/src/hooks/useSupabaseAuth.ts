@@ -88,6 +88,11 @@ export function useSupabaseAuth() {
         throw new Error('Network connection failed')
       }
       
+      if (!error && data.user && data.session) {
+        setUser(data.user)
+        setSession(data.session)
+      }
+      
       return { data, error }
     } catch (networkError: any) {
       console.error('Network/connection error during sign in:', networkError.message || networkError)
@@ -148,6 +153,11 @@ export function useSupabaseAuth() {
       
       if (error && error.message.includes('fetch')) {
         throw new Error('Network connection failed')
+      }
+      
+      if (!error && data.user && data.session) {
+        setUser(data.user)
+        setSession(data.session)
       }
       
       return { data, error }

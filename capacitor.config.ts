@@ -6,7 +6,7 @@ const isDevelopment = process.env.NODE_ENV === 'development'
 const useDevServer = process.env.CAPACITOR_DEV_SERVER === 'true'
 
 const config: CapacitorConfig = {
-  appId: 'com.crumbcoach.app',
+  appId: 'com.crumbcoach.com',
   appName: 'Crumb Coach',
   webDir: 'dist/public',
   bundledWebRuntime: false,
