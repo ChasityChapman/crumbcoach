@@ -19,3 +19,21 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Reduce WebView/Chromium logging spam
+-assumenosideeffects class android.util.Log {
+    public static int v(...);
+    public static int d(...);
+    public static int i(...);
+}
+
+# Remove verbose logging from Chromium WebView
+-assumenosideeffects class org.chromium.** {
+    void log*(...);
+    void debug*(...);
+    void info*(...);
+}
+
+# Keep essential WebView classes but remove debug logging
+-keep class org.chromium.** { *; }
+-dontwarn org.chromium.**
