@@ -13,7 +13,7 @@ import { Loader2, Camera, Sparkles, TrendingUp, AlertCircle, Thermometer, Upload
 import { analyzeBreadPhoto, convertFileToBase64, type BreadAnalysis, type BreadContext } from "@/lib/breadAnalysis";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import { safeBakeQueries, safeSensorQueries, safeRecipeQueries } from "@/lib/safeQueries";
+import { safeBakeQueries, safeSensorQueries, safeRecipeQueries, safeTimelineStepQueries } from "@/lib/safeQueries";
 import { useSensors } from "@/hooks/use-sensors";
 
 interface BreadAnalysisModalProps {
@@ -38,12 +38,14 @@ export default function BreadAnalysisModal({ open, onOpenChange, initialImage }:
   // Get user's bakes to show photos from
   const { data: recentBakes = [] } = useQuery<any[]>({
     queryKey: ['/api/bakes'],
+    queryFn: safeBakeQueries.getAll,
     enabled: open,
   });
 
   // Get active bake data for auto-populating context
   const { data: allBakes = [] } = useQuery<any[]>({
     queryKey: ['/api/bakes'],
+    queryFn: safeBakeQueries.getAll,
     enabled: open,
   });
 
@@ -60,6 +62,7 @@ export default function BreadAnalysisModal({ open, onOpenChange, initialImage }:
   // Get recipes to match with active bake
   const { data: recipes = [] } = useQuery<any[]>({
     queryKey: ['/api/recipes'],
+    queryFn: safeRecipeQueries.getAll,
     enabled: open,
   });
 
@@ -69,6 +72,7 @@ export default function BreadAnalysisModal({ open, onOpenChange, initialImage }:
   // Get timeline steps for the active bake to understand current step
   const { data: timelineSteps = [] } = useQuery<any[]>({
     queryKey: [`/api/bakes/${activeBake?.id}/timeline`],
+    queryFn: activeBake?.id ? () => safeTimelineStepQueries.getByBakeId(activeBake.id) : () => Promise.resolve([]),
     enabled: open && !!activeBake?.id,
   });
 
