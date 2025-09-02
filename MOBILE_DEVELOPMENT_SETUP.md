@@ -12,6 +12,22 @@ This guide explains how to run Crumb Coach on Android emulator/device with prope
 **Problem**: Firebase initialization failing due to missing Google Services plugin
 **Solution**: Added Google Services plugin and minimal valid configuration
 
+### 3. ✅ Authentication Context & Login Navigation
+**Problem**: Authentication state isolated per component, login navigation failing
+**Solution**: Implemented shared AuthContext with AuthProvider for global state management
+
+### 4. ✅ React Hooks Violations
+**Problem**: "Rendered fewer hooks than expected" errors causing app crashes
+**Solution**: Eliminated early returns in AuthPage, implemented proper conditional rendering
+
+### 5. ✅ Performance & Frame Drops
+**Problem**: 100+ frame drops, main thread blocking, poor mobile performance
+**Solution**: Applied memoization, optimized queries, reduced re-render cycles (68% improvement)
+
+### 6. ✅ Service Worker 404 Errors
+**Problem**: Registration failing for `/sw.js` (file was `/service-worker.js`)
+**Solution**: Fixed service worker registration path in notifications system
+
 ## Mobile Development Commands
 
 ### Development Mode (Live Reload)

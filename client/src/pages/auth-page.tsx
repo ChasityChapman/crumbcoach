@@ -43,9 +43,13 @@ export default function AuthPage() {
 
   const [isLoading, setIsLoading] = useState(false);
 
+  // State for showing redirect message
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
   // Redirect if already authenticated - using useEffect to avoid hooks violation
   useEffect(() => {
     if (user) {
+      setIsRedirecting(true);
       setLocation("/");
     }
   }, [user, setLocation]);
@@ -154,25 +158,22 @@ export default function AuthPage() {
   };
 
 
-  // Show loading state if user is authenticated (while redirecting)
-  if (user) {
-    return (
-      <div className="min-h-screen bg-sourdough-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 bg-sourdough-500 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          </div>
-          <p className="text-sourdough-600">Redirecting...</p>
-        </div>
-      </div>
-    );
-  }
-
+  // Always render consistent structure - no conditional returns
   return (
     <div className="min-h-screen bg-gradient-to-br from-sourdough-50 to-sourdough-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo and App Name */}
-        <div className="text-center mb-8">
+        {/* Show redirecting message if user is authenticated */}
+        {(user || isRedirecting) ? (
+          <div className="text-center">
+            <div className="w-8 h-8 bg-sourdough-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            </div>
+            <p className="text-sourdough-600">Redirecting...</p>
+          </div>
+        ) : (
+          <>
+            {/* Logo and App Name */}
+            <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
             <img 
               src={crumbCoachLogo} 
@@ -356,9 +357,11 @@ export default function AuthPage() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs sm:text-sm text-sourdough-500 mt-6">
-          Start your sourdough journey with expert guidance every step of the way
-        </p>
+            <p className="text-center text-xs sm:text-sm text-sourdough-500 mt-6">
+              Start your sourdough journey with expert guidance every step of the way
+            </p>
+          </>
+        )}
       </div>
     </div>
   );
