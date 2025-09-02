@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { BakeNote } from "@shared/schema";
+import { safeBakeNoteQueries } from "@/lib/safeQueries";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,6 +22,7 @@ export default function NotesModal({ isOpen, onClose, bakeId }: NotesModalProps)
 
   const { data: notes } = useQuery<BakeNote[]>({
     queryKey: ["/api/bakes", bakeId, "notes"],
+    queryFn: bakeId ? () => safeBakeNoteQueries.getByBakeId(bakeId) : () => Promise.resolve([]),
     enabled: !!bakeId,
   });
 

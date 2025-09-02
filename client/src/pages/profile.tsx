@@ -11,6 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useLocation } from "wouter";
 import type { Bake, Recipe, User as UserType } from "@shared/schema";
+import { safeBakeQueries, safeRecipeQueries } from "@/lib/safeQueries";
 import AdvancedSettingsModal from "@/components/advanced-settings-modal";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
@@ -39,10 +40,12 @@ export default function Profile() {
   // Fetch real baking data
   const { data: bakes } = useQuery<Bake[]>({
     queryKey: ["/api/bakes"],
+    queryFn: safeBakeQueries.getAll,
   });
 
   const { data: recipes } = useQuery<Recipe[]>({
     queryKey: ["/api/recipes"],
+    queryFn: safeRecipeQueries.getAll,
   });
 
   // Calculate statistics

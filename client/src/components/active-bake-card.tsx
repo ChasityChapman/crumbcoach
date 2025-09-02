@@ -3,6 +3,7 @@ import { formatDistanceToNow } from "date-fns";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { safeRecipeQueries, safeTimelineStepQueries } from "@/lib/safeQueries";
 import { Button } from "@/components/ui/button";
 import { Timer, Play, Pause, CheckCircle, SkipForward, ChevronDown, ChevronUp, X, Camera, FileText, Clock, RefreshCw, Bell, BellOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -84,10 +85,12 @@ export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
   
   const { data: timelineSteps } = useQuery<TimelineStep[]>({
     queryKey: [`/api/bakes/${bake.id}/timeline`],
+    queryFn: () => safeTimelineStepQueries.getByBakeId(bake.id),
   });
   
   const { data: recipes } = useQuery<Recipe[]>({
     queryKey: ["/api/recipes"],
+    queryFn: safeRecipeQueries.getAll,
   });
   
   // Calculate progress based on completed steps
