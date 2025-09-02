@@ -15,7 +15,7 @@ import NotesModal from "@/components/notes-modal";
 import StartBakeModal from "@/components/start-bake-modal";
 import RecipeModal from "@/components/recipe-modal";
 import BreadAnalysisModal from "@/components/bread-analysis-modal";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Bell, LogOut, User as UserIcon, Sparkles } from "lucide-react";
 import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_1756224893332.png";
 import { useToast } from "@/hooks/use-toast";
@@ -40,12 +40,12 @@ export default function Home() {
   const [breadAnalysisOpen, setBreadAnalysisOpen] = useState(false);
   const [isCreatingBake, setIsCreatingBake] = useState(false);
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     await signOut();
     // The auth state change will automatically redirect to auth page
-  };
+  }, [signOut]);
 
-  const getUserDisplayName = () => {
+  const getUserDisplayName = useMemo(() => {
     if (user?.user_metadata?.firstName && user?.user_metadata?.lastName) {
       return `${user.user_metadata.firstName} ${user.user_metadata.lastName}`;
     }
@@ -56,9 +56,9 @@ export default function Home() {
       return user.email;
     }
     return "User";
-  };
+  }, [user?.user_metadata?.firstName, user?.user_metadata?.lastName, user?.email]);
 
-  const getUserInitials = () => {
+  const getUserInitials = useMemo(() => {
     if (user?.user_metadata?.firstName && user?.user_metadata?.lastName) {
       return `${user.user_metadata.firstName[0]}${user.user_metadata.lastName[0]}`.toUpperCase();
     }
@@ -69,53 +69,72 @@ export default function Home() {
       return user.email[0].toUpperCase();
     }
     return "U";
-  };
+  }, [user?.user_metadata?.firstName, user?.user_metadata?.lastName, user?.email]);
   
-  // Clear any stale bake cache data on component mount and test Supabase connection
+  // Initialize data and test connection only once
   useEffect(() => {
-    // Clear all bake-related cache on mount to ensure fresh data
-    queryClient.removeQueries({ 
-      predicate: (query) => {
-        const key = query.queryKey[0] as string;
-        return key?.includes('/api/bakes/') && (key?.includes('/timeline') || key?.includes('/notes') || key?.includes('/photos'));
-      }
-    });
+    let mounted = true;
     
-    // Test Supabase connection
-    if (user) {
-      testSupabaseConnection().then(result => {
-        console.log('Supabase connection test result:', result);
-        if (result.success) {
-          testDatabaseTables().then(tableResult => {
-            console.log('Database tables test result:', tableResult);
-          });
+    // Only clear cache and test connection if user just logged in
+    if (user && mounted) {
+      // Clear only stale bake-related cache data once
+      queryClient.removeQueries({ 
+        predicate: (query) => {
+          const key = query.queryKey[0] as string;
+          return key?.includes('/api/bakes/') && (key?.includes('/timeline') || key?.includes('/notes') || key?.includes('/photos'));
         }
       });
+      
+      // Test connection once per session
+      const testConnection = async () => {
+        try {
+          const result = await testSupabaseConnection();
+          if (mounted) console.log('Supabase connection test result:', result);
+          if (result.success && mounted) {
+            const tableResult = await testDatabaseTables();
+            if (mounted) console.log('Database tables test result:', tableResult);
+          }
+        } catch (error) {
+          if (mounted) console.error('Connection test error:', error);
+        }
+      };
+      
+      testConnection();
     }
-  }, [user]);
+    
+    return () => { mounted = false; };
+  }, [user?.id]); // Only run when user ID changes
 
   // Get all bakes and filter for active ones
   const { data: allBakes } = useQuery<Bake[]>({
     queryKey: ["bakes"],
     queryFn: bakeQueries.getAll,
-    staleTime: 0, // Always refetch to ensure fresh data
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    refetchOnWindowFocus: false, // Reduce unnecessary refetches
+    refetchOnMount: "always",
+    enabled: !!user, // Only query when user is authenticated
   });
   
-  const activeBakes = (allBakes || [])
-    .filter((bake: Bake) => bake && bake.id && bake.status === 'active')
-    .sort((a, b) => new Date(b.startTime || 0).getTime() - new Date(a.startTime || 0).getTime()); // Sort by newest first
+  const activeBakes = useMemo(() => 
+    (allBakes || [])
+      .filter((bake: Bake) => bake && bake.id && bake.status === 'active')
+      .sort((a, b) => new Date(b.startTime || 0).getTime() - new Date(a.startTime || 0).getTime()),
+    [allBakes]
+  ); // Memoize expensive filtering and sorting
 
   const { data: latestSensor } = useQuery<SensorReading | null>({
     queryKey: ["sensors", "latest"],
     queryFn: sensorQueries.getLatest,
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: 60000, // Reduced to refresh every 60 seconds to reduce load
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    enabled: !!user && activeBakes.length > 0, // Only query if there are active bakes
   });
 
   const { data: recipes } = useQuery<Recipe[]>({
     queryKey: ["recipes"],
     queryFn: recipeQueries.getAll,
+    staleTime: 10 * 60 * 1000, // Recipes don't change often - 10 minutes
+    enabled: !!user,
   });
 
   // Timeline data is now handled individually by each ActiveBakeCard

@@ -89,7 +89,7 @@ export function useSupabaseAuth() {
         }
       }
     }
-  }, [])
+  }, []) // Empty dependency array to run only once on mount
 
   const signIn = async (email: string, password: string) => {
     try {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_1756224893332.png";
 import { Button } from "@/components/ui/button";
@@ -27,12 +27,6 @@ export default function AuthPage() {
   const { toast } = useToast();
   const { signIn, signUp, user, setDemoMode } = useSupabaseAuth();
 
-  // Redirect if already authenticated
-  if (user) {
-    setLocation("/");
-    return null;
-  }
-
   // Login form state
   const [loginData, setLoginData] = useState<LoginData>({
     email: "",
@@ -48,6 +42,13 @@ export default function AuthPage() {
   });
 
   const [isLoading, setIsLoading] = useState(false);
+
+  // Redirect if already authenticated - using useEffect to avoid hooks violation
+  useEffect(() => {
+    if (user) {
+      setLocation("/");
+    }
+  }, [user, setLocation]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,7 +83,10 @@ export default function AuthPage() {
             description: "You've successfully logged in.",
           });
         }
-        setLocation("/");
+        // Wait a brief moment for user state to update before navigating
+        setTimeout(() => {
+          setLocation("/");
+        }, 100);
       }
     } catch (error) {
       toast({
@@ -133,7 +137,10 @@ export default function AuthPage() {
             description: "Your account has been created successfully.",
           });
         }
-        setLocation("/");
+        // Wait a brief moment for user state to update before navigating
+        setTimeout(() => {
+          setLocation("/");
+        }, 100);
       }
     } catch (error) {
       toast({
@@ -146,6 +153,20 @@ export default function AuthPage() {
     }
   };
 
+
+  // Show loading state if user is authenticated (while redirecting)
+  if (user) {
+    return (
+      <div className="min-h-screen bg-sourdough-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 bg-sourdough-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          </div>
+          <p className="text-sourdough-600">Redirecting...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sourdough-50 to-sourdough-100 flex items-center justify-center p-4">
