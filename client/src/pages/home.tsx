@@ -15,6 +15,11 @@ import NotesModal from "@/components/notes-modal";
 import StartBakeModal from "@/components/start-bake-modal";
 import RecipeModal from "@/components/recipe-modal";
 import BreadAnalysisModal from "@/components/bread-analysis-modal";
+
+// Guard against undefined component
+if (typeof BreadAnalysisModal !== 'function') {
+  console.error('BreadAnalysisModal is not a function:', typeof BreadAnalysisModal, BreadAnalysisModal);
+}
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Bell, LogOut, User as UserIcon, Sparkles } from "lucide-react";
 import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_1756224893332.png";
@@ -367,10 +372,26 @@ export default function Home() {
         isOpen={newRecipeOpen}
         onClose={() => setNewRecipeOpen(false)}
       />
-      <BreadAnalysisModal
-        open={breadAnalysisOpen}
-        onOpenChange={setBreadAnalysisOpen}
-      />
+      {typeof BreadAnalysisModal === 'function' ? (
+        <BreadAnalysisModal
+          open={breadAnalysisOpen}
+          onOpenChange={setBreadAnalysisOpen}
+        />
+      ) : (
+        breadAnalysisOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg">
+              <p>AI Bread Analysis feature is temporarily unavailable.</p>
+              <button 
+                onClick={() => setBreadAnalysisOpen(false)}
+                className="mt-4 px-4 py-2 bg-gray-500 text-white rounded"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )
+      )}
     </div>
   );
 }

@@ -22,7 +22,7 @@ interface BreadAnalysisModalProps {
   initialImage?: string;
 }
 
-export default function BreadAnalysisModal({ open, onOpenChange, initialImage }: BreadAnalysisModalProps) {
+function BreadAnalysisModal({ open, onOpenChange, initialImage }: BreadAnalysisModalProps) {
   const [selectedImage, setSelectedImage] = useState<string>(initialImage || "");
   const [analysis, setAnalysis] = useState<BreadAnalysis | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -238,6 +238,17 @@ export default function BreadAnalysisModal({ open, onOpenChange, initialImage }:
         description: "AI analysis feature is currently unavailable.",
         variant: "destructive",
       });
+      return;
+    }
+
+    // Additional function guards for dependencies
+    if (typeof toast !== 'function') {
+      console.error('Ask Gemini missing: toast function not available');
+      return;
+    }
+    
+    if (typeof setIsAnalyzing !== 'function') {
+      console.error('Ask Gemini missing: setIsAnalyzing function not available');
       return;
     }
 
@@ -651,3 +662,8 @@ export default function BreadAnalysisModal({ open, onOpenChange, initialImage }:
     </Dialog>
   );
 }
+
+// Set display name for debugging
+BreadAnalysisModal.displayName = "BreadAnalysisModal";
+
+export default BreadAnalysisModal;
