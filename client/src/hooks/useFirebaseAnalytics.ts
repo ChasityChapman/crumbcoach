@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { useLocation } from 'wouter';
-import { useAuth } from '@/hooks/useAuth';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import type { User } from '@shared/schema';
 import {
   initializeFirebase,
@@ -20,7 +20,7 @@ import {
 // Hook to handle Firebase Analytics initialization and user tracking
 export const useFirebaseAnalytics = () => {
   const [location] = useLocation();
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
 
   // Initialize Firebase on mount
   useEffect(() => {

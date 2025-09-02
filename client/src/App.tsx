@@ -28,6 +28,9 @@ function Router() {
   const isAuthenticated = !!user;
   const isLoading = loading;
   
+  // Debug logging
+  console.log('Router state:', { user: !!user, loading, isAuthenticated });
+  
   // Initialize mobile features with error handling
   useEffect(() => {
     try {

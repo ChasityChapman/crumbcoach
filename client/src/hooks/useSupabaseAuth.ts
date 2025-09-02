@@ -131,6 +131,8 @@ export function useSupabaseAuth() {
       }
       
       console.log('Demo user session created successfully')
+      setUser(mockUser)
+      setSession(mockSession)
       return { 
         data: { user: mockUser, session: mockSession }, 
         error: null,
@@ -198,6 +200,8 @@ export function useSupabaseAuth() {
       }
       
       console.log('Demo user account created successfully')
+      setUser(mockUser)
+      setSession(mockSession)
       return { 
         data: { user: mockUser, session: mockSession }, 
         error: null,

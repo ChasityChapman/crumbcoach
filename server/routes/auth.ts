@@ -6,7 +6,6 @@ import { db } from "../db";
 import { authenticateUser, type AuthenticatedRequest } from "../middleware/supabaseAuth";
 import { supabase, supabaseAdmin } from "../services/supabase";
 import GDPRService from "../services/gdprService";
-import { JWTService, TokenService } from "../services/jwt";
 import { emailService } from "../services/email";
 import { 
   users, 

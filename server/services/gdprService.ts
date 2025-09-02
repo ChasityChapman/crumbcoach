@@ -1,7 +1,7 @@
 import { db } from "../db";
 import { storage } from "../storage";
 import { emailService } from "./email";
-import { TokenService } from "./jwt";
+import { randomUUID } from "crypto";
 import {
   users,
   recipes,
@@ -369,7 +369,9 @@ export class GDPRService {
     }
 
     // Generate secure confirmation token
-    const tokenData = TokenService.generateAccountDeletionToken({ userId, email: user.email });
+    const token = randomUUID();
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24); // 24 hours from now
     
     // Get data summary
     const dataSummary = await this.getDataSummary(userId);
@@ -377,9 +379,9 @@ export class GDPRService {
     const deletionRequest: InsertDataDeletionRequest = {
       userId,
       userEmail: user.email,
-      requestToken: tokenData.hashedToken,
+      requestToken: token,
       requestType,
-      confirmationExpiresAt: tokenData.expiresAt,
+      confirmationExpiresAt: expiresAt,
       dataSummary,
       auditTrail: {
         requestInitiated: new Date(),
@@ -410,9 +412,9 @@ export class GDPRService {
 
 You have requested ${requestType === 'full_deletion' ? 'complete deletion' : 'anonymization'} of your CrumbCoach account.
 
-To confirm this request, use this confirmation token: ${tokenData.token}
+To confirm this request, use this confirmation token: ${token}
 
-This token will expire on ${tokenData.expiresAt.toLocaleString()}.
+This token will expire on ${expiresAt.toLocaleString()}.
 
 If you did not make this request, please ignore this email.
 
@@ -421,8 +423,8 @@ Note: This action cannot be undone. All your baking data, recipes, and account i
 
     return {
       requestId: request.id,
-      confirmationToken: tokenData.token,
-      expiresAt: tokenData.expiresAt
+      confirmationToken: token,
+      expiresAt: expiresAt
     };
   }
 
@@ -447,10 +449,12 @@ Note: This action cannot be undone. All your baking data, recipes, and account i
     }
 
     // Validate token
-    const validation = TokenService.validateTokenWithExpiry(confirmationToken);
+    if (request.requestToken !== confirmationToken) {
+      throw new Error('Invalid confirmation token');
+    }
 
-    if (!validation.isValid) {
-      throw new Error(validation.reason || 'Invalid confirmation token');
+    if (request.confirmationExpiresAt && request.confirmationExpiresAt < new Date()) {
+      throw new Error('Confirmation token has expired');
     }
 
     // Mark as confirmed and start processing
