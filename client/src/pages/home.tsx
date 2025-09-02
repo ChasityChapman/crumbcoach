@@ -201,7 +201,7 @@ export default function Home() {
       }
 
       // Check if timeline steps already exist for this bake
-      const existingSteps = await timelineStepQueries.getByBakeId(bake.id);
+      const existingSteps = await safeTimelineStepQueries.getByBakeId(bake.id);
       if (existingSteps && existingSteps.length > 0) {
         toast({
           title: "Timeline Already Exists",

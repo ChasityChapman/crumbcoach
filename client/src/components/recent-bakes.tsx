@@ -33,7 +33,7 @@ export default function RecentBakes() {
   // Restart bake mutation
   const restartBakeMutation = useMutation({
     mutationFn: async (bake: Bake) => {
-      return bakeQueries.create({
+      return safeBakeQueries.create({
         recipeId: bake.recipeId,
         name: `${bake.name} (Restart)`,
         status: "active",

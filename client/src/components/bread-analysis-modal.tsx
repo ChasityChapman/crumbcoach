@@ -230,6 +230,17 @@ export default function BreadAnalysisModal({ open, onOpenChange, initialImage }:
       return;
     }
 
+    // Defensive check to ensure function is properly imported
+    if (typeof analyzeBreadPhoto !== 'function') {
+      console.error('analyzeBreadPhoto is not a function:', typeof analyzeBreadPhoto, analyzeBreadPhoto);
+      toast({
+        title: "Analysis unavailable",
+        description: "AI analysis feature is currently unavailable.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsAnalyzing(true);
     try {
       // Convert image to base64
