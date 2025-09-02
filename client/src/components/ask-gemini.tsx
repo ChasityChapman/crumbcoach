@@ -17,9 +17,65 @@ function AskGemini({ open, onOpenChange, context }: AskGeminiProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
+  // Defensive checks for required functions
+  const safeToast = (options: any) => {
+    if (typeof toast === 'function') {
+      try {
+        return toast(options);
+      } catch (error) {
+        console.error('Toast function error:', error);
+      }
+    } else {
+      console.warn('Toast function not available:', typeof toast);
+    }
+  };
+
+  const safeOnOpenChange = (open: boolean) => {
+    if (typeof onOpenChange === 'function') {
+      try {
+        return onOpenChange(open);
+      } catch (error) {
+        console.error('onOpenChange callback error:', error);
+      }
+    } else {
+      console.warn('onOpenChange callback not available:', typeof onOpenChange);
+    }
+  };
+
+  // Defensive checks for state setters
+  const safeSetQuestion = (value: string) => {
+    if (typeof setQuestion === 'function') {
+      try {
+        return setQuestion(value);
+      } catch (error) {
+        console.error('setQuestion error:', error);
+      }
+    }
+  };
+
+  const safeSetResponse = (value: string) => {
+    if (typeof setResponse === 'function') {
+      try {
+        return setResponse(value);
+      } catch (error) {
+        console.error('setResponse error:', error);
+      }
+    }
+  };
+
+  const safeSetIsLoading = (value: boolean) => {
+    if (typeof setIsLoading === 'function') {
+      try {
+        return setIsLoading(value);
+      } catch (error) {
+        console.error('setIsLoading error:', error);
+      }
+    }
+  };
+
   const handleAskQuestion = async () => {
     if (!question.trim()) {
-      toast({
+      safeToast({
         title: "Please enter a question",
         description: "Ask me anything about sourdough baking!",
         variant: "destructive",
@@ -27,7 +83,7 @@ function AskGemini({ open, onOpenChange, context }: AskGeminiProps) {
       return;
     }
 
-    setIsLoading(true);
+    safeSetIsLoading(true);
     try {
       // Simulate AI response for now
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -41,27 +97,27 @@ ${context ? `Context: ${context}` : ""}
 
 For now, I recommend checking your starter health, monitoring fermentation temperature, and ensuring proper hydration levels for your dough.`;
 
-      setResponse(mockResponse);
-      toast({
+      safeSetResponse(mockResponse);
+      safeToast({
         title: "AI Response Ready",
         description: "I've analyzed your question and provided recommendations.",
       });
     } catch (error) {
       console.error('Ask Gemini error:', error);
-      toast({
+      safeToast({
         title: "Unable to get response",
         description: "There was an issue connecting to the AI assistant.",
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      safeSetIsLoading(false);
     }
   };
 
   const handleClose = () => {
-    setQuestion("");
-    setResponse("");
-    onOpenChange(false);
+    safeSetQuestion("");
+    safeSetResponse("");
+    safeOnOpenChange(false);
   };
 
   return (
@@ -82,7 +138,7 @@ For now, I recommend checking your starter health, monitoring fermentation tempe
             <Textarea
               id="question"
               value={question}
-              onChange={(e) => setQuestion(e.target.value)}
+              onChange={(e) => safeSetQuestion(e.target.value)}
               placeholder="Ask me about starter maintenance, fermentation timing, shaping techniques, troubleshooting issues..."
               className="min-h-[100px]"
             />
