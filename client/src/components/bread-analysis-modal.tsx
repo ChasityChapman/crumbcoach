@@ -13,7 +13,7 @@ import { Loader2, Camera, Sparkles, TrendingUp, AlertCircle, Thermometer, Upload
 import { analyzeBreadPhoto, convertFileToBase64, type BreadAnalysis, type BreadContext } from "@/lib/breadAnalysis";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import { bakeQueries, sensorQueries, recipeQueries } from "@/lib/supabaseQueries";
+import { safeBakeQueries, safeSensorQueries, safeRecipeQueries } from "@/lib/safeQueries";
 import { useSensors } from "@/hooks/use-sensors";
 
 interface BreadAnalysisModalProps {
@@ -53,7 +53,7 @@ export default function BreadAnalysisModal({ open, onOpenChange, initialImage }:
   // Get latest sensor readings  
   const { data: latestSensor } = useQuery({
     queryKey: ["sensors", "latest"],
-    queryFn: sensorQueries.getLatest,
+    queryFn: safeSensorQueries.getLatest,
     enabled: open,
   });
 

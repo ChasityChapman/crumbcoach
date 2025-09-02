@@ -186,7 +186,7 @@ export class BakeNotifications {
     }
 
     try {
-      this.registration = await navigator.serviceWorker.register('/service-worker.js', {
+      this.registration = await navigator.serviceWorker.register('/sw.js', {
         scope: '/'
       });
       console.log('Service Worker registered successfully');

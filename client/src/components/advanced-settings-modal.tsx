@@ -28,6 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 
 interface AdvancedSettingsModalProps {
   isOpen: boolean;
@@ -36,6 +37,7 @@ interface AdvancedSettingsModalProps {
 
 export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSettingsModalProps) {
   const { toast } = useToast();
+  const { user } = useSupabaseAuth();
   
   // Load settings from localStorage on mount
   const loadSettings = () => {
@@ -84,7 +86,6 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
   const { data: currentUser, error: userQueryError } = useQuery({
     queryKey: ['current-user'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         console.log('No authenticated user found');
         return null;
@@ -105,7 +106,8 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
       
       console.log('User data loaded:', data);
       return data;
-    }
+    },
+    enabled: !!user
   });
 
   // Log any user query errors
@@ -126,7 +128,6 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
     mutationFn: async ({ firstName, lastName }: { firstName: string; lastName: string }) => {
       console.log('Updating user profile:', { firstName, lastName });
       
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
       
       console.log('Current user ID:', user.id);

@@ -84,7 +84,6 @@ function Router() {
       )}
       
       {/* Public routes - available regardless of auth status */}
-      <Route path="/auth" component={AuthPage} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />
       <Route component={NotFound} />

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { bakeQueries, bakeNoteQueries, bakePhotoQueries, timelineStepQueries, recipeQueries } from "@/lib/supabaseQueries";
+import { safeBakeQueries, safeBakeNoteQueries, safeBakePhotoQueries, safeTimelineStepQueries, safeRecipeQueries } from "@/lib/safeQueries";
 import type { Bake, BakeNote, BakePhoto, TimelineStep, Recipe } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
@@ -25,25 +25,25 @@ function BakeDetailModal({ bake, isOpen, onClose }: BakeDetailModalProps) {
 
   const { data: notes } = useQuery<BakeNote[]>({
     queryKey: ["bake_notes", bake?.id],
-    queryFn: () => bakeNoteQueries.getByBakeId(bake!.id),
+    queryFn: () => safeBakeNoteQueries.getByBakeId(bake!.id),
     enabled: isOpen && !!bake?.id,
   });
 
   const { data: photos } = useQuery<BakePhoto[]>({
     queryKey: ["bake_photos", bake?.id],
-    queryFn: () => bakePhotoQueries.getByBakeId(bake!.id),
+    queryFn: () => safeBakePhotoQueries.getByBakeId(bake!.id),
     enabled: isOpen && !!bake?.id,
   });
 
   const { data: timelineSteps } = useQuery<TimelineStep[]>({
     queryKey: ["timeline_steps", bake?.id],
-    queryFn: () => timelineStepQueries.getByBakeId(bake!.id),
+    queryFn: () => safeTimelineStepQueries.getByBakeId(bake!.id),
     enabled: isOpen && !!bake?.id,
   });
 
   const { data: recipe } = useQuery<Recipe | undefined>({
     queryKey: ["recipe", bake?.recipeId],
-    queryFn: () => bake?.recipeId ? recipeQueries.getById(bake.recipeId) : Promise.resolve(undefined),
+    queryFn: () => bake?.recipeId ? safeRecipeQueries.getById(bake.recipeId) : Promise.resolve(undefined),
     enabled: isOpen && !!bake?.recipeId,
   });
 
@@ -258,13 +258,13 @@ export default function RecentBakesPage() {
 
   const { data: bakes } = useQuery<Bake[]>({
     queryKey: ["bakes"],
-    queryFn: bakeQueries.getAll,
+    queryFn: safeBakeQueries.getAll,
   });
 
   // Restart bake mutation
   const restartBakeMutation = useMutation({
     mutationFn: async (bake: Bake) => {
-      return bakeQueries.create({
+      return safeBakeQueries.create({
         recipeId: bake.recipeId,
         name: `${bake.name} (Restart)`,
         status: "active",

@@ -1,7 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import type { Bake, Recipe, SensorReading, TimelineStep } from "@shared/schema";
-import { bakeQueries, sensorQueries, recipeQueries, timelineStepQueries } from "@/lib/supabaseQueries";
+import { safeBakeQueries, safeSensorQueries, safeRecipeQueries, safeTimelineStepQueries } from "@/lib/safeQueries";
 import type { User } from "@supabase/supabase-js";
 import ActiveBakeCard from "@/components/active-bake-card";
 import SensorWidget from "@/components/sensor-widget";
@@ -108,7 +108,7 @@ export default function Home() {
   // Get all bakes and filter for active ones
   const { data: allBakes } = useQuery<Bake[]>({
     queryKey: ["bakes"],
-    queryFn: bakeQueries.getAll,
+    queryFn: safeBakeQueries.getAll,
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
     refetchOnWindowFocus: false, // Reduce unnecessary refetches
     refetchOnMount: "always",
@@ -124,7 +124,7 @@ export default function Home() {
 
   const { data: latestSensor } = useQuery<SensorReading | null>({
     queryKey: ["sensors", "latest"],
-    queryFn: sensorQueries.getLatest,
+    queryFn: safeSensorQueries.getLatest,
     refetchInterval: 60000, // Reduced to refresh every 60 seconds to reduce load
     staleTime: 30000, // Consider data fresh for 30 seconds
     enabled: !!user && activeBakes.length > 0, // Only query if there are active bakes
@@ -132,7 +132,7 @@ export default function Home() {
 
   const { data: recipes } = useQuery<Recipe[]>({
     queryKey: ["recipes"],
-    queryFn: recipeQueries.getAll,
+    queryFn: safeRecipeQueries.getAll,
     staleTime: 10 * 60 * 1000, // Recipes don't change often - 10 minutes
     enabled: !!user,
   });
@@ -164,7 +164,7 @@ export default function Home() {
       // Create each timeline step in Supabase
       const createdSteps = [];
       for (const stepData of timelineSteps) {
-        const created = await timelineStepQueries.create(stepData);
+        const created = await safeTimelineStepQueries.create(stepData);
         createdSteps.push(created);
       }
       

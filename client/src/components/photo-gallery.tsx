@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { bakePhotoQueries } from "@/lib/supabaseQueries";
+import { safeBakePhotoQueries } from "@/lib/safeQueries";
 import { Camera, Image as ImageIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import type { BakePhoto } from "@shared/schema";
@@ -16,7 +16,7 @@ interface BakePhotoWithUrl extends BakePhoto {
 export default function PhotoGallery({ bakeId, className = "" }: PhotoGalleryProps) {
   const { data: photos, isLoading, error } = useQuery({
     queryKey: ["bake-photos", bakeId],
-    queryFn: () => bakePhotoQueries.getByBakeId(bakeId),
+    queryFn: () => safeBakePhotoQueries.getByBakeId(bakeId),
     enabled: !!bakeId,
   });
 

@@ -87,10 +87,7 @@ export default function AuthPage() {
             description: "You've successfully logged in.",
           });
         }
-        // Wait a brief moment for user state to update before navigating
-        setTimeout(() => {
-          setLocation("/");
-        }, 100);
+        // Navigation handled by useEffect when user state updates
       }
     } catch (error) {
       toast({
@@ -141,10 +138,7 @@ export default function AuthPage() {
             description: "Your account has been created successfully.",
           });
         }
-        // Wait a brief moment for user state to update before navigating
-        setTimeout(() => {
-          setLocation("/");
-        }, 100);
+        // Navigation handled by useEffect when user state updates
       }
     } catch (error) {
       toast({

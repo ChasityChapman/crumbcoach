@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
-import { bakeQueries } from "@/lib/supabaseQueries";
+import { safeBakeQueries } from "@/lib/safeQueries";
 import type { Bake, BakePhoto } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Share2, RefreshCw, FileText, X, RotateCcw } from "lucide-react";
@@ -13,7 +13,7 @@ export default function RecentBakes() {
   const { toast } = useToast();
   const { data: bakes } = useQuery<Bake[]>({
     queryKey: ["bakes"],
-    queryFn: bakeQueries.getAll,
+    queryFn: safeBakeQueries.getAll,
   });
 
   const handleShare = async (bake: Bake) => {

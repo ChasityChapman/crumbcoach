@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import type { Tutorial } from "@shared/schema";
-import { tutorialQueries } from "@/lib/supabaseQueries";
+import { safeTutorialQueries } from "@/lib/safeQueries";
 import BottomNavigation from "@/components/bottom-navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +18,7 @@ export default function Tutorials() {
   
   const { data: tutorials, isLoading } = useQuery<Tutorial[]>({
     queryKey: ["tutorials"],
-    queryFn: tutorialQueries.getAll,
+    queryFn: safeTutorialQueries.getAll,
   });
   
   const startTutorial = (tutorial: Tutorial) => {

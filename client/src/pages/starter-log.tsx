@@ -20,7 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { insertStarterLogSchema, type StarterLog, type Recipe } from "@shared/schema";
 import { format } from "date-fns";
 import BottomNavigation from "@/components/bottom-navigation";
-import { starterLogQueries, recipeQueries } from "@/lib/supabaseQueries";
+import { safeStarterLogQueries, safeRecipeQueries } from "@/lib/safeQueries";
 import RecipeModal from "@/components/recipe-modal";
 
 // Form schema with validation - exclude userId since it's added automatically
@@ -86,13 +86,13 @@ export default function StarterLogPage() {
   // Fetch starter logs
   const { data: starterLogs = [], isLoading } = useQuery<StarterLog[]>({
     queryKey: ["starter-logs"],
-    queryFn: starterLogQueries.getAll,
+    queryFn: safeStarterLogQueries.getAll,
   });
 
   // Fetch recipes for selection
   const { data: recipes = [] } = useQuery<Recipe[]>({
     queryKey: ["recipes"],
-    queryFn: recipeQueries.getAll,
+    queryFn: safeRecipeQueries.getAll,
   });
 
   const form = useForm<StarterLogFormData>({
@@ -143,7 +143,7 @@ export default function StarterLogPage() {
 
   // Create starter log mutation
   const createLogMutation = useMutation({
-    mutationFn: starterLogQueries.create,
+    mutationFn: safeStarterLogQueries.create,
     onSuccess: () => {
       console.log('Starter log saved successfully');
       queryClient.invalidateQueries({ queryKey: ["starter-logs"] });
