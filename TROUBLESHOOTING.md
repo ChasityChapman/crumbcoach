@@ -85,6 +85,31 @@ const isDemoModeAllowed = import.meta.env.VITE_ENABLE_DEMO_MODE === 'true'
 #### Network Detection
 Demo mode only activates on actual network failures, not invalid credentials.
 
+#### TypeError Crashes in Demo Mode
+**Symptoms**:
+- "TypeError: D is not a function" after demo login
+- App crashes when navigating to home page
+- React Error Boundary triggers after offline login
+
+**Solution**: ✅ **Fixed** - Implemented comprehensive safe query system:
+```typescript
+// Before: Direct queries fail in demo mode
+const { data: bakes } = useQuery({
+  queryFn: bakeQueries.getAll, // ❌ Crashes offline
+});
+
+// After: Safe queries with demo fallbacks
+const { data: bakes } = useQuery({
+  queryFn: safeBakeQueries.getAll, // ✅ Works offline
+});
+```
+
+**Technical Details**:
+- **Root Cause**: Components calling undefined Supabase query functions in offline mode
+- **Fix**: Created `client/src/lib/safeQueries.ts` with fallback wrappers
+- **Coverage**: Updated all 6+ components and 13+ query calls
+- **Result**: Complete offline functionality with realistic demo data
+
 ### 5. Authentication Loops
 
 **Symptoms**:
@@ -263,6 +288,27 @@ server: {
 - Gradle build errors
 - Capacitor sync failures
 - Missing dependencies
+
+#### Duplicate Capacitor Dependency (Dex Merge Error)
+**Symptoms**:
+- "com.getcapacitor.AndroidProtocolHandler is defined multiple times"
+- "Dex merge failed: multiple dex files define"
+- Build aborts during dexing phase
+
+**Solution**: ✅ **Fixed** - Remove duplicate Capacitor core dependency:
+```gradle
+// android/app/build.gradle
+dependencies {
+-    implementation "com.capacitorjs:core:7.4.3"  // ❌ Remove this
++    implementation project(':capacitor-android')  // ✅ Use project reference
+    // ... other dependencies
+}
+```
+
+**Technical Details**:
+- **Root Cause**: Both direct JAR (`com.capacitorjs:core`) and project (`:capacitor-android`) included
+- **Fix**: Use only the project reference, not the direct dependency
+- **Result**: Clean build without class conflicts
 
 **Solutions**:
 

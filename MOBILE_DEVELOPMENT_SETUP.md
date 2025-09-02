@@ -159,4 +159,17 @@ NODE_ENV=production
 3. **Test Thoroughly**: On multiple devices and Android versions
 4. **Build Release APK**: Using Android Studio's build process
 
+### To Test Demo Mode (Offline Support)
+1. **Enable Demo Mode**: Ensure `VITE_ENABLE_DEMO_MODE=true` in `.env`
+2. **Disable Network**: Turn off WiFi/data on device/emulator
+3. **Test Login Flow**: Attempt login - should fallback to demo mode
+4. **Verify Data**: App should load with realistic demo data instead of crashing
+5. **Check Functionality**: All major features should work with mock data
+
+#### Demo Mode Architecture
+- **Safe Queries**: `client/src/lib/safeQueries.ts` wraps all Supabase calls
+- **Demo Data**: `client/src/lib/demoData.ts` provides realistic mock data
+- **Fallback Logic**: Network failures automatically switch to demo data
+- **Complete Coverage**: All components protected against offline scenarios
+
 This setup provides a robust foundation for both development and production mobile app deployment.

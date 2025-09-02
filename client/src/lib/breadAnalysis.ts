@@ -1,4 +1,6 @@
 // AI-powered bread analysis service
+import { apiRequest } from "./queryClient";
+
 export interface BreadAnalysis {
   overallScore: number; // 1-10 rating
   crumbStructure: {
@@ -30,20 +32,10 @@ export interface BreadContext {
 
 export async function analyzeBreadPhoto(imageBase64: string, context?: BreadContext): Promise<BreadAnalysis> {
   try {
-    const response = await fetch('/api/analyze-bread', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ 
-        image: imageBase64,
-        context: context || {} 
-      }),
+    const response = await apiRequest('POST', '/api/analyze-bread', { 
+      image: imageBase64,
+      context: context || {} 
     });
-
-    if (!response.ok) {
-      throw new Error('Failed to analyze bread');
-    }
 
     const analysis = await response.json();
     return analysis;
