@@ -17,56 +17,70 @@ export function useSupabaseAuth() {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
     const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
     
-    if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('your-project') || supabaseAnonKey.includes('your-anon-key')) {
+    // Debug logging for mobile
+    console.log('Supabase credentials check:', {
+      url: supabaseUrl ? 'present' : 'missing',
+      key: supabaseAnonKey ? 'present' : 'missing',
+      urlValue: supabaseUrl || 'undefined',
+      keyStart: (supabaseAnonKey && typeof supabaseAnonKey === 'string') ? supabaseAnonKey.substring(0, 10) + '...' : 'undefined'
+    });
+    
+    const hasValidCredentials = supabaseUrl && supabaseAnonKey && !supabaseUrl.includes('your-project') && !supabaseAnonKey.includes('your-anon-key');
+    
+    if (!hasValidCredentials) {
       console.warn('Missing or placeholder Supabase credentials - skipping auth initialization')
       setSession(null)
       setUser(null)
       setLoading(false)
-      return
+      // Don't return early - continue with useEffect to avoid hooks issue
     }
 
-    // Set a very short timeout to prevent hanging
-    const timeoutId = setTimeout(() => {
-      console.warn('Authentication timeout - assuming no session')
-      setSession(null)
-      setUser(null)
-      setLoading(false)
-    }, 1000) // Reduced to 1 second
+    let timeoutId: NodeJS.Timeout | null = null;
+    let subscription: any = null;
 
-    // Try to get initial session with immediate fallback
-    Promise.race([
-      supabase.auth.getSession(),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 500))
-    ]).then(({ data: { session } }: any) => {
-      clearTimeout(timeoutId)
-      console.log('Got session:', !!session)
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
-    }).catch((error) => {
-      clearTimeout(timeoutId)
-      console.warn('Failed to get initial session, assuming no auth:', error.message)
-      setSession(null)
-      setUser(null)
-      setLoading(false)
-    })
+    if (hasValidCredentials) {
+      // Set a very short timeout to prevent hanging
+      timeoutId = setTimeout(() => {
+        console.warn('Authentication timeout - assuming no session')
+        setSession(null)
+        setUser(null)
+        setLoading(false)
+      }, 1000) // Reduced to 1 second
 
-    // Skip auth state change listener in demo mode to avoid hanging
-    let subscription: any = null
-    try {
-      const result = supabase.auth.onAuthStateChange((_event: any, session: Session | null) => {
-        console.log('Auth state changed:', !!session)
+      // Try to get initial session with immediate fallback
+      Promise.race([
+        supabase.auth.getSession(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 500))
+      ]).then(({ data: { session } }: any) => {
+        if (timeoutId) clearTimeout(timeoutId)
+        console.log('Got session:', !!session)
         setSession(session)
         setUser(session?.user ?? null)
         setLoading(false)
+      }).catch((error) => {
+        if (timeoutId) clearTimeout(timeoutId)
+        console.warn('Failed to get initial session, assuming no auth:', error.message)
+        setSession(null)
+        setUser(null)
+        setLoading(false)
       })
-      subscription = result.data.subscription
-    } catch (error) {
-      console.warn('Failed to setup auth state listener:', error)
+
+      // Skip auth state change listener in demo mode to avoid hanging
+      try {
+        const result = supabase.auth.onAuthStateChange((_event: any, session: Session | null) => {
+          console.log('Auth state changed:', !!session)
+          setSession(session)
+          setUser(session?.user ?? null)
+          setLoading(false)
+        })
+        subscription = result.data.subscription
+      } catch (error) {
+        console.warn('Failed to setup auth state listener:', error)
+      }
     }
 
     return () => {
-      clearTimeout(timeoutId)
+      if (timeoutId) clearTimeout(timeoutId)
       if (subscription) {
         try {
           subscription.unsubscribe()

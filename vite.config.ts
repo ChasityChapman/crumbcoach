@@ -1,5 +1,5 @@
 // vite.config.ts
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
@@ -11,6 +11,9 @@ export default defineConfig(async ({ mode }) => {
   const isDev = mode !== 'production'
   const isReplit = isDev && process.env.REPL_ID !== undefined
 
+  // Load env variables
+  const env = loadEnv(mode, process.cwd(), '')
+
   const plugins: any[] = [react()]
 
   if (isReplit) {
@@ -21,6 +24,12 @@ export default defineConfig(async ({ mode }) => {
 
   return {
     plugins,
+    // Explicitly define environment variables for mobile builds
+    define: {
+      'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL),
+      'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY),
+      'import.meta.env.VITE_ENABLE_DEMO_MODE': JSON.stringify(env.VITE_ENABLE_DEMO_MODE),
+    },
     // Capacitor loads from a custom scheme/file:// — empty base prevents broken asset URLs
     base: '',
     root: resolve(__dirname, 'client'),
