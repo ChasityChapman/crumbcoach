@@ -15,12 +15,33 @@ import NotesModal from "@/components/notes-modal";
 import StartBakeModal from "@/components/start-bake-modal";
 import RecipeModal from "@/components/recipe-modal";
 import BreadAnalysisModal from "@/components/bread-analysis-modal";
-import AskGemini from "@/components/ask-gemini";
+import * as AskGeminiModule from "@/components/ask-gemini";
 
 // Guard against undefined components
 if (typeof BreadAnalysisModal !== 'function') {
   console.error('BreadAnalysisModal is not a function:', typeof BreadAnalysisModal, BreadAnalysisModal);
 }
+
+// Derive the component with fallback logic
+const AskGemini = AskGeminiModule.default ?? AskGeminiModule.AskGemini;
+
+// Enhanced debugging for AskGemini module and component
+console.log('AskGeminiModule debug:', {
+  module: AskGeminiModule,
+  default: AskGeminiModule.default,
+  named: AskGeminiModule.AskGemini,
+  defaultType: typeof AskGeminiModule.default,
+  namedType: typeof AskGeminiModule.AskGemini,
+});
+
+console.log('AskGemini derived component debug:', {
+  type: typeof AskGemini,
+  value: AskGemini,
+  isFunction: typeof AskGemini === 'function',
+  constructor: AskGemini?.constructor?.name,
+  toString: AskGemini?.toString?.()
+});
+
 if (typeof AskGemini !== 'function') {
   console.error('AskGemini is not a function:', typeof AskGemini, AskGemini);
 }
@@ -428,6 +449,8 @@ export default function Home() {
         />
       ) : (
         askGeminiOpen && (
+          console.log('AskGemini fallback triggered - component not a function') ||
+          console.error('AskGemini component is not callable, showing fallback panel') ||
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg">
               <p>Ask Gemini AI assistant is temporarily unavailable.</p>

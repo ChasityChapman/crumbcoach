@@ -5,6 +5,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { Sparkles, Send, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+// Debug: Check if all imports are functions/components
+console.log("Import type checks:", {
+  useState: typeof useState,
+  Dialog: typeof Dialog,
+  DialogContent: typeof DialogContent,
+  DialogHeader: typeof DialogHeader,
+  DialogTitle: typeof DialogTitle,
+  Button: typeof Button,
+  Textarea: typeof Textarea,
+  Sparkles: typeof Sparkles,
+  Send: typeof Send,
+  Loader2: typeof Loader2,
+  useToast: typeof useToast
+});
+
 interface AskGeminiProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -178,5 +193,13 @@ For now, I recommend checking your starter health, monitoring fermentation tempe
 
 // Set display name for debugging
 AskGemini.displayName = "AskGemini";
+
+// Debug the export
+console.log('AskGemini export debug:', {
+  typeof: typeof AskGemini,
+  isFunction: typeof AskGemini === 'function',
+  displayName: AskGemini.displayName,
+  name: AskGemini.name
+});
 
 export default AskGemini;
