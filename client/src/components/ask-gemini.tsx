@@ -27,64 +27,67 @@ interface AskGeminiProps {
 }
 
 function AskGemini({ open, onOpenChange, context }: AskGeminiProps) {
-  const [question, setQuestion] = useState("");
-  const [response, setResponse] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  console.log('🔍 DEBUG: AskGemini function start');
+  
+  console.log('🔍 DEBUG: About to call useState for question');
+  const [question, setQuestion] = useState?.("") ?? "";
+  console.log('🔍 DEBUG: useState question completed');
+  
+  console.log('🔍 DEBUG: About to call useState for response');
+  const [response, setResponse] = useState?.("") ?? "";
+  console.log('🔍 DEBUG: useState response completed');
+  
+  console.log('🔍 DEBUG: About to call useState for isLoading');
+  const [isLoading, setIsLoading] = useState?.(false) ?? false;
+  console.log('🔍 DEBUG: useState isLoading completed');
+  
+  console.log('🔍 DEBUG: About to call useToast');
+  const toastHook = useToast?.() ?? {};
+  console.log('🔍 DEBUG: useToast completed, result:', toastHook, typeof toastHook?.toast);
+  
+  console.log('🔍 DEBUG: About to destructure toast');
+  const { toast } = toastHook;
+  console.log('🔍 DEBUG: Toast destructured:', typeof toast);
 
   // Defensive checks for required functions
   const safeToast = (options: any) => {
-    if (typeof toast === 'function') {
-      try {
-        return toast(options);
-      } catch (error) {
-        console.error('Toast function error:', error);
-      }
-    } else {
-      console.warn('Toast function not available:', typeof toast);
+    try {
+      return toast?.(options);
+    } catch (error) {
+      console.error('Toast function error:', error);
     }
   };
 
   const safeOnOpenChange = (open: boolean) => {
-    if (typeof onOpenChange === 'function') {
-      try {
-        return onOpenChange(open);
-      } catch (error) {
-        console.error('onOpenChange callback error:', error);
-      }
-    } else {
-      console.warn('onOpenChange callback not available:', typeof onOpenChange);
+    try {
+      return onOpenChange?.(open);
+    } catch (error) {
+      console.error('onOpenChange callback error:', error);
     }
   };
 
-  // Defensive checks for state setters
+  // Defensive checks for state setters using optional chaining
   const safeSetQuestion = (value: string) => {
-    if (typeof setQuestion === 'function') {
-      try {
-        return setQuestion(value);
-      } catch (error) {
-        console.error('setQuestion error:', error);
-      }
+    try {
+      return setQuestion?.(value);
+    } catch (error) {
+      console.error('setQuestion error:', error);
     }
   };
 
   const safeSetResponse = (value: string) => {
-    if (typeof setResponse === 'function') {
-      try {
-        return setResponse(value);
-      } catch (error) {
-        console.error('setResponse error:', error);
-      }
+    try {
+      return setResponse?.(value);
+    } catch (error) {
+      console.error('setResponse error:', error);
     }
   };
 
   const safeSetIsLoading = (value: boolean) => {
-    if (typeof setIsLoading === 'function') {
-      try {
-        return setIsLoading(value);
-      } catch (error) {
-        console.error('setIsLoading error:', error);
-      }
+    try {
+      return setIsLoading?.(value);
+    } catch (error) {
+      console.error('setIsLoading error:', error);
     }
   };
 
@@ -101,7 +104,7 @@ function AskGemini({ open, onOpenChange, context }: AskGeminiProps) {
     safeSetIsLoading(true);
     try {
       // Simulate AI response for now
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout?.(resolve, 1000));
       
       // Mock response based on context
       const mockResponse = `Based on your question "${question}", here's what I can help with:
@@ -135,8 +138,15 @@ For now, I recommend checking your starter health, monitoring fermentation tempe
     safeOnOpenChange(false);
   };
 
+  const handleDialogOpenChange = (isOpen: boolean) => {
+    console.log('Dialog onOpenChange called with:', isOpen, typeof isOpen);
+    if (!isOpen) {
+      handleClose();
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -153,15 +163,15 @@ For now, I recommend checking your starter health, monitoring fermentation tempe
             <Textarea
               id="question"
               value={question}
-              onChange={(e) => safeSetQuestion(e.target.value)}
+              onChange={(e) => safeSetQuestion?.(e?.target?.value)}
               placeholder="Ask me about starter maintenance, fermentation timing, shaping techniques, troubleshooting issues..."
               className="min-h-[100px]"
             />
           </div>
 
           <Button 
-            onClick={handleAskQuestion}
-            disabled={isLoading || !question.trim()}
+            onClick={() => handleAskQuestion?.()}
+            disabled={isLoading || !question?.trim?.()}
             className="w-full"
           >
             {isLoading ? (
@@ -202,4 +212,5 @@ console.log('AskGemini export debug:', {
   name: AskGemini.name
 });
 
+// Default export - matches import AskGemini from "./ask-gemini"
 export default AskGemini;

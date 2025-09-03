@@ -15,31 +15,22 @@ import NotesModal from "@/components/notes-modal";
 import StartBakeModal from "@/components/start-bake-modal";
 import RecipeModal from "@/components/recipe-modal";
 import BreadAnalysisModal from "@/components/bread-analysis-modal";
-import * as AskGeminiModule from "@/components/ask-gemini";
+// Direct default import - matches "export default AskGemini"
+import AskGemini from "@/components/ask-gemini";
 
 // Guard against undefined components
 if (typeof BreadAnalysisModal !== 'function') {
   console.error('BreadAnalysisModal is not a function:', typeof BreadAnalysisModal, BreadAnalysisModal);
 }
 
-// Derive the component with fallback logic
-const AskGemini = AskGeminiModule.default ?? AskGeminiModule.AskGemini;
-
-// Enhanced debugging for AskGemini module and component
-console.log('AskGeminiModule debug:', {
-  module: AskGeminiModule,
-  default: AskGeminiModule.default,
-  named: AskGeminiModule.AskGemini,
-  defaultType: typeof AskGeminiModule.default,
-  namedType: typeof AskGeminiModule.AskGemini,
-});
-
-console.log('AskGemini derived component debug:', {
+// Simple debugging for direct default import
+console.log('AskGemini direct import verification:', {
+  imported: AskGemini,
   type: typeof AskGemini,
-  value: AskGemini,
   isFunction: typeof AskGemini === 'function',
-  constructor: AskGemini?.constructor?.name,
-  toString: AskGemini?.toString?.()
+  displayName: AskGemini?.displayName,
+  name: AskGemini?.name,
+  constructor: AskGemini?.constructor?.name
 });
 
 if (typeof AskGemini !== 'function') {
@@ -378,7 +369,7 @@ export default function Home() {
                 </p>
               </div>
               <Button 
-                onClick={() => setAskGeminiOpen(true)}
+                onClick={() => setAskGeminiOpen?.(true)}
                 className="bg-white text-blue-600 hover:bg-blue-50 ml-4 shadow-md"
                 size="sm"
               >
@@ -443,9 +434,9 @@ export default function Home() {
       )}
       {typeof AskGemini === 'function' ? (
         <AskGemini
-          open={askGeminiOpen}
-          onOpenChange={setAskGeminiOpen}
-          context={activeBakes.length > 0 ? `Active bake: ${activeBakes[0].recipeName}` : undefined}
+          open={askGeminiOpen ?? false}
+          onOpenChange={(open) => setAskGeminiOpen?.(open)}
+          context={activeBakes?.length > 0 ? `Active bake: ${activeBakes?.[0]?.recipeName}` : undefined}
         />
       ) : (
         askGeminiOpen && (
@@ -455,7 +446,7 @@ export default function Home() {
             <div className="bg-white p-6 rounded-lg">
               <p>Ask Gemini AI assistant is temporarily unavailable.</p>
               <button 
-                onClick={() => setAskGeminiOpen(false)}
+                onClick={() => setAskGeminiOpen?.(false)}
                 className="mt-4 px-4 py-2 bg-gray-500 text-white rounded"
               >
                 Close

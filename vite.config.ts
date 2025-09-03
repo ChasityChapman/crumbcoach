@@ -45,6 +45,8 @@ export default defineConfig(async ({ mode }) => {
       outDir: resolve(__dirname, 'dist/public'),
       emptyOutDir: true,
       chunkSizeWarningLimit: 1000,
+      // Enable source maps for debugging bundled errors
+      sourcemap: true,
     },
     server: {
       fs: {
