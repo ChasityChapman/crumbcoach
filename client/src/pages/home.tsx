@@ -36,7 +36,7 @@ console.log('AskGemini direct import verification:', {
 if (typeof AskGemini !== 'function') {
   console.error('AskGemini is not a function:', typeof AskGemini, AskGemini);
 }
-import { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Bell, LogOut, User as UserIcon, Sparkles } from "lucide-react";
 import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_1756224893332.png";
 import { useToast } from "@/hooks/use-toast";
@@ -54,6 +54,14 @@ import {
 export default function Home() {
   const { toast } = useToast();
   const { user, signOut } = useSupabaseAuth();
+
+  // Debug: Track AskGemini component fallback state
+  React.useEffect(() => {
+    if (typeof AskGemini !== 'function') {
+      console.log('🔍 AskGemini fallback triggered - component not a function');
+      console.error('🔍 AskGemini component is not callable, showing fallback panel');
+    }
+  }, []);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
   const [startBakeOpen, setStartBakeOpen] = useState(false);
@@ -440,8 +448,6 @@ export default function Home() {
         />
       ) : (
         askGeminiOpen && (
-          console.log('AskGemini fallback triggered - component not a function') ||
-          console.error('AskGemini component is not callable, showing fallback panel') ||
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg">
               <p>Ask Gemini AI assistant is temporarily unavailable.</p>
