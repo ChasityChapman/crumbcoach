@@ -4,3 +4,18 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+
+# Environment variables and secrets
+.env
+.env.local
+.env.production
+.env.server
+.env.server.local
+.env.server.production
+
+# Firebase configuration
+google-services.json
+GoogleService-Info.plist
+
+# Android local properties
+android/local.properties
