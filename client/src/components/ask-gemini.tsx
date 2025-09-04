@@ -16,8 +16,9 @@ function AskGemini({ open, onOpenChange, context }: AskGeminiProps) {
   const [response, setResponse] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Directly destructure from the useToast hook.
-  const { toast } = useToast();
+  // Get toast function from useToast hook with fallback
+  const toastHook = useToast();
+  const toast = toastHook?.toast;
 
   const handleAskQuestion = async () => {
     if (!question.trim()) {
@@ -59,7 +60,6 @@ For now, I recommend checking your starter health, monitoring fermentation tempe
   const handleClose = () => {
     setQuestion("");
     setResponse("");
-    // Use optional chaining directly on the prop.
     onOpenChange?.(false);
   };
 

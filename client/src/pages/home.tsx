@@ -18,24 +18,6 @@ import BreadAnalysisModal from "@/components/bread-analysis-modal";
 // Direct default import - matches "export default AskGemini"
 import AskGemini from "@/components/ask-gemini";
 
-// Guard against undefined components
-if (typeof BreadAnalysisModal !== 'function') {
-  console.error('BreadAnalysisModal is not a function:', typeof BreadAnalysisModal, BreadAnalysisModal);
-}
-
-// Simple debugging for direct default import
-console.log('AskGemini direct import verification:', {
-  imported: AskGemini,
-  type: typeof AskGemini,
-  isFunction: typeof AskGemini === 'function',
-  displayName: AskGemini?.displayName,
-  name: AskGemini?.name,
-  constructor: AskGemini?.constructor?.name
-});
-
-if (typeof AskGemini !== 'function') {
-  console.error('AskGemini is not a function:', typeof AskGemini, AskGemini);
-}
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Bell, LogOut, User as UserIcon, Sparkles } from "lucide-react";
 import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_1756224893332.png";
@@ -55,13 +37,6 @@ export default function Home() {
   const { toast } = useToast();
   const { user, signOut } = useSupabaseAuth();
 
-  // Debug: Track AskGemini component fallback state
-  React.useEffect(() => {
-    if (typeof AskGemini !== 'function') {
-      console.log('🔍 AskGemini fallback triggered - component not a function');
-      console.error('🔍 AskGemini component is not callable, showing fallback panel');
-    }
-  }, []);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
   const [startBakeOpen, setStartBakeOpen] = useState(false);
@@ -440,27 +415,11 @@ export default function Home() {
           </div>
         )
       )}
-      {typeof AskGemini === 'function' ? (
-        <AskGemini
-          open={askGeminiOpen ?? false}
-          onOpenChange={(open) => setAskGeminiOpen?.(open)}
-          context={activeBakes?.length > 0 ? `Active bake: ${activeBakes?.[0]?.recipeName}` : undefined}
-        />
-      ) : (
-        askGeminiOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg">
-              <p>Ask Gemini AI assistant is temporarily unavailable.</p>
-              <button 
-                onClick={() => setAskGeminiOpen?.(false)}
-                className="mt-4 px-4 py-2 bg-gray-500 text-white rounded"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        )
-      )}
+      <AskGemini
+        open={askGeminiOpen || false}
+        onOpenChange={setAskGeminiOpen}
+        context={activeBakes?.length > 0 ? `Active bake: ${activeBakes[0]?.recipeName}` : undefined}
+      />
     </div>
   );
 }
