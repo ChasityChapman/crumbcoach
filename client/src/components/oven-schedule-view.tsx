@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { format, isSameDay } from "date-fns";
+import { safeMap } from "@/lib/safeArray";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -182,7 +183,7 @@ export default function OvenScheduleView({ ovenSchedule, conflicts, className = 
           <AlertDescription className="text-amber-800">
             <div className="font-medium mb-2">Oven Temperature Conflicts Detected</div>
             <div className="space-y-2">
-              {conflicts.map((conflict, index) => (
+              {safeMap(conflicts, (conflict, index) => (
                 <div key={index} className="text-sm">
                   <div className="font-medium">
                     {format(conflict.time, 'h:mm a')} - {conflict.temperatures.join('°F vs ')}°F
@@ -199,7 +200,7 @@ export default function OvenScheduleView({ ovenSchedule, conflicts, className = 
       )}
 
       {/* Daily Oven Schedule */}
-      {dailySchedule.map(({ day, events }) => {
+      {safeMap(dailySchedule, ({ day, events }) => {
         const timelineBlocks = createTimelineBlocks(events);
         
         return (
@@ -217,7 +218,7 @@ export default function OvenScheduleView({ ovenSchedule, conflicts, className = 
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {timelineBlocks.map((block, index) => (
+                {safeMap(timelineBlocks, (block, index) => (
                   <div
                     key={index}
                     className={`p-4 rounded-lg border-2 ${getBlockColor(block.type, block.temperature)}`}
@@ -247,7 +248,7 @@ export default function OvenScheduleView({ ovenSchedule, conflicts, className = 
                       </div>
                       
                       <div className="space-y-1">
-                        {block.recipes.map((recipe, idx) => (
+                        {safeMap(block.recipes, (recipe, idx) => (
                           <div key={idx} className="flex items-center space-x-2">
                             <CheckCircle2 className="w-3 h-3" />
                             <span>{recipe}</span>

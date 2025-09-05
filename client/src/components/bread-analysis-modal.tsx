@@ -13,6 +13,7 @@ import { Loader2, Camera, Sparkles, TrendingUp, AlertCircle, Thermometer, Upload
 import { analyzeBreadPhoto, convertFileToBase64, type BreadAnalysis, type BreadContext } from "@/lib/breadAnalysis";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
+import { safeMap } from "@/lib/safeArray";
 import { safeBakeQueries, safeSensorQueries, safeRecipeQueries, safeTimelineStepQueries } from "@/lib/safeQueries";
 import { useSensors } from "@/hooks/use-sensors";
 
@@ -78,7 +79,7 @@ function BreadAnalysisModal({ open, onOpenChange, initialImage }: BreadAnalysisM
 
   // Get photos from all recent bakes
   const allPhotos = recentBakes.flatMap((bake: any) => 
-    (bake.photos || []).map((photo: any) => ({ ...photo, bakeName: bake.recipeName || 'Untitled Bake' }))
+    safeMap(bake.photos, (photo: any) => ({ ...photo, bakeName: bake.recipeName || 'Untitled Bake' }))
   );
 
   // Auto-populate context from active bake data
@@ -372,7 +373,7 @@ function BreadAnalysisModal({ open, onOpenChange, initialImage }: BreadAnalysisM
                 {allPhotos.length > 0 ? (
                   <ScrollArea className="h-64">
                     <div className="grid grid-cols-2 gap-3">
-                      {allPhotos.map((photo: any, index: number) => (
+                      {safeMap(allPhotos, (photo: any, index: number) => (
                         <div 
                           key={photo.id || index}
                           className="relative group cursor-pointer"
@@ -611,7 +612,7 @@ function BreadAnalysisModal({ open, onOpenChange, initialImage }: BreadAnalysisM
                   </CardHeader>
                   <CardContent className="pt-0">
                     <ul className="space-y-2">
-                      {analysis.strengths.map((strength, index) => (
+                      {safeMap(analysis.strengths, (strength, index) => (
                         <li key={index} className="flex items-start gap-2">
                           <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0" />
                           <span className="text-sm text-sourdough-700">{strength}</span>
@@ -633,7 +634,7 @@ function BreadAnalysisModal({ open, onOpenChange, initialImage }: BreadAnalysisM
                   </CardHeader>
                   <CardContent className="pt-0">
                     <ul className="space-y-2">
-                      {analysis.suggestions.map((suggestion, index) => (
+                      {safeMap(analysis.suggestions, (suggestion, index) => (
                         <li key={index} className="flex items-start gap-2">
                           <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
                           <span className="text-sm text-sourdough-700">{suggestion}</span>

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { safeBakePhotoQueries } from "@/lib/safeQueries";
+import { safeMap } from "@/lib/safeArray";
 import { Camera, Image as ImageIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import type { BakePhoto } from "@shared/schema";
@@ -70,7 +71,7 @@ export default function PhotoGallery({ bakeId, className = "" }: PhotoGalleryPro
       </div>
       
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        {photos.map((photo) => {
+        {safeMap(photos, (photo) => {
           const photoWithUrl = photo as BakePhotoWithUrl;
           return (
           <Card key={photoWithUrl.id} className="overflow-hidden border-sourdough-200">
