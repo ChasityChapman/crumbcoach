@@ -34,12 +34,17 @@ export default function RecalibrationSheet({
 
   if (!isOpen) return null;
 
-  const selectedStep = selectedStepId ? items.find(item => item.id === selectedStepId) : null;
-  const activeStep = items.find(item => item.status === 'active');
-  const pendingItems = items.filter(item => item.status === 'pending');
+  const selectedStep = selectedStepId && Array.isArray(items) ? items.find(item => item.id === selectedStepId) : null;
+  const activeStep = Array.isArray(items) ? items.find(item => item.status === 'active') : null;
+  const pendingItems = Array.isArray(items) ? items.filter(item => item.status === 'pending') : [];
 
   // Calculate recalibrated schedule based on type and delta
   const getRecalibratedSchedule = () => {
+    // Ensure items is an array
+    if (!items || !Array.isArray(items)) {
+      return [];
+    }
+
     if (recalibrationType === 'shift') {
       // Shift all remaining steps by delta
       return items.map(item => {
@@ -231,7 +236,7 @@ export default function RecalibrationSheet({
               </h3>
               
               <div className="space-y-2">
-                {items.slice(0, 3).map((item, index) => {
+                {(Array.isArray(items) ? items.slice(0, 3) : []).map((item, index) => {
                   const recalibratedItem = recalibratedItems[index];
                   const hasChanged = item.startAt.getTime() !== recalibratedItem.startAt.getTime() || 
                                    item.endAt.getTime() !== recalibratedItem.endAt.getTime() ||

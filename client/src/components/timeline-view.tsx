@@ -94,6 +94,11 @@ export default function TimelineView({
 
   // Group overlapping steps
   const groupedItems = useMemo(() => {
+    // Ensure items is an array
+    if (!items || !Array.isArray(items)) {
+      return [];
+    }
+
     const groups: TimelineItem[][] = [];
     let currentGroup: TimelineItem[] = [];
 
@@ -313,9 +318,16 @@ export default function TimelineView({
                       className="w-full justify-start h-8 text-blue-700"
                       onClick={() => {
                         // Default bedtime 10 PM, wakeup 7 AM
-                        const bedtime = new Date(item.startAt);
+                        // Ensure item.startAt is a valid Date
+                        const startDate = item.startAt instanceof Date ? item.startAt : new Date(item.startAt);
+                        if (isNaN(startDate.getTime())) {
+                          console.error('Invalid startAt date for step:', item.id);
+                          return;
+                        }
+                        
+                        const bedtime = new Date(startDate);
                         bedtime.setHours(22, 0, 0, 0);
-                        const wakeup = new Date(item.startAt);
+                        const wakeup = new Date(startDate);
                         wakeup.setDate(wakeup.getDate() + 1);
                         wakeup.setHours(7, 0, 0, 0);
                         

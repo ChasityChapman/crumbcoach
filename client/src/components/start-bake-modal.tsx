@@ -93,7 +93,6 @@ export default function StartBakeModal({ isOpen, onClose, onBakeStarted }: Start
       }
 
       // Track bake start analytics
-      const recipe = recipes?.find(r => r.id === selectedRecipeId);
       if (recipe && newBake) {
         const steps = recipe.steps as RecipeStep[] || [];
         const totalDuration = steps.reduce((sum, step) => sum + (step.duration || 0), 0);

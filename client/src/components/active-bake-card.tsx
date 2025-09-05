@@ -43,28 +43,44 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
 
   // Generate schedule from timeline steps
   const timelineItems = useMemo(() => {
-    if (!timelineSteps || timelineSteps.length === 0) return [];
+    if (!timelineSteps || !Array.isArray(timelineSteps) || timelineSteps.length === 0) return [];
+
+    // Helper function to safely parse dates
+    const safeParseDate = (dateValue: any, fallback: Date): Date => {
+      if (!dateValue) return fallback;
+      try {
+        const parsed = new Date(dateValue);
+        return isNaN(parsed.getTime()) ? fallback : parsed;
+      } catch {
+        return fallback;
+      }
+    };
 
     return timelineSteps
       .sort((a, b) => (a.stepNumber || 0) - (b.stepNumber || 0))
-      .map(step => ({
-        id: step.id,
-        stepName: step.title || step.name || `Step ${step.stepNumber}`,
-        status: step.status as 'active' | 'pending' | 'completed',
-        startAt: new Date(step.scheduledTime || step.startTime || now),
-        endAt: new Date((step.scheduledTime || step.startTime || now) + (step.estimatedDuration || 30) * 60 * 1000),
-        duration: step.estimatedDuration || 30,
-        instructions: step.description,
-        // Check for overnight steps (8+ hours)
-        isOvernight: (step.estimatedDuration || 30) >= 480,
+      .map(step => {
+        const stepStartTime = safeParseDate(step.scheduledTime || step.startTime, now);
+        const stepEndTime = new Date(stepStartTime.getTime() + (step.estimatedDuration || 30) * 60 * 1000);
+        
+        return {
+          id: step.id,
+          stepName: step.title || step.name || `Step ${step.stepNumber}`,
+          status: step.status as 'active' | 'pending' | 'completed',
+          startAt: stepStartTime,
+          endAt: stepEndTime,
+          duration: step.estimatedDuration || 30,
+          instructions: step.description,
+          // Check for overnight steps (8+ hours)
+          isOvernight: (step.estimatedDuration || 30) >= 480,
         // Check for adaptive steps (detect by keywords or special flags)
         isAdaptive: step.name?.toLowerCase().includes('until') || 
                    step.name?.toLowerCase().includes('doubled') ||
                    step.name?.toLowerCase().includes('ready') ||
                    step.description?.toLowerCase().includes('until'),
-        canOverlap: false, // Could be set based on step type
-        adaptiveCheckInterval: 30, // Default 30 minutes
-      }));
+          canOverlap: false, // Could be set based on step type
+          adaptiveCheckInterval: 30, // Default 30 minutes
+        };
+      });
   }, [timelineSteps, now]);
 
   // Calculate progress
