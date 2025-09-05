@@ -1,6 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { safeBakeQueries } from "@/lib/safeQueries";
+import { safeMap } from "@/lib/safeArray";
 import type { Bake, BakePhoto } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Share2, RefreshCw, FileText, X, RotateCcw } from "lucide-react";
@@ -81,7 +82,7 @@ export default function RecentBakes() {
       
       {recentBakes.length > 0 ? (
         <div className="grid grid-cols-2 gap-3">
-          {recentBakes.map((bake) => (
+          {safeMap(recentBakes, (bake) => (
             <div 
               key={bake.id} 
               className="relative group"

@@ -11,6 +11,7 @@ import TutorialPreview from "@/components/tutorial-preview";
 import RecentBakes from "@/components/recent-bakes";
 import BottomNavigation from "@/components/bottom-navigation";
 import NextStepTile from "@/components/next-step-tile";
+import { safeMap } from "@/lib/safeArray";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { testSupabaseConnection, testDatabaseTables } from "@/lib/testSupabase";
 import { Button } from "@/components/ui/button";
@@ -131,7 +132,7 @@ export default function Home() {
       }
       
       const recipeSteps = Array.isArray(recipe.steps) ? recipe.steps : [];
-      const timelineSteps = recipeSteps.map((step, index) => ({
+      const timelineSteps = safeMap(recipeSteps, (step, index) => ({
         bakeId: bake.id,
         stepIndex: index,
         name: step.name || `Step ${index + 1}`,
@@ -142,7 +143,7 @@ export default function Home() {
         endTime: null,
         status: 'pending' as const,
         autoAdjustments: {}
-      })) || [];
+      }));
 
       const createdSteps = [];
       for (const stepData of timelineSteps) {
@@ -241,7 +242,7 @@ export default function Home() {
         {/* Active Bake Cards */}
         {activeBakes.length > 0 ? (
           <div className="space-y-4">
-            {activeBakes.map((bake) => (
+            {safeMap(activeBakes, (bake) => (
               <ActiveBakeCard key={bake.id} bake={bake} />
             ))}
           </div>
