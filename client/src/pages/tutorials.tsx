@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { Tutorial } from "@shared/schema";
 import { safeTutorialQueries } from "@/lib/safeQueries";
+import { safeMap } from "@/lib/safeArray";
 import BottomNavigation from "@/components/bottom-navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -71,7 +72,7 @@ export default function Tutorials() {
       <div className="p-4 pb-20">
         {tutorials && tutorials.length > 0 ? (
           <div className="space-y-4">
-            {tutorials.map((tutorial) => (
+            {safeMap(tutorials, (tutorial) => (
               <Card key={tutorial.id} className="shadow-sm border-sourdough-100">
                 <CardContent className="p-4">
                   {tutorial.thumbnail && (
@@ -175,7 +176,7 @@ export default function Tutorials() {
                 <div className="space-y-3">
                   <h3 className="font-semibold text-lg">Tutorial Steps:</h3>
                   <div className="space-y-2">
-                    {selectedTutorial.steps.map((step: any, index: number) => (
+                    {safeMap(selectedTutorial.steps, (step: any, index: number) => (
                       <div key={index} className="flex space-x-3 p-3 bg-sourdough-50 rounded-lg">
                         <div className="w-6 h-6 bg-sourdough-500 text-white rounded-full flex items-center justify-center text-sm font-medium">
                           {index + 1}

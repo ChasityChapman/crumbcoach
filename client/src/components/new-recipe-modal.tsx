@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { safeMap } from "@/lib/safeArray";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -93,7 +94,7 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
   };
 
   const updateStep = (id: string, field: keyof RecipeStep, value: string | number) => {
-    setSteps(steps.map(step => (step.id === id ? { ...step, [field]: value } : step)));
+    setSteps(safeMap(steps, step => (step.id === id ? { ...step, [field]: value } : step)));
   };
 
   const addIngredient = () => {
@@ -111,7 +112,7 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
   };
 
   const updateIngredient = (id: string, field: keyof RecipeIngredient, value: string | number) => {
-    setIngredients(ingredients.map(ing => (ing.id === id ? { ...ing, [field]: value } : ing)));
+    setIngredients(safeMap(ingredients, ing => (ing.id === id ? { ...ing, [field]: value } : ing)));
   };
 
   const handleSubmit = () => {
@@ -138,13 +139,13 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
       ...(description.trim() && { description: description.trim() }),
       difficulty,
       totalTimeHours,
-      steps: steps.map(step => ({
+      steps: safeMap(steps, step => ({
         id: step.id,
         name: step.name.trim(),
         duration: step.duration,
         ...(step.description.trim() && { description: step.description.trim() })
       })),
-      ingredients: ingredients.map(ing => ({
+      ingredients: safeMap(ingredients, ing => ({
         id: ing.id,
         name: ing.name.trim(),
         amount: ing.amount,
@@ -234,7 +235,7 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
             </div>
 
             <div className="space-y-3">
-              {ingredients.map((ingredient, index) => (
+              {safeMap(ingredients, (ingredient, index) => (
                 <div key={ingredient.id} className="border border-sourdough-200 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="font-medium text-sourdough-800">Ingredient {index + 1}</h4>
@@ -320,7 +321,7 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
             </div>
 
             <div className="space-y-3">
-              {steps.map((step, index) => (
+              {safeMap(steps, (step, index) => (
                 <div key={step.id} className="border border-sourdough-200 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="font-medium text-sourdough-800">Step {index + 1}</h4>

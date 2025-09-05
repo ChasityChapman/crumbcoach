@@ -4,6 +4,7 @@ import { Clock, Check, MoreVertical, ChevronRight, Moon, Sun } from "lucide-reac
 import { Button } from "@/components/ui/button";
 import SkipConfirmationModal from "./skip-confirmation-modal";
 import { timelineAnalytics } from "@/lib/timeline-analytics";
+import { safeMap } from "@/lib/safeArray";
 
 interface TimelineItem {
   id: string;
@@ -130,7 +131,7 @@ export default function TimelineView({
 
   return (
     <div className="space-y-3">
-      {groupedItems.map((group, groupIndex) => {
+      {safeMap(groupedItems, (group, groupIndex) => {
         const isParallel = group.length > 1;
         const prevGroup = groupIndex > 0 ? groupedItems[groupIndex - 1] : undefined;
         const showDateBadge = needsDateBadge(group[0], prevGroup?.[0]);
@@ -161,7 +162,7 @@ export default function TimelineView({
             
             {/* Step rows (stacked if parallel) */}
             <div className={`space-y-2 ${isParallel ? 'pl-2 border-l-2 border-purple-200' : ''}`}>
-              {group.map((item, itemIndex) => {
+              {safeMap(group, (item, itemIndex) => {
                 const overnight = isOvernightStep(item);
                 
                 return (
