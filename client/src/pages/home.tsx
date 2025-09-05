@@ -11,7 +11,7 @@ import TutorialPreview from "@/components/tutorial-preview";
 import RecentBakes from "@/components/recent-bakes";
 import BottomNavigation from "@/components/bottom-navigation";
 import NextStepTile from "@/components/next-step-tile";
-import { safeMap } from "@/lib/safeArray";
+import { safeMap, safeFind } from "@/lib/safeArray";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { testSupabaseConnection, testDatabaseTables } from "@/lib/testSupabase";
 import { Button } from "@/components/ui/button";
@@ -103,9 +103,10 @@ export default function Home() {
     if (!firstActiveBake || !firstBakeTimeline) return null;
 
     // Find the first pending step
-    const nextStep = firstBakeTimeline
-      .sort((a, b) => (a.stepNumber || 0) - (b.stepNumber || 0))
-      .find(step => step.status === 'pending');
+    const nextStep = safeFind(
+      firstBakeTimeline?.sort((a, b) => (a.stepNumber || 0) - (b.stepNumber || 0)),
+      step => step.status === 'pending'
+    );
 
     if (!nextStep) return null;
 

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { safeFind } from "@/lib/safeArray";
 import type { Recipe, Bake, InsertBake } from "@shared/schema";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -47,7 +48,7 @@ export default function StartBakeModal({ isOpen, onClose, onBakeStarted }: Start
       setIsSubmitting(false);
       console.log('New bake created:', newBake);
       // Create timeline steps for the new bake
-      const recipe = recipes?.find(r => r.id === selectedRecipeId);
+      const recipe = safeFind(recipes, r => r.id === selectedRecipeId);
       console.log('Recipe found:', recipe);
       console.log('Recipe steps:', recipe?.steps);
       
@@ -132,7 +133,7 @@ export default function StartBakeModal({ isOpen, onClose, onBakeStarted }: Start
     },
   });
 
-  const selectedRecipe = recipes?.find(r => r.id === selectedRecipeId);
+  const selectedRecipe = safeFind(recipes, r => r.id === selectedRecipeId);
 
   const handleStartBake = () => {
     if (isSubmitting || startBakeMutation.isPending) {

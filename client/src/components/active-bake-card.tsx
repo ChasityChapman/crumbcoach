@@ -6,6 +6,7 @@ import { queryClient } from "@/lib/queryClient";
 import { safeRecipeQueries, safeTimelineStepQueries, safeBakeQueries } from "@/lib/safeQueries";
 import { bakeNotifications } from "@/lib/notifications";
 import { timelineAnalytics } from "@/lib/timeline-analytics";
+import { safeFind } from "@/lib/safeArray";
 import { Button } from "@/components/ui/button";
 import { MoreVertical, RefreshCw, Pause, CheckCircle, FileText, Thermometer, SkipForward, X } from "lucide-react";
 import TimelineView from "./timeline-view";
@@ -39,7 +40,7 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
     refetchOnWindowFocus: true,
   });
 
-  const recipe = recipes?.find(r => r.id === bake.recipeId);
+  const recipe = safeFind(recipes, r => r.id === bake.recipeId);
 
   // Generate schedule from timeline steps
   const timelineItems = useMemo(() => {
@@ -93,8 +94,8 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
   const eta = lastStep ? lastStep.endAt : addMinutes(new Date(bake.startTime || now), 480);
 
   // Get active step for next-step tile
-  const activeStep = timelineItems.find(item => item.status === 'active');
-  const nextStep = timelineItems.find(item => item.status === 'pending');
+  const activeStep = safeFind(timelineItems, item => item.status === 'active');
+  const nextStep = safeFind(timelineItems, item => item.status === 'pending');
 
   // Schedule notifications for pending steps
   useEffect(() => {
@@ -130,7 +131,7 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
   // Mutations
   const markDoneMutation = useMutation({
     mutationFn: async (stepId: string) => {
-      const step = timelineSteps?.find(s => s.id === stepId);
+      const step = safeFind(timelineSteps, s => s.id === stepId);
       if (!step) return;
 
       const startTime = new Date(step.scheduledTime || step.startTime || now);
@@ -158,7 +159,7 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
       });
 
       // Activate next step
-      const nextStep = timelineSteps?.find(s => s.stepNumber === (step.stepNumber || 0) + 1);
+      const nextStep = safeFind(timelineSteps, s => s.stepNumber === (step.stepNumber || 0) + 1);
       if (nextStep) {
         await safeTimelineStepQueries.update(nextStep.id, {
           status: "active",
@@ -174,7 +175,7 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
 
   const skipStepMutation = useMutation({
     mutationFn: async (stepId: string) => {
-      const step = timelineSteps?.find(s => s.id === stepId);
+      const step = safeFind(timelineSteps, s => s.id === stepId);
       if (!step) return;
 
       await safeTimelineStepQueries.update(stepId, {
@@ -195,7 +196,7 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
       });
 
       // Activate next step
-      const nextStep = timelineSteps?.find(s => s.stepNumber === (step.stepNumber || 0) + 1);
+      const nextStep = safeFind(timelineSteps, s => s.stepNumber === (step.stepNumber || 0) + 1);
       if (nextStep) {
         await safeTimelineStepQueries.update(nextStep.id, {
           status: "active",
@@ -210,7 +211,7 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
 
   const pauseBakeMutation = useMutation({
     mutationFn: () => {
-      const currentStep = timelineSteps?.find(s => s.status === 'active');
+      const currentStep = safeFind(timelineSteps, s => s.status === 'active');
       
       // Track pause analytics
       if (currentStep) {
@@ -286,7 +287,7 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
       const { type, delta, stepId } = params;
       
       // Track recalibrate open analytics
-      const currentStep = timelineSteps?.find(s => s.status === 'active');
+      const currentStep = safeFind(timelineSteps, s => s.status === 'active');
       timelineAnalytics.trackRecalibrateOpen({
         bakeId: bake.id,
         stepId: currentStep?.id,
@@ -333,7 +334,7 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
         affectedSteps = 1;
         mode = 'custom_timing';
         
-        const step = timelineSteps?.find(s => s.id === stepId);
+        const step = safeFind(timelineSteps, s => s.id === stepId);
         if (step) {
           const newDuration = Math.max(1, (step.estimatedDuration || 30) + delta);
           await safeTimelineStepQueries.update(stepId, {
