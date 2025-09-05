@@ -15,6 +15,10 @@ import { safeMap } from "@/lib/safeArray";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { testSupabaseConnection, testDatabaseTables } from "@/lib/testSupabase";
 import { Button } from "@/components/ui/button";
+import { useLocation } from "wouter";
+import StartBakeModal from "@/components/start-bake-modal";
+import NotesModal from "@/components/notes-modal";
+import RecipeModal from "@/components/recipe-modal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   DropdownMenu, 
@@ -27,9 +31,13 @@ import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_175622489
 
 export default function Home() {
   const { user, signOut } = useSupabaseAuth();
+  const [, setLocation] = useLocation();
 
-  // State for modals (keeping them disabled for now to avoid errors)
+  // State for modals
   const [isCreatingBake, setIsCreatingBake] = useState(false);
+  const [showStartBakeModal, setShowStartBakeModal] = useState(false);
+  const [showNotesModal, setShowNotesModal] = useState(false);
+  const [showNewRecipeModal, setShowNewRecipeModal] = useState(false);
 
   // Initialize data and test connection
   useEffect(() => {
@@ -194,6 +202,40 @@ export default function Home() {
     return "U";
   };
 
+  // Quick action handlers
+  const handleStartBake = () => {
+    setShowStartBakeModal(true);
+  };
+
+  const handleOpenCamera = () => {
+    // Navigate to photo gallery or camera for first active bake
+    if (activeBakes.length > 0) {
+      setLocation(`/recent-bakes?bake=${activeBakes[0].id}&tab=photos`);
+    } else {
+      // No active bake, could show a message or open camera anyway
+      console.log('No active bake to add photo to');
+    }
+  };
+
+  const handleOpenNotes = () => {
+    if (activeBakes.length > 0) {
+      setShowNotesModal(true);
+    } else {
+      // Navigate to general notes or recent bakes
+      setLocation('/recent-bakes');
+    }
+  };
+
+  const handleNewRecipe = () => {
+    setShowNewRecipeModal(true);
+  };
+
+  const handleBakeCreated = (bake: Bake) => {
+    setShowStartBakeModal(false);
+    // Refresh bakes query
+    queryClient.invalidateQueries({ queryKey: ["bakes"] });
+  };
+
   return (
     <div className="min-h-screen bg-sourdough-50">
       {/* Header */}
@@ -262,10 +304,10 @@ export default function Home() {
 
         {/* Quick Actions */}
         <QuickActions
-          onOpenCamera={() => console.log('Camera disabled for now')}
-          onOpenNotes={() => console.log('Notes disabled for now')}
-          onStartBake={() => console.log('Start bake disabled for now')}
-          onNewRecipe={() => console.log('New recipe disabled for now')}
+          onOpenCamera={handleOpenCamera}
+          onOpenNotes={handleOpenNotes}
+          onStartBake={handleStartBake}
+          onNewRecipe={handleNewRecipe}
           hasActiveBake={activeBakes.length > 0}
           isCreatingBake={isCreatingBake}
         />
@@ -320,6 +362,24 @@ export default function Home() {
 
       {/* Bottom Navigation */}
       <BottomNavigation currentPath="/" />
+
+      {/* Modals */}
+      <StartBakeModal
+        isOpen={showStartBakeModal}
+        onClose={() => setShowStartBakeModal(false)}
+        onBakeStarted={handleBakeCreated}
+      />
+
+      <NotesModal
+        isOpen={showNotesModal}
+        onClose={() => setShowNotesModal(false)}
+        bakeId={activeBakes.length > 0 ? activeBakes[0].id : undefined}
+      />
+
+      <RecipeModal
+        isOpen={showNewRecipeModal}
+        onClose={() => setShowNewRecipeModal(false)}
+      />
     </div>
   );
 }
