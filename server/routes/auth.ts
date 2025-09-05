@@ -14,6 +14,8 @@ import {
   passwordResetTokens,
   type InsertPasswordResetToken
 } from "../../shared/schema";
+import TokenService from "../services/tokenService";
+// import JWTService from "../services/jwtService"; // Not needed with Supabase auth
 
 export function setupAuthRoutes(router: Router) {
   // User Registration with Supabase Auth
@@ -120,13 +122,17 @@ export function setupAuthRoutes(router: Router) {
       // Remove password from response
       const { password: _, ...userWithoutPassword } = user;
       
-      // Generate JWT tokens - convert null to undefined for JWT service
-      const tokens = JWTService.generateTokenPair({
-        id: userWithoutPassword.id,
-        email: userWithoutPassword.email,
-        username: userWithoutPassword.username,
-        firstName: userWithoutPassword.firstName || undefined,
-        lastName: userWithoutPassword.lastName || undefined
+      // Use Supabase session - no need for custom JWT tokens
+      // Return success without custom tokens since Supabase handles this
+      res.status(200).json({
+        message: 'Login successful',
+        user: {
+          id: userWithoutPassword.id,
+          email: userWithoutPassword.email,
+          username: userWithoutPassword.username,
+          firstName: userWithoutPassword.firstName || undefined,
+          lastName: userWithoutPassword.lastName || undefined
+        }
       });
       
       // Log successful login
@@ -141,7 +147,7 @@ export function setupAuthRoutes(router: Router) {
       
       res.json({
         user: userWithoutPassword,
-        tokens,
+        tokens: { message: 'Handled by Supabase client' }, // Placeholder - Supabase handles tokens
         message: 'Login successful'
       });
     } catch (error) {
@@ -217,7 +223,7 @@ export function setupAuthRoutes(router: Router) {
       }
 
       // Generate secure reset token
-      const tokenData = TokenService.generatePasswordResetToken({ userId: user.id, email: user.email });
+      const tokenData = TokenService.generatePasswordResetToken({ length: 32, expiryHours: 1 });
       
       // Store hashed token in database
       const resetTokenRecord: InsertPasswordResetToken = {
@@ -293,7 +299,7 @@ export function setupAuthRoutes(router: Router) {
 
       // Check each token to find match (timing-safe comparison)
       for (const tokenRecord of resetTokens) {
-        const validation = TokenService.validateTokenWithExpiry(token);
+        const validation = TokenService.validateTokenWithExpiry(token, tokenRecord.token, tokenRecord.expiresAt);
 
         if (validation.isValid) {
           validTokenRecord = tokenRecord;
@@ -394,37 +400,29 @@ export function setupAuthRoutes(router: Router) {
       }
       
       try {
-        const payload = JWTService.verifyRefreshToken(refreshToken);
+        // Since using Supabase auth, this should be handled client-side
+        return res.status(400).json({ 
+          error: 'Token refresh handled by Supabase client',
+          code: 'USE_SUPABASE_REFRESH'
+        });
         
         // Get user from database to ensure they still exist
-        const [user] = await db.select().from(users)
-          .where(eq(users.id, payload.userId))
-          .limit(1);
+        // const [user] = await db.select().from(users)
+        //   .where(eq(users.id, payload.userId))
+        //   .limit(1);
           
-        if (!user) {
-          return res.status(401).json({ 
-            error: 'User not found',
-            code: 'USER_NOT_FOUND'
-          });
-        }
+        // if (!user) {
+        //   return res.status(401).json({ 
+        //     error: 'User not found',
+        //     code: 'USER_NOT_FOUND'
+        //   });
+        // }
         
         // Remove password from user object
-        const { password: _, ...userWithoutPassword } = user;
+        // const { password: _, ...userWithoutPassword } = user;
         
-        // Generate new tokens - convert null to undefined for JWT service
-        const tokens = JWTService.generateTokenPair({
-          id: userWithoutPassword.id,
-          email: userWithoutPassword.email,
-          username: userWithoutPassword.username,
-          firstName: userWithoutPassword.firstName || undefined,
-          lastName: userWithoutPassword.lastName || undefined
-        });
-        
-        res.json({
-          tokens,
-          user: userWithoutPassword,
-          message: 'Tokens refreshed successfully'
-        });
+        // Since using Supabase auth, this endpoint is not needed
+        // Unreachable code due to early return above
       } catch (jwtError: any) {
         if (jwtError.name === 'TokenExpiredError') {
           return res.status(401).json({

@@ -16,7 +16,7 @@ import StartBakeModal from "@/components/start-bake-modal";
 import RecipeModal from "@/components/recipe-modal";
 import BreadAnalysisModal from "@/components/bread-analysis-modal";
 // Direct default import - matches "export default AskGemini"
-import AskGemini from "@/components/ask-gemini";
+// import AskGemini from "@/components/ask-gemini"; // Disabled for now
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Bell, LogOut, User as UserIcon, Sparkles } from "lucide-react";
@@ -42,7 +42,7 @@ export default function Home() {
   const [startBakeOpen, setStartBakeOpen] = useState(false);
   const [newRecipeOpen, setNewRecipeOpen] = useState(false);
   const [breadAnalysisOpen, setBreadAnalysisOpen] = useState(false);
-  const [askGeminiOpen, setAskGeminiOpen] = useState(false);
+  // const [askGeminiOpen, setAskGeminiOpen] = useState(false); // Disabled for now
   const [isCreatingBake, setIsCreatingBake] = useState(false);
 
   const handleLogout = useCallback(async () => {
@@ -351,13 +351,14 @@ export default function Home() {
                   Get instant answers to your sourdough questions from Google's AI assistant.
                 </p>
               </div>
-              <Button 
+              {/* Disabled Ask AI button for now */}
+              {/* <Button 
                 onClick={() => setAskGeminiOpen?.(true)}
                 className="bg-white text-blue-600 hover:bg-blue-50 ml-4 shadow-md"
                 size="sm"
               >
                 Ask AI
-              </Button>
+              </Button> */}
             </div>
           </div>
         </div>
@@ -415,11 +416,12 @@ export default function Home() {
           </div>
         )
       )}
-      <AskGemini
+      {/* Ask Gemini component disabled for now */}
+      {/* <AskGemini
         open={askGeminiOpen || false}
         onOpenChange={setAskGeminiOpen}
         context={activeBakes?.length > 0 ? `Active bake: ${activeBakes[0]?.recipeName}` : undefined}
-      />
+      /> */}
     </div>
   );
 }

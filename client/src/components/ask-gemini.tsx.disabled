@@ -16,14 +16,13 @@ function AskGemini({ open, onOpenChange, context }: AskGeminiProps) {
   const [response, setResponse] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Get toast function from useToast hook with fallback
-  const toastHook = useToast();
-  const toast = toastHook?.toast;
+  // Get toast function from useToast hook with proper destructuring
+  const { toast } = useToast();
 
   const handleAskQuestion = async () => {
     if (!question.trim()) {
-      // Use optional chaining directly on the toast function.
-      toast?.({
+      // Call toast function directly since it's destructured
+      toast({
         title: "Please enter a question",
         description: "Ask me anything about sourdough baking!",
         variant: "destructive",
@@ -41,13 +40,13 @@ ${context ? `Context: ${context}` : ""}
 For now, I recommend checking your starter health, monitoring fermentation temperature, and ensuring proper hydration levels for your dough.`;
 
       setResponse(mockResponse);
-      toast?.({
+      toast({
         title: "AI Response Ready",
         description: "I've analyzed your question and provided recommendations.",
       });
     } catch (error) {
       console.error('Ask Gemini error:', error);
-      toast?.({
+      toast({
         title: "Unable to get response",
         description: "There was an issue connecting to the AI assistant.",
         variant: "destructive",
