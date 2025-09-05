@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { safeMap } from "@/lib/safeArray";
 import type { BakeNote } from "@shared/schema";
 import { safeBakeNoteQueries } from "@/lib/safeQueries";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -99,7 +100,7 @@ export default function NotesModal({ isOpen, onClose, bakeId }: NotesModalProps)
           {notes && notes.length > 0 && (
             <div className="space-y-3">
               <h4 className="font-medium text-sourdough-800">Previous Notes</h4>
-              {notes.map((note) => (
+              {safeMap(notes, (note) => (
                 <div key={note.id} className="bg-green-50 rounded-lg p-3 border border-green-200">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm text-green-700 font-medium">

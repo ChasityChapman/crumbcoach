@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { safeFind } from "@/lib/safeArray";
+import { safeFind, safeMap } from "@/lib/safeArray";
 import type { Recipe, Bake, InsertBake } from "@shared/schema";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -208,7 +208,7 @@ export default function StartBakeModal({ isOpen, onClose, onBakeStarted }: Start
                   <SelectValue placeholder="Select a recipe" />
                 </SelectTrigger>
                 <SelectContent>
-                  {recipes?.map((recipe) => (
+                  {safeMap(recipes, (recipe) => (
                     <SelectItem key={recipe.id} value={recipe.id}>
                       <div className="flex items-center space-x-2">
                         <ChefHat className="w-4 h-4" />

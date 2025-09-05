@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { safeMap } from "@/lib/safeArray";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -427,7 +428,7 @@ export default function RecipeModal({ isOpen, onClose, recipe, initialTab = "man
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {ingredients.map((ingredient, index) => (
+              {safeMap(ingredients, (ingredient, index) => (
                 <div key={index} className="flex space-x-2">
                   <Input
                     value={ingredient.name}
@@ -474,7 +475,7 @@ export default function RecipeModal({ isOpen, onClose, recipe, initialTab = "man
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="grid grid-cols-2 gap-2">
-                {HYDRATION_PRESETS.map((preset) => (
+                {safeMap(HYDRATION_PRESETS, (preset) => (
                   <Button
                     key={preset.percentage}
                     variant={selectedHydration === preset.percentage ? "default" : "outline"}
@@ -503,7 +504,7 @@ export default function RecipeModal({ isOpen, onClose, recipe, initialTab = "man
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {steps.map((step, index) => (
+              {safeMap(steps, (step, index) => (
                 <div key={step.id} className="space-y-2 p-3 border rounded-lg">
                   <div className="flex items-center justify-between">
                     <Badge variant="secondary">Step {index + 1}</Badge>
