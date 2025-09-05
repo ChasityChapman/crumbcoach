@@ -1,6 +1,5 @@
 import { Capacitor } from "@capacitor/core";
 import { PushNotifications } from "@capacitor/push-notifications";
-import { revenueCat } from "./revenuecat";
 
 export async function initializeCapacitor() {
   // Only initialize native features on mobile platforms
@@ -10,16 +9,6 @@ export async function initializeCapacitor() {
   }
 
   try {
-    // Initialize RevenueCat with the provided API key
-    const apiKey = import.meta.env.VITE_REVENUECAT_API_KEY || process.env.REVENUECAT_API_KEY;
-    
-    if (apiKey) {
-      await revenueCat.initialize({ apiKey });
-      console.log('RevenueCat initialized successfully');
-    } else {
-      console.warn('RevenueCat API key not found - skipping initialization');
-    }
-
     // Initialize push notifications - disabled until Firebase is properly configured
     console.log('Push notifications disabled - configure Firebase to enable');
     // await initializePushNotifications();

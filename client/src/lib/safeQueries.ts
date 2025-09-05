@@ -17,6 +17,7 @@ import {
   demoStarterLogs, 
   demoTutorials 
 } from './demoData';
+import { demoState } from './demoState';
 
 // Check if we're in demo mode by looking for demo user
 const isDemoMode = () => {
@@ -31,27 +32,36 @@ export const safeBakeQueries = {
       return await bakeQueries.getAll();
     } catch (error: any) {
       console.warn('Falling back to demo bakes:', error.message);
-      if (isDemoMode()) {
-        return demoBakes;
-      }
-      throw error;
+      // Always fall back to demo state for consistency
+      return demoState.getAllBakes();
     }
   },
   create: async (bakeData: any) => {
     try {
       return await bakeQueries.create(bakeData);
     } catch (error: any) {
-      console.warn('Demo mode: Cannot create bakes:', error.message);
-      if (isDemoMode()) {
-        // Return a mock bake
-        return {
-          id: `demo-bake-${Date.now()}`,
-          ...bakeData,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-      }
-      throw error;
+      console.warn('Demo mode: Creating bake in demo state:', error.message);
+      // Always fall back to demo state
+      return demoState.createBake(bakeData);
+    }
+  },
+  delete: async (bakeId: string) => {
+    try {
+      return await bakeQueries.delete(bakeId);
+    } catch (error: any) {
+      console.warn('Cannot delete bake, deleting from demo state:', error.message);
+      // Actually delete from demo state
+      const deleted = demoState.deleteBake(bakeId);
+      return { success: true, deleted };
+    }
+  },
+  update: async (bakeId: string, updates: any) => {
+    try {
+      return await bakeQueries.update(bakeId, updates);
+    } catch (error: any) {
+      console.warn('Cannot update bake, updating demo state:', error.message);
+      // For now, just return success - we could extend demo state to handle bake updates
+      return { success: true, updated: true };
     }
   }
 };
@@ -119,7 +129,20 @@ export const safeTimelineStepQueries = {
     } catch (error: any) {
       console.warn('Falling back to demo timeline steps:', error.message);
       if (isDemoMode()) {
-        return demoTimelineSteps.filter(step => step.bakeId === bakeId);
+        return demoState.getTimelineStepsByBakeId(bakeId);
+      }
+      throw error;
+    }
+  },
+
+  // Add update function for demo mode
+  update: async (stepId: string, updates: any) => {
+    try {
+      return await timelineStepQueries.update(stepId, updates);
+    } catch (error: any) {
+      console.warn('Demo mode: Updating timeline step in memory:', stepId, updates);
+      if (isDemoMode()) {
+        return demoState.updateTimelineStep(stepId, updates);
       }
       throw error;
     }

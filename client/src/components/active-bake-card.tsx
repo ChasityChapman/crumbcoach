@@ -1,811 +1,549 @@
-import type { Bake, TimelineStep, Recipe } from "@shared/schema";
-import { formatDistanceToNow } from "date-fns";
-import { useState, useEffect } from "react";
+import type { Bake, Recipe } from "@shared/schema";
+import { formatDistanceToNow, format, addMinutes } from "date-fns";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import { safeRecipeQueries, safeTimelineStepQueries } from "@/lib/safeQueries";
-import { Button } from "@/components/ui/button";
-import { Timer, Play, Pause, CheckCircle, SkipForward, ChevronDown, ChevronUp, X, Camera, FileText, Clock, RefreshCw, Bell, BellOff } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
+import { safeRecipeQueries, safeTimelineStepQueries, safeBakeQueries } from "@/lib/safeQueries";
 import { bakeNotifications } from "@/lib/notifications";
+import { timelineAnalytics } from "@/lib/timeline-analytics";
+import { Button } from "@/components/ui/button";
+import { MoreVertical, RefreshCw, Pause, CheckCircle, FileText, Thermometer, SkipForward, X } from "lucide-react";
+import TimelineView from "./timeline-view";
+import RecalibrationSheet from "./recalibration-sheet";
+import AdaptiveStepGuide from "./adaptive-step-guide";
+import NotificationAnalyticsListener from "./notification-analytics-listener";
 
 interface ActiveBakeCardProps {
   bake: Bake;
+  now?: Date;
 }
 
-export default function ActiveBakeCard({ bake }: ActiveBakeCardProps) {
-  const { toast } = useToast();
-  const [stepTimer, setStepTimer] = useState(0);
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
-  const [cameraOpen, setCameraOpen] = useState(false);
-  const [notesOpen, setNotesOpen] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(bakeNotifications.hasPermission());
-  
-  // Helper function to create timeline steps for this bake
-  const createTimelineSteps = async (bake: Bake) => {
-    console.log('Creating timeline steps for bake:', bake.id);
-    const recipe = recipes?.find((r: Recipe) => r.id === bake.recipeId);
-    
-    if (recipe && recipe.steps) {
-      const steps = recipe.steps as any[];
-      console.log('Found recipe with', steps.length, 'steps');
-      
-      // Start with current time
-      let currentTime = new Date();
-      
-      for (let i = 0; i < steps.length; i++) {
-        const step = steps[i];
-        const stepStartTime = new Date(currentTime);
-        
-        // Calculate when this step should end (current time + duration in minutes)
-        const stepEndTime = new Date(currentTime.getTime() + (step.duration * 60 * 1000));
-        
-        try {
-          await apiRequest("POST", "/api/timeline-steps", {
-            bakeId: bake.id,
-            stepIndex: i,
-            name: step.name,
-            description: step.description || null,
-            estimatedDuration: step.duration,
-            status: i === 0 ? 'active' : 'pending',
-            startTime: stepStartTime.toISOString(),
-            endTime: null, // Will be set when step is completed
-            actualDuration: null,
-            autoAdjustments: null
-          });
-          
-          // Next step starts when this step ends
-          currentTime = stepEndTime;
-          
-          console.log(`Step ${i + 1} (${step.name}): ${stepStartTime.toLocaleTimeString()} - ${stepEndTime.toLocaleTimeString()}`);
-        } catch (error) {
-          console.error('Failed to create timeline step:', error);
-        }
-      }
-      
-      // Refresh timeline after creation
-      queryClient.invalidateQueries({ queryKey: [`/api/bakes/${bake.id}/timeline`] });
-      
-      toast({
-        title: "Timeline Created!",
-        description: "Your baking timeline is now ready",
-      });
-    }
-  };
-  
-  // Don't render if bake is invalid or doesn't have an ID
-  if (!bake || !bake.id) {
-    return null;
-  }
-  
-  const startTime = new Date(bake.startTime || Date.now());
-  const estimatedEnd = new Date(bake.estimatedEndTime || Date.now());
-  const now = new Date();
-  
-  const { data: timelineSteps } = useQuery<TimelineStep[]>({
-    queryKey: [`/api/bakes/${bake.id}/timeline`],
-    queryFn: () => safeTimelineStepQueries.getByBakeId(bake.id),
-  });
-  
+export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCardProps) {
+  const [showOverflowMenu, setShowOverflowMenu] = useState(false);
+  const [recalibrateSheetOpen, setRecalibrateSheetOpen] = useState(false);
+  const [selectedStep, setSelectedStep] = useState<string | null>(null);
+  const [adaptiveGuideOpen, setAdaptiveGuideOpen] = useState(false);
+  const [adaptiveStepId, setAdaptiveStepId] = useState<string | null>(null);
+
+  // Get recipe data
   const { data: recipes } = useQuery<Recipe[]>({
-    queryKey: ["/api/recipes"],
+    queryKey: ["recipes"],
     queryFn: safeRecipeQueries.getAll,
   });
-  
-  // Calculate progress based on completed steps
-  const completedSteps = timelineSteps?.filter(step => step.status === 'completed').length || 0;
-  const totalSteps = timelineSteps?.length || 1;
-  const progress = (completedSteps / totalSteps) * 100;
-  
-  const timeRemaining = estimatedEnd.getTime() - now.getTime();
-  const hoursRemaining = Math.floor(timeRemaining / (1000 * 60 * 60));
-  const minutesRemaining = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
 
-  const getCurrentStage = () => {
-    const currentStep = bake.currentStep || 0;
-    const stages = ["Mix", "Bulk Rise", "Shape", "Final Rise", "Bake"];
-    return stages[currentStep] || "Unknown";
-  };
-  
-  const getActiveStep = () => {
-    return timelineSteps?.find(step => step.status === 'active');
-  };
-  
-  const isAllStepsCompleted = () => {
-    if (!timelineSteps || timelineSteps.length === 0) return false;
-    return timelineSteps.every(step => step.status === 'completed');
-  };
-  
-  const activeStep = getActiveStep();
-  const allCompleted = isAllStepsCompleted();
-  
-  // Mark bake as completed when all steps are done
-  const completeBakeMutation = useMutation({
-    mutationFn: () => apiRequest("PATCH", `/api/bakes/${bake.id}`, {
-      status: "completed",
-      endTime: new Date().toISOString(),
-    }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/bakes"] });
-      toast({
-        title: "Bake Complete! 🎉",
-        description: "Congratulations! Your sourdough journey is finished.",
-      });
-    },
+  // Get timeline steps
+  const { data: timelineSteps } = useQuery({
+    queryKey: [`bakes`, bake.id, `timeline`],
+    queryFn: () => safeTimelineStepQueries.getByBakeId(bake.id),
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
-  
-  // Auto-complete bake when all steps are done
-  useEffect(() => {
-    if (allCompleted && bake.status !== 'completed') {
-      bakeNotifications.clearAllAlarms();
-      completeBakeMutation.mutate();
-    }
-  }, [allCompleted, bake.status]);
 
-  // Schedule alarms for upcoming steps
-  useEffect(() => {
-    if (!timelineSteps || !notificationsEnabled) return;
+  const recipe = recipes?.find(r => r.id === bake.recipeId);
 
-    // Clear existing alarms
+  // Generate schedule from timeline steps
+  const timelineItems = useMemo(() => {
+    if (!timelineSteps || timelineSteps.length === 0) return [];
+
+    return timelineSteps
+      .sort((a, b) => (a.stepNumber || 0) - (b.stepNumber || 0))
+      .map(step => ({
+        id: step.id,
+        stepName: step.title || step.name || `Step ${step.stepNumber}`,
+        status: step.status as 'active' | 'pending' | 'completed',
+        startAt: new Date(step.scheduledTime || step.startTime || now),
+        endAt: new Date((step.scheduledTime || step.startTime || now) + (step.estimatedDuration || 30) * 60 * 1000),
+        duration: step.estimatedDuration || 30,
+        instructions: step.description,
+        // Check for overnight steps (8+ hours)
+        isOvernight: (step.estimatedDuration || 30) >= 480,
+        // Check for adaptive steps (detect by keywords or special flags)
+        isAdaptive: step.name?.toLowerCase().includes('until') || 
+                   step.name?.toLowerCase().includes('doubled') ||
+                   step.name?.toLowerCase().includes('ready') ||
+                   step.description?.toLowerCase().includes('until'),
+        canOverlap: false, // Could be set based on step type
+        adaptiveCheckInterval: 30, // Default 30 minutes
+      }));
+  }, [timelineSteps, now]);
+
+  // Calculate progress
+  const completedSteps = timelineItems.filter(item => item.status === 'completed').length;
+  const totalSteps = timelineItems.length;
+  const progress = totalSteps > 0 ? (completedSteps / totalSteps) * 100 : 0;
+
+  // Calculate ETA
+  const lastStep = timelineItems[timelineItems.length - 1];
+  const eta = lastStep ? lastStep.endAt : addMinutes(new Date(bake.startTime || now), 480);
+
+  // Get active step for next-step tile
+  const activeStep = timelineItems.find(item => item.status === 'active');
+  const nextStep = timelineItems.find(item => item.status === 'pending');
+
+  // Schedule notifications for pending steps
+  useEffect(() => {
+    if (!timelineItems || timelineItems.length === 0) return;
+
+    // Clear all existing alarms first
     bakeNotifications.clearAllAlarms();
 
     // Schedule alarms for pending steps
-    timelineSteps.forEach((step) => {
-      if (step.status === 'pending' && step.startTime) {
-        const stepStart = new Date(step.startTime);
-        bakeNotifications.scheduleStepAlarm(
-          step.id,
-          step.name,
-          stepStart,
-          bake.id
+    timelineItems.forEach((item) => {
+      if (item.status === 'pending') {
+        bakeNotifications.scheduleStepAlarms(
+          item.id,
+          item.stepName,
+          item.startAt,
+          item.duration,
+          bake.id,
+          {
+            isOvernight: item.isOvernight,
+            isAdaptive: item.isAdaptive,
+            adaptiveCheckInterval: item.adaptiveCheckInterval,
+          }
         );
       }
     });
 
-    // Listen for alarm events
-    const handleStepAlarm = (event: CustomEvent) => {
-      toast({
-        title: "🍞 Step Ready!",
-        description: `Time for: ${event.detail.stepName}`,
-        duration: 10000,
-      });
-    };
-
-    window.addEventListener('bake-step-alarm', handleStepAlarm as EventListener);
+    // Cleanup on unmount
     return () => {
-      window.removeEventListener('bake-step-alarm', handleStepAlarm as EventListener);
+      bakeNotifications.clearAllAlarms();
     };
-  }, [timelineSteps, notificationsEnabled, bake.id, toast]);
-  
-  // Auto-create timeline when bake card loads and no timeline exists
-  useEffect(() => {
-    if (timelineSteps !== undefined && timelineSteps.length === 0 && recipes && bake.id) {
-      console.log('Auto-creating timeline for bake:', bake.id);
-      createTimelineSteps(bake);
-    }
-  }, [timelineSteps, recipes, bake.id]);
-  
-  // Auto-create timeline steps if this bake has none
-  useEffect(() => {
-    if (timelineSteps !== undefined && timelineSteps.length === 0) {
-      // We need access to recipes to create timeline steps
-      // For now, this will be handled when the user interacts with the bake
-      console.log('Bake has no timeline steps:', bake.id);
-    }
-  }, [timelineSteps, bake.id]);
-  
-  // Timer functionality
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isTimerRunning) {
-      interval = setInterval(() => {
-        setStepTimer(prev => prev + 1);
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isTimerRunning]);
-  
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-  
-  const startStepTimer = () => {
-    setIsTimerRunning(true);
-  };
-  
-  const pauseStepTimer = () => {
-    setIsTimerRunning(false);
-  };
-  
-  const resetStepTimer = () => {
-    setStepTimer(0);
-    setIsTimerRunning(false);
-  };
-  
-  
-  // Skip to next step mutation
-  const skipStepMutation = useMutation({
-    mutationFn: async () => {
-      if (!activeStep) return;
-      
-      // Mark current step as completed
-      await apiRequest("PATCH", `/api/timeline-steps/${activeStep.id}`, {
+  }, [timelineItems, bake.id]);
+
+  // Mutations
+  const markDoneMutation = useMutation({
+    mutationFn: async (stepId: string) => {
+      const step = timelineSteps?.find(s => s.id === stepId);
+      if (!step) return;
+
+      const startTime = new Date(step.scheduledTime || step.startTime || now);
+      const actualDuration = Math.floor((now.getTime() - startTime.getTime()) / (1000 * 60));
+      const estimatedDuration = step.estimatedDuration || 30;
+      const delta = actualDuration - estimatedDuration;
+
+      await safeTimelineStepQueries.update(stepId, {
         status: "completed",
-        endTime: new Date().toISOString(),
-        actualDuration: Math.floor(stepTimer / 60),
+        completedTime: now.toISOString(),
+        actualDuration,
       });
-      
-      // Find and activate next step
-      const nextStep = timelineSteps?.find(step => step.stepIndex === activeStep.stepIndex + 1);
+
+      // Track step completion analytics
+      timelineAnalytics.trackStepComplete({
+        bakeId: bake.id,
+        stepId: step.id,
+        stepName: step.title || step.name || `Step ${step.stepNumber}`,
+        stepIndex: step.stepNumber || 0,
+        actualDuration,
+        estimatedDuration,
+        delta,
+        completedAt: now,
+        wasOverdue: delta > 10 // Consider overdue if >10 minutes late
+      });
+
+      // Activate next step
+      const nextStep = timelineSteps?.find(s => s.stepNumber === (step.stepNumber || 0) + 1);
       if (nextStep) {
-        await apiRequest("PATCH", `/api/timeline-steps/${nextStep.id}`, {
+        await safeTimelineStepQueries.update(nextStep.id, {
           status: "active",
-          startTime: new Date().toISOString(),
+          startTime: now.toISOString(),
         });
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/bakes/${bake.id}/timeline`] });
-      setStepTimer(0);
-      setIsTimerRunning(false);
-      toast({
-        title: "Step Completed!",
-        description: "Moved to the next baking step",
-      });
+      queryClient.invalidateQueries({ queryKey: [`bakes`, bake.id, `timeline`] });
+      if ('vibrate' in navigator) navigator.vibrate(50);
     },
   });
-  
-  // Skip step without completing mutation
-  const skipWithoutCompletingMutation = useMutation({
-    mutationFn: async () => {
-      if (!activeStep) return;
-      
-      // Mark current step as skipped
-      await apiRequest("PATCH", `/api/timeline-steps/${activeStep.id}`, {
+
+  const skipStepMutation = useMutation({
+    mutationFn: async (stepId: string) => {
+      const step = timelineSteps?.find(s => s.id === stepId);
+      if (!step) return;
+
+      await safeTimelineStepQueries.update(stepId, {
         status: "skipped",
-        endTime: new Date().toISOString(),
-        actualDuration: Math.floor(stepTimer / 60),
+        completedTime: now.toISOString(),
       });
-      
-      // Find and activate next step
-      const nextStep = timelineSteps?.find(step => step.stepIndex === activeStep.stepIndex + 1);
+
+      // Track step skip analytics
+      timelineAnalytics.trackStepSkip({
+        bakeId: bake.id,
+        stepId: step.id,
+        stepName: step.title || step.name || `Step ${step.stepNumber}`,
+        stepIndex: step.stepNumber || 0,
+        reason: 'manual',
+        pullForward: false, // This would come from skip confirmation modal
+        skippedAt: now,
+        originalDuration: step.estimatedDuration || 30
+      });
+
+      // Activate next step
+      const nextStep = timelineSteps?.find(s => s.stepNumber === (step.stepNumber || 0) + 1);
       if (nextStep) {
-        await apiRequest("PATCH", `/api/timeline-steps/${nextStep.id}`, {
+        await safeTimelineStepQueries.update(nextStep.id, {
           status: "active",
-          startTime: new Date().toISOString(),
+          startTime: now.toISOString(),
         });
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/bakes/${bake.id}/timeline`] });
-      setStepTimer(0);
-      setIsTimerRunning(false);
-      toast({
-        title: "Step Skipped",
-        description: "Moved to the next step without completing current one",
-        variant: "default",
-      });
+      queryClient.invalidateQueries({ queryKey: [`bakes`, bake.id, `timeline`] });
     },
   });
-  
-  
-  const handleSkipStep = () => {
-    skipStepMutation.mutate();
-  };
-  
-  const handleSkipWithoutCompleting = () => {
-    skipWithoutCompletingMutation.mutate();
-  };
-  
-  const handleMinimize = () => {
-    setIsMinimized(!isMinimized);
-  };
-  
-  // Delete bake mutation
+
+  const pauseBakeMutation = useMutation({
+    mutationFn: () => {
+      const currentStep = timelineSteps?.find(s => s.status === 'active');
+      
+      // Track pause analytics
+      if (currentStep) {
+        timelineAnalytics.trackPause({
+          bakeId: bake.id,
+          currentStepId: currentStep.id,
+          currentStepIndex: currentStep.stepNumber || 0,
+          pausedAt: now,
+          remainingSteps: timelineSteps?.filter(s => s.status === 'pending').length || 0
+        });
+      }
+      
+      return safeBakeQueries.update?.(bake.id, { status: "paused" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bakes"] });
+    },
+  });
+
+  const completeBakeMutation = useMutation({
+    mutationFn: () => {
+      const completedSteps = timelineSteps?.filter(s => s.status === 'completed').length || 0;
+      const skippedSteps = timelineSteps?.filter(s => s.status === 'skipped').length || 0;
+      const startTime = new Date(bake.createdAt);
+      const actualDuration = Math.floor((now.getTime() - startTime.getTime()) / (1000 * 60));
+      
+      // Track bake completion analytics
+      timelineAnalytics.trackBakeComplete({
+        bakeId: bake.id,
+        recipeId: bake.recipeId,
+        duration: actualDuration,
+        estimatedDuration: bake.estimatedDuration || 0,
+        stepsCompleted: completedSteps,
+        stepsSkipped: skippedSteps,
+        timesRecalibrated: 0, // TODO: track this in bake state
+        timesPaused: 0, // TODO: track this in bake state  
+        endTime: now
+      });
+      
+      return safeBakeQueries.update?.(bake.id, { 
+        status: "completed",
+        actualEndTime: now.toISOString()
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bakes"] });
+    },
+  });
+
   const deleteBakeMutation = useMutation({
-    mutationFn: () => apiRequest("DELETE", `/api/bakes/${bake.id}`),
+    mutationFn: () => safeBakeQueries.delete(bake.id),
     onMutate: async () => {
-      // Cancel any outgoing refetches so they don't overwrite our optimistic update
-      await queryClient.cancelQueries({ queryKey: ['/api/bakes'] });
-      
-      // Snapshot the previous value
-      const previousBakes = queryClient.getQueryData(['/api/bakes']);
-      
-      // Optimistically update to remove this bake immediately
-      queryClient.setQueryData(['/api/bakes'], (oldData: any) => {
+      await queryClient.cancelQueries({ queryKey: ["bakes"] });
+      const previousBakes = queryClient.getQueryData(["bakes"]);
+      queryClient.setQueryData(["bakes"], (oldData: any) => {
         if (!oldData || !Array.isArray(oldData)) return [];
         return oldData.filter((b: any) => b.id !== bake.id);
       });
-      
-      // Return a context object with the snapshotted value
       return { previousBakes };
     },
     onSuccess: () => {
-      // Clear all cache data related to this bake
-      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}`] });
-      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}/timeline`] });
-      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}/notes`] });
-      queryClient.removeQueries({ queryKey: [`/api/bakes/${bake.id}/photos`] });
-      
-      // Force refresh of main bakes list to ensure deletion persists
-      queryClient.invalidateQueries({ queryKey: ['/api/bakes'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/bakes/active'] });
-      
-      toast({
-        title: "Bake Deleted",
-        description: "Your baking session has been permanently removed",
-        variant: "destructive",
-      });
+      queryClient.invalidateQueries({ queryKey: ["bakes"] });
     },
     onError: (err, variables, context) => {
-      // If the mutation fails, use the context returned from onMutate to roll back
       if (context?.previousBakes) {
-        queryClient.setQueryData(['/api/bakes'], context.previousBakes);
+        queryClient.setQueryData(["bakes"], context.previousBakes);
+      }
+    },
+  });
+
+  const recalibrateMutation = useMutation({
+    mutationFn: async (params: { type: 'shift' | 'compress' | 'single'; delta: number; stepId?: string }) => {
+      const { type, delta, stepId } = params;
+      
+      // Track recalibrate open analytics
+      const currentStep = timelineSteps?.find(s => s.status === 'active');
+      timelineAnalytics.trackRecalibrateOpen({
+        bakeId: bake.id,
+        stepId: currentStep?.id,
+        currentStepIndex: currentStep?.stepNumber || 0,
+        remainingSteps: timelineSteps?.filter(s => s.status === 'pending').length || 0,
+        openedAt: now,
+        trigger: 'manual'
+      });
+      
+      let affectedSteps = 0;
+      let mode: 'shift_all' | 'from_current' | 'custom_timing' = 'shift_all';
+      
+      if (type === 'shift') {
+        // Shift all remaining steps by delta minutes
+        const remainingSteps = timelineSteps?.filter(s => s.status !== 'completed') || [];
+        affectedSteps = remainingSteps.length;
+        mode = 'shift_all';
+        
+        for (const step of remainingSteps) {
+          const newStartTime = addMinutes(new Date(step.scheduledTime || step.startTime || now), delta);
+          await safeTimelineStepQueries.update(step.id, {
+            scheduledTime: newStartTime.toISOString(),
+            startTime: step.status === 'active' ? step.startTime : newStartTime.toISOString(),
+          });
+        }
+      } else if (type === 'compress') {
+        // Compress gaps between pending steps
+        const pendingSteps = timelineSteps?.filter(s => s.status === 'pending') || [];
+        affectedSteps = pendingSteps.length;
+        mode = 'from_current';
+        
+        const compressionPerStep = Math.floor(delta / pendingSteps.length);
+        let accumulatedCompression = 0;
+        
+        for (const step of pendingSteps) {
+          accumulatedCompression += compressionPerStep;
+          const newStartTime = addMinutes(new Date(step.scheduledTime || step.startTime || now), -accumulatedCompression);
+          await safeTimelineStepQueries.update(step.id, {
+            scheduledTime: newStartTime.toISOString(),
+          });
+        }
+      } else if (type === 'single' && stepId) {
+        // Update single step duration
+        affectedSteps = 1;
+        mode = 'custom_timing';
+        
+        const step = timelineSteps?.find(s => s.id === stepId);
+        if (step) {
+          const newDuration = Math.max(1, (step.estimatedDuration || 30) + delta);
+          await safeTimelineStepQueries.update(stepId, {
+            estimatedDuration: newDuration,
+          });
+        }
       }
       
-      toast({
-        title: "Delete Failed",
-        description: "Could not delete the bake. Please try again.",
-        variant: "destructive",
+      // Track recalibrate apply analytics
+      timelineAnalytics.trackRecalibrateApply({
+        bakeId: bake.id,
+        stepId,
+        mode,
+        delta,
+        affectedSteps,
+        appliedAt: now
       });
     },
-  });
-  
-  // Recalibrate timeline mutation
-  const recalibrateMutation = useMutation({
-    mutationFn: () => apiRequest("POST", `/api/bakes/${bake.id}/recalibrate`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/bakes"] });
-      toast({
-        title: "Timeline Recalibrated!",
-        description: "Your baking schedule has been optimized for current conditions",
-      });
+      queryClient.invalidateQueries({ queryKey: [`bakes`, bake.id, `timeline`] });
+      setRecalibrateSheetOpen(false);
+      setSelectedStep(null);
+      // Notifications will be rescheduled automatically via the useEffect
+      console.log('Timeline recalibrated and notifications rescheduled');
     },
   });
-
-  const handleClose = () => {
-    bakeNotifications.clearAllAlarms();
-    deleteBakeMutation.mutate();
-  };
-
-  const handleToggleNotifications = async () => {
-    if (!notificationsEnabled) {
-      const granted = await bakeNotifications.requestPermission();
-      setNotificationsEnabled(granted);
-      if (granted) {
-        toast({
-          title: "Notifications Enabled",
-          description: "You'll be alerted when your next baking step is ready",
-        });
-      } else {
-        toast({
-          title: "Notifications Blocked",
-          description: "Enable notifications in your browser settings to get step alerts",
-          variant: "destructive",
-        });
-      }
-    } else {
-      setNotificationsEnabled(false);
-      bakeNotifications.clearAllAlarms();
-      toast({
-        title: "Notifications Disabled",
-        description: "Step alarms have been turned off",
-      });
-    }
-  };
 
   return (
-    <div className="p-4">
-      <div className="bg-gradient-to-r from-sourdough-500 to-sourdough-600 rounded-2xl p-6 text-white shadow-lg">
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex-1">
-            <h2 className="font-display font-semibold text-xl mb-1">{bake.name}</h2>
-            <p className="text-sourdough-100 text-sm">
-              Started {formatDistanceToNow(startTime, { addSuffix: true })}
-            </p>
+    <div className="bg-background border rounded-lg shadow-sm" data-active-bake>
+      {/* Header pill */}
+      <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center space-x-3">
+          <div className="px-3 py-1 bg-primary/10 text-primary text-sm font-medium rounded-full">
+            Active bake
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="bg-white/20 rounded-lg px-3 py-1">
-              <span className="text-sm font-medium">{getCurrentStage()}</span>
-            </div>
-            <button
-              onClick={handleMinimize}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-              title={isMinimized ? "Expand" : "Minimize"}
-            >
-              {isMinimized ? (
-                <ChevronDown className="w-4 h-4 text-white" />
-              ) : (
-                <ChevronUp className="w-4 h-4 text-white" />
-              )}
-            </button>
-            <button
-              onClick={handleClose}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-              title="Close baking session"
-            >
-              <X className="w-4 h-4 text-white" />
-            </button>
+          <div>
+            <h3 className="font-medium text-foreground">{recipe?.name || bake.name}</h3>
+            <p className="text-sm text-muted-foreground">
+              Started {formatDistanceToNow(new Date(bake.startTime || now), { addSuffix: true })} • 
+              ETA {format(eta, 'h:mm a')}
+            </p>
           </div>
         </div>
         
-        {/* Content (hidden when minimized) */}
-        {!isMinimized && (
-          <>
-            {/* Timeline Progress */}
-            <div className="mb-4">
-              <div className="flex justify-between text-sm mb-2">
-                <span>Steps Progress</span>
-                <span>{completedSteps}/{totalSteps} ({Math.round(progress)}%)</span>
-              </div>
-              <div className="w-full bg-white/20 rounded-full h-2">
-                <div 
-                  className="bg-white h-2 rounded-full transition-all duration-300" 
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-            </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setRecalibrateSheetOpen(true)}
+          >
+            <RefreshCw className="w-4 h-4 mr-1" />
+            Recalibrate
+          </Button>
+          
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowOverflowMenu(!showOverflowMenu)}
+            >
+              <MoreVertical className="w-4 h-4" />
+            </Button>
             
-            {/* Quick Actions */}
-            <div className="flex space-x-2 mb-4">
-              <button
-                onClick={() => setNotesOpen(true)}
-                className="flex-1 flex items-center justify-center space-x-2 bg-white/10 hover:bg-white/20 rounded-lg py-2 px-3 transition-colors"
-              >
-                <FileText className="w-4 h-4" />
-                <span className="text-sm">Notes</span>
-              </button>
-              <button
-                onClick={() => setCameraOpen(true)}
-                className="flex-1 flex items-center justify-center space-x-2 bg-white/10 hover:bg-white/20 rounded-lg py-2 px-3 transition-colors"
-              >
-                <Camera className="w-4 h-4" />
-                <span className="text-sm">Photo</span>
-              </button>
-            </div>
-            
-            {/* Timeline Management */}
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-sm font-medium">Timeline Management</h4>
-                <div className="flex space-x-2">
-                  <Button 
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleToggleNotifications}
-                    className={`text-xs px-2 py-1 h-auto ${
-                      notificationsEnabled 
-                        ? 'text-green-400 hover:text-green-300' 
-                        : 'text-white/60 hover:text-white/80'
-                    }`}
-                  >
-                    {notificationsEnabled ? (
-                      <Bell className="w-3 h-3 mr-1" />
-                    ) : (
-                      <BellOff className="w-3 h-3 mr-1" />
-                    )}
-                    Alarms
-                  </Button>
-                  <Button 
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => recalibrateMutation.mutate()}
-                    disabled={recalibrateMutation.isPending}
-                    className="text-accent-orange-500 hover:text-accent-orange-600 text-xs px-2 py-1 h-auto"
-                  >
-                    <RefreshCw className={`w-3 h-3 mr-1 ${recalibrateMutation.isPending ? 'animate-spin' : ''}`} />
-                    Recalibrate
-                  </Button>
-                </div>
-              </div>
-              <p className="text-xs text-white/60">
-                {notificationsEnabled 
-                  ? "Alarms enabled - you'll be notified when steps are ready" 
-                  : "Enable alarms to get notifications for upcoming baking steps"
-                }
-              </p>
-            </div>
-            
-            {/* Baking Steps */}
-            <div className="mb-4">
-              <h4 className="text-sm font-medium mb-2">Baking Steps</h4>
-              {timelineSteps && timelineSteps.length > 0 ? (
-                <div className="space-y-2">
-                  {timelineSteps.map((step, index) => (
-                    <div key={step.id} className={`flex items-center space-x-3 p-2 rounded-lg text-sm ${
-                      step.status === 'active' ? 'bg-white/10' : ''
-                    }`}>
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium ${
-                        step.status === 'completed' ? 'bg-green-500 text-white' :
-                        step.status === 'skipped' ? 'bg-yellow-500 text-white' :
-                        step.status === 'active' ? 'bg-white text-sourdough-600' :
-                        'bg-white/20 text-white/60'
-                      }`}>
-                        {step.status === 'completed' ? (
-                          <CheckCircle className="w-3 h-3" />
-                        ) : step.status === 'skipped' ? (
-                          <SkipForward className="w-3 h-3" />
-                        ) : step.status === 'active' ? (
-                          <Clock className="w-3 h-3" />
-                        ) : (
-                          index + 1
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <p className={`font-medium ${
-                          step.status === 'active' ? 'text-white' : 
-                          step.status === 'completed' ? 'text-green-100' :
-                          step.status === 'skipped' ? 'text-yellow-100' :
-                          'text-white/60'
-                        }`}>
-                          {step.name}
-                        </p>
-                        <div className="flex items-center space-x-2 text-xs text-white/60">
-                          <span>{step.estimatedDuration} min</span>
-                          {step.startTime && (
-                            <span className="text-blue-300">
-                              {new Date(step.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - 
-                              {new Date(new Date(step.startTime).getTime() + step.estimatedDuration * 60 * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                            </span>
-                          )}
-                          {step.status === 'completed' && step.actualDuration && (
-                            <span className="text-green-300">({step.actualDuration} min actual)</span>
-                          )}
-                          {step.status === 'skipped' && (
-                            <span className="text-yellow-300">(skipped)</span>
-                          )}
-                        </div>
-                        {step.description && (
-                          <p className="text-xs text-white/50 mt-1">{step.description}</p>
-                        )}
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        {step.status === 'pending' && notificationsEnabled && step.startTime && (
-                          <div className="text-xs text-amber-300 bg-amber-500/20 px-2 py-1 rounded flex items-center">
-                            <Bell className="w-2 h-2 mr-1" />
-                            Alarm
-                          </div>
-                        )}
-                        {step.status === 'active' && (
-                          <div className="text-xs text-white/80 bg-white/10 px-2 py-1 rounded">
-                            Current
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-sm text-white/60 bg-white/10 rounded-lg p-3 text-center">
-                  <Clock className="w-5 h-5 mx-auto mb-2 text-white/40" />
-                  <p>Creating timeline...</p>
-                  <p className="text-xs mt-1 text-white/40">Setting up your baking steps</p>
-                </div>
-              )}
-            </div>
-
-            {/* Completion State */}
-        {allCompleted && (
-          <div className="bg-green-500/20 rounded-lg p-4 border border-green-400/30">
-            <div className="text-center">
-              <CheckCircle className="w-8 h-8 text-green-200 mx-auto mb-2" />
-              <p className="font-medium text-lg text-green-100">Bake Complete!</p>
-              <p className="text-sm text-green-200">All steps finished successfully</p>
-            </div>
-          </div>
-        )}
-        
-        {/* Active Step with Timer */}
-        {activeStep && !allCompleted && (
-          <div className="bg-white/10 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <p className="text-sm text-sourdough-100">Current Step</p>
-                <p className="font-medium text-lg">{activeStep.name}</p>
-                <p className="text-sm text-sourdough-200">{activeStep.description}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm text-sourdough-100">Target</p>
-                <p className="font-semibold text-lg">{activeStep.estimatedDuration} min</p>
-              </div>
-            </div>
-            
-            {/* Timer Display */}
-            <div className="bg-white/10 rounded-lg p-3 mb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Timer className="w-5 h-5" />
-                  <span className="text-xl font-mono font-bold">{formatTime(stepTimer)}</span>
-                </div>
-                <div className="flex space-x-2">
-                  {!isTimerRunning ? (
-                    <Button
-                      onClick={startStepTimer}
-                      size="sm"
-                      className="bg-white/20 hover:bg-white/30 text-white border-white/30"
-                    >
-                      <Play className="w-4 h-4 mr-1" />
-                      Start
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={pauseStepTimer}
-                      size="sm"
-                      className="bg-white/20 hover:bg-white/30 text-white border-white/30"
-                    >
-                      <Pause className="w-4 h-4 mr-1" />
-                      Pause
-                    </Button>
-                  )}
-                  <Button
-                    onClick={resetStepTimer}
-                    size="sm"
-                    variant="outline"
-                    className="bg-white/10 hover:bg-white/20 text-white border-white/30"
-                  >
-                    Reset
-                  </Button>
-                </div>
-              </div>
-            </div>
-            
-            {/* Progress indicator */}
-            {activeStep.estimatedDuration && (
-              <div className="mb-4">
-                <div className="flex justify-between text-sm mb-1">
-                  <span>Step Progress</span>
-                  <span>{Math.min(Math.round((stepTimer / 60) / activeStep.estimatedDuration * 100), 100)}%</span>
-                </div>
-                <div className="w-full bg-white/20 rounded-full h-1.5">
-                  <div 
-                    className="bg-white h-1.5 rounded-full transition-all duration-300" 
-                    style={{ width: `${Math.min((stepTimer / 60) / activeStep.estimatedDuration * 100, 100)}%` }}
-                  />
-                </div>
-              </div>
-            )}
-            
-            {/* Step Actions (only shown when step is active) */}
-            <div className="flex space-x-2">
-              <Button
-                onClick={resetStepTimer}
-                size="sm"
-                variant="outline"
-                className="flex-1 bg-white/10 hover:bg-white/20 text-white border-white/30"
-              >
-                Reset Timer
-              </Button>
-            </div>
-          </div>
-        )}
-        
-            {/* Fallback for when no active step but not all completed */}
-            {!activeStep && !allCompleted && (
-              <div className="bg-white/10 rounded-lg p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-sourdough-100">
-                      {timeRemaining > 0 ? "Next Step" : "Ready"}
-                    </p>
-                    <p className="font-medium">
-                      {timeRemaining > 0 ? getCurrentStage() : "Timeline Ready"}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm text-sourdough-100">
-                      {timeRemaining > 0 ? "In" : "Waiting"}
-                    </p>
-                    <p className="font-semibold text-lg">
-                      {timeRemaining > 0 
-                        ? `${hoursRemaining}h ${minutesRemaining}m`
-                        : "Ready!"
-                      }
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-        
-        {/* Bake Controls - Moved to bottom */}
-        {!isMinimized && (
-          <div className="border-t border-white/10 pt-4 mt-4">
-            <h4 className="text-sm font-medium mb-3">Bake Controls</h4>
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                onClick={handleSkipWithoutCompleting}
-                disabled={skipWithoutCompletingMutation.isPending || !activeStep}
-                size="sm"
-                className="bg-yellow-600 hover:bg-yellow-700 text-white disabled:bg-gray-400"
-              >
-                <SkipForward className="w-4 h-4 mr-1" />
-                Skip
-              </Button>
-              <Button
-                onClick={handleSkipStep}
-                disabled={skipStepMutation.isPending || !activeStep}
-                size="sm"
-                className="bg-green-600 hover:bg-green-700 text-white disabled:bg-gray-400"
-              >
-                <CheckCircle className="w-4 h-4 mr-1" />
-                Complete
-              </Button>
-            </div>
-          </div>
-        )}
-        
-        {/* Camera Modal */}
-        {cameraOpen && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg p-4 w-full max-w-md">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-semibold text-sourdough-800">Take Photo</h3>
+            {showOverflowMenu && (
+              <div className="absolute right-0 top-full mt-1 bg-background border rounded-md shadow-lg py-1 z-10">
                 <button
-                  onClick={() => setCameraOpen(false)}
-                  className="p-1 hover:bg-sourdough-100 rounded"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="text-center py-8">
-                <Camera className="w-12 h-12 text-sourdough-400 mx-auto mb-4" />
-                <p className="text-sourdough-600 mb-4">Camera functionality will be available soon!</p>
-                <button
-                  onClick={() => setCameraOpen(false)}
-                  className="bg-sourdough-500 text-white px-4 py-2 rounded-lg hover:bg-sourdough-600 transition-colors"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Notes Modal */}
-        {notesOpen && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg p-4 w-full max-w-md">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-semibold text-sourdough-800">Add Note</h3>
-                <button
-                  onClick={() => setNotesOpen(false)}
-                  className="p-1 hover:bg-sourdough-100 rounded"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              <textarea
-                placeholder="Add notes about this step..."
-                className="w-full h-32 p-3 border border-sourdough-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-sourdough-500 text-black"
-              />
-              <div className="flex space-x-2 mt-4">
-                <button
-                  onClick={() => setNotesOpen(false)}
-                  className="flex-1 bg-sourdough-100 text-sourdough-700 px-4 py-2 rounded-lg hover:bg-sourdough-200 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
+                  className="flex items-center space-x-2 px-4 py-2 text-sm hover:bg-muted w-full text-left"
                   onClick={() => {
-                    toast({
-                      title: "Note Saved!",
-                      description: "Your baking note has been saved",
-                    });
-                    setNotesOpen(false);
+                    pauseBakeMutation.mutate();
+                    setShowOverflowMenu(false);
                   }}
-                  className="flex-1 bg-sourdough-500 text-white px-4 py-2 rounded-lg hover:bg-sourdough-600 transition-colors"
                 >
-                  Save Note
+                  <Pause className="w-4 h-4" />
+                  <span>Pause</span>
+                </button>
+                <button
+                  className="flex items-center space-x-2 px-4 py-2 text-sm hover:bg-muted w-full text-left"
+                  onClick={() => {
+                    completeBakeMutation.mutate();
+                    setShowOverflowMenu(false);
+                  }}
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  <span>Complete bake</span>
+                </button>
+                <button
+                  className="flex items-center space-x-2 px-4 py-2 text-sm hover:bg-muted w-full text-left text-destructive"
+                  onClick={() => {
+                    deleteBakeMutation.mutate();
+                    setShowOverflowMenu(false);
+                  }}
+                >
+                  <X className="w-4 h-4" />
+                  <span>Delete bake</span>
                 </button>
               </div>
-            </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
+
+      {/* Progress bar */}
+      <div className="px-4 py-3 border-b">
+        <div className="flex items-center justify-between text-sm mb-2">
+          <span className="text-muted-foreground">Progress</span>
+          <span className="font-medium">{completedSteps}/{totalSteps} steps</span>
+        </div>
+        <div className="w-full bg-muted rounded-full h-2">
+          <div 
+            className="bg-primary h-2 rounded-full transition-all duration-300"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Timeline */}
+      <div className="p-4">
+        <TimelineView
+          items={timelineItems}
+          now={now}
+          onMarkDone={(stepId) => markDoneMutation.mutate(stepId)}
+          onSkip={(stepId) => skipStepMutation.mutate(stepId)}
+          onOpenRecalibrate={(stepId) => {
+            setSelectedStep(stepId);
+            setRecalibrateSheetOpen(true);
+          }}
+          onOpenStepSheet={(stepId) => {
+            const step = timelineItems.find(item => item.id === stepId);
+            if (step?.isAdaptive) {
+              setAdaptiveStepId(stepId);
+              setAdaptiveGuideOpen(true);
+            } else {
+              // TODO: Open regular step detail sheet
+              console.log('Open step sheet for:', stepId);
+            }
+          }}
+          onSplitOvernightNotification={(stepId, bedtime, wakeup) => {
+            const item = timelineItems.find(item => item.id === stepId);
+            if (item) {
+              bakeNotifications.scheduleStepAlarms(
+                stepId,
+                item.stepName,
+                item.startAt,
+                item.duration,
+                bake.id,
+                {
+                  isOvernight: true,
+                  bedtime,
+                  wakeup,
+                }
+              );
+              console.log(`Split overnight notifications scheduled for ${item.stepName}`);
+            }
+          }}
+          onCheckAdaptiveReadiness={(stepId) => {
+            setAdaptiveStepId(stepId);
+            setAdaptiveGuideOpen(true);
+          }}
+        />
+      </div>
+
+      {/* Quick actions */}
+      <div className="flex space-x-2 p-4 border-t bg-muted/20">
+        <Button variant="outline" size="sm" className="flex-1">
+          <FileText className="w-4 h-4 mr-1" />
+          Add note
+        </Button>
+        <Button variant="outline" size="sm" className="flex-1">
+          <Thermometer className="w-4 h-4 mr-1" />
+          Adjust temp
+        </Button>
+        <Button variant="outline" size="sm" className="flex-1">
+          <SkipForward className="w-4 h-4 mr-1" />
+          Skip step
+        </Button>
+      </div>
+
+      {/* Recalibration Sheet */}
+      <RecalibrationSheet
+        isOpen={recalibrateSheetOpen}
+        onClose={() => {
+          setRecalibrateSheetOpen(false);
+          setSelectedStep(null);
+        }}
+        items={timelineItems}
+        selectedStepId={selectedStep}
+        onApplyRecalibration={(type, delta, stepId) => 
+          recalibrateMutation.mutate({ type, delta, stepId })
+        }
+      />
+
+      {/* Adaptive Step Guide */}
+      {adaptiveStepId && (
+        <AdaptiveStepGuide
+          stepName={timelineItems.find(item => item.id === adaptiveStepId)?.stepName || "Check Readiness"}
+          stepDescription={timelineItems.find(item => item.id === adaptiveStepId)?.instructions}
+          visualCues={[
+            "Dough has increased in size noticeably",
+            "Surface appears smooth and slightly domed",
+            "Gentle poke test: dough springs back slowly",
+            "Sides have pulled away slightly from container"
+          ]}
+          isOpen={adaptiveGuideOpen}
+          onClose={() => {
+            setAdaptiveGuideOpen(false);
+            setAdaptiveStepId(null);
+          }}
+          onMarkComplete={() => {
+            if (adaptiveStepId) {
+              markDoneMutation.mutate(adaptiveStepId);
+            }
+            setAdaptiveGuideOpen(false);
+            setAdaptiveStepId(null);
+          }}
+          onTakePhoto={() => {
+            // TODO: Implement photo capture
+            console.log('Taking photo for step:', adaptiveStepId);
+            // For now, just close the guide
+            setAdaptiveGuideOpen(false);
+            setAdaptiveStepId(null);
+          }}
+        />
+      )}
+
+      {/* Notification Analytics Listener */}
+      <NotificationAnalyticsListener bakeId={bake.id} />
     </div>
   );
 }

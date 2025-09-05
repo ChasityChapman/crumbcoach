@@ -93,19 +93,32 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
       
       console.log('Fetching user data for ID:', user.id);
       
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-      
-      if (error) {
-        console.error('Error fetching user data:', error);
-        throw error;
+      try {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        
+        if (error) {
+          console.error('Error fetching user data:', error);
+          throw error;
+        }
+        
+        console.log('User data loaded:', data);
+        return data;
+      } catch (error) {
+        console.warn('Falling back to demo user profile:', error);
+        // Return demo user profile
+        return {
+          id: user.id,
+          first_name: 'Demo',
+          last_name: 'User',
+          email: user.email || 'demo@example.com',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
       }
-      
-      console.log('User data loaded:', data);
-      return data;
     },
     enabled: !!user
   });

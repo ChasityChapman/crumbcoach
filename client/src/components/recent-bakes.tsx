@@ -5,12 +5,12 @@ import type { Bake, BakePhoto } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Share2, RefreshCw, FileText, X, RotateCcw } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { useToast } from "@/hooks/use-toast";
+// import { useToast } from "@/hooks/use-toast"; // Disabled to prevent JavaScript errors
 import { useState } from "react";
 import { useLocation } from "wouter";
 
 export default function RecentBakes() {
-  const { toast } = useToast();
+  // const { toast } = useToast(); // Disabled to prevent JavaScript errors
   const { data: bakes } = useQuery<Bake[]>({
     queryKey: ["bakes"],
     queryFn: safeBakeQueries.getAll,
@@ -47,10 +47,7 @@ export default function RecentBakes() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bakes"] });
-      toast({
-        title: "Bake Restarted! 🍞",
-        description: "Your new baking session has begun",
-      });
+      console.log("Bake Restarted! 🍞 - Your new baking session has begun");
     },
   });
 
@@ -66,7 +63,7 @@ export default function RecentBakes() {
   };
 
   const completedBakes = bakes?.filter(bake => bake.status === 'completed') || [];
-  const recentBakes = completedBakes.slice(0, 4); // Show last 4 completed bakes
+  const recentBakes = completedBakes.slice(0, 4) || []; // Show last 4 completed bakes
 
   return (
     <div className="px-4 mb-6">

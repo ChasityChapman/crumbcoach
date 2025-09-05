@@ -1,4 +1,3 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import type { Bake, Recipe, SensorReading, TimelineStep } from "@shared/schema";
@@ -7,10 +6,22 @@ import type { User } from "@supabase/supabase-js";
 import ActiveBakeCard from "@/components/active-bake-card";
 import SensorWidget from "@/components/sensor-widget";
 import QuickActions from "@/components/quick-actions";
+import TimelineView from "@/components/timeline-view";
 import TutorialPreview from "@/components/tutorial-preview";
 import RecentBakes from "@/components/recent-bakes";
 import BottomNavigation from "@/components/bottom-navigation";
-import NextStepTile from "@/components/next-step-tile";
+// import CameraModal from "@/components/camera-modal"; // Temporarily disabled
+// import NotesModal from "@/components/notes-modal"; // Temporarily disabled
+// import StartBakeModal from "@/components/start-bake-modal"; // Temporarily disabled
+// import RecipeModal from "@/components/recipe-modal"; // Temporarily disabled
+// import BreadAnalysisModal from "@/components/bread-analysis-modal"; // Temporarily disabled for testing
+// Direct default import - matches "export default AskGemini"
+// import AskGemini from "@/components/ask-gemini"; // Disabled for now
+
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { Bell, LogOut, User as UserIcon, Sparkles } from "lucide-react";
+import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_1756224893332.png";
+// import { useToast } from "@/hooks/use-toast"; // Temporarily disabled to test if this causes error
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { testSupabaseConnection, testDatabaseTables } from "@/lib/testSupabase";
 import { Button } from "@/components/ui/button";
@@ -21,21 +32,57 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Bell, LogOut, User as UserIcon, Sparkles } from "lucide-react";
-import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_1756224893332.png";
 
 export default function Home() {
+  // const { toast } = useToast(); // Temporarily disabled to test if this causes the error
   const { user, signOut } = useSupabaseAuth();
 
-  // State for modals (keeping them disabled for now to avoid errors)
+  // const [cameraOpen, setCameraOpen] = useState(false); // Temporarily disabled
+  // const [notesOpen, setNotesOpen] = useState(false); // Temporarily disabled
+  // const [startBakeOpen, setStartBakeOpen] = useState(false); // Temporarily disabled
+  // const [newRecipeOpen, setNewRecipeOpen] = useState(false); // Temporarily disabled
+  // const [breadAnalysisOpen, setBreadAnalysisOpen] = useState(false); // Temporarily disabled
+  // const [askGeminiOpen, setAskGeminiOpen] = useState(false); // Disabled for now
   const [isCreatingBake, setIsCreatingBake] = useState(false);
 
-  // Initialize data and test connection
+  const handleLogout = useCallback(async () => {
+    await signOut();
+    // The auth state change will automatically redirect to auth page
+  }, [signOut]);
+
+  const getUserDisplayName = useMemo(() => {
+    if (user?.user_metadata?.firstName && user?.user_metadata?.lastName) {
+      return `${user.user_metadata.firstName} ${user.user_metadata.lastName}`;
+    }
+    if (user?.user_metadata?.firstName) {
+      return user.user_metadata.firstName;
+    }
+    if (user?.email) {
+      return user.email;
+    }
+    return "User";
+  }, [user?.user_metadata?.firstName, user?.user_metadata?.lastName, user?.email]);
+
+  const getUserInitials = useMemo(() => {
+    if (user?.user_metadata?.firstName && user?.user_metadata?.lastName) {
+      return `${user.user_metadata.firstName[0]}${user.user_metadata.lastName[0]}`.toUpperCase();
+    }
+    if (user?.user_metadata?.firstName) {
+      return user.user_metadata.firstName[0].toUpperCase();
+    }
+    if (user?.email) {
+      return user.email[0].toUpperCase();
+    }
+    return "U";
+  }, [user?.user_metadata?.firstName, user?.user_metadata?.lastName, user?.email]);
+  
+  // Initialize data and test connection only once
   useEffect(() => {
     let mounted = true;
     
+    // Only clear cache and test connection if user just logged in
     if (user && mounted) {
-      // Clear stale cache data
+      // Clear only stale bake-related cache data once
       queryClient.removeQueries({ 
         predicate: (query) => {
           const key = query.queryKey[0] as string;
@@ -43,7 +90,7 @@ export default function Home() {
         }
       });
       
-      // Test connection
+      // Test connection once per session
       const testConnection = async () => {
         try {
           const result = await testSupabaseConnection();
@@ -61,16 +108,16 @@ export default function Home() {
     }
     
     return () => { mounted = false; };
-  }, [user?.id]);
+  }, [user?.id]); // Only run when user ID changes
 
   // Get all bakes and filter for active ones
   const { data: allBakes } = useQuery<Bake[]>({
     queryKey: ["bakes"],
     queryFn: safeBakeQueries.getAll,
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    refetchOnWindowFocus: false, // Reduce unnecessary refetches
     refetchOnMount: "always",
-    enabled: !!user,
+    enabled: !!user, // Only query when user is authenticated
   });
   
   const activeBakes = useMemo(() => 
@@ -78,65 +125,40 @@ export default function Home() {
       .filter((bake: Bake) => bake && bake.id && bake.status === 'active')
       .sort((a, b) => new Date(b.startTime || 0).getTime() - new Date(a.startTime || 0).getTime()),
     [allBakes]
-  );
-
-  // Get timeline for first active bake to show next step
-  const firstActiveBake = activeBakes[0];
-  const { data: firstBakeTimeline } = useQuery({
-    queryKey: [`bakes`, firstActiveBake?.id, `timeline`],
-    queryFn: () => safeTimelineStepQueries.getByBakeId(firstActiveBake.id),
-    enabled: !!firstActiveBake?.id,
-    staleTime: 0,
-  });
-
-  // Get next step from first active bake for the bottom tile
-  const nextStepInfo = useMemo(() => {
-    if (!firstActiveBake || !firstBakeTimeline) return null;
-
-    // Find the first pending step
-    const nextStep = firstBakeTimeline
-      .sort((a, b) => (a.stepNumber || 0) - (b.stepNumber || 0))
-      .find(step => step.status === 'pending');
-
-    if (!nextStep) return null;
-
-    return {
-      bakeId: firstActiveBake.id,
-      stepName: nextStep.title || nextStep.name || `Step ${nextStep.stepNumber}`,
-      startTime: new Date(nextStep.scheduledTime || nextStep.startTime || Date.now()),
-      duration: nextStep.estimatedDuration || 30,
-    };
-  }, [firstActiveBake, firstBakeTimeline]);
+  ); // Memoize expensive filtering and sorting
 
   const { data: latestSensor } = useQuery<SensorReading | null>({
     queryKey: ["sensors", "latest"],
     queryFn: safeSensorQueries.getLatest,
-    refetchInterval: 60000,
-    staleTime: 30000,
-    enabled: !!user && activeBakes.length > 0,
+    refetchInterval: 60000, // Reduced to refresh every 60 seconds to reduce load
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    enabled: !!user && activeBakes.length > 0, // Only query if there are active bakes
   });
 
   const { data: recipes } = useQuery<Recipe[]>({
     queryKey: ["recipes"],
     queryFn: safeRecipeQueries.getAll,
-    staleTime: 10 * 60 * 1000,
+    staleTime: 10 * 60 * 1000, // Recipes don't change often - 10 minutes
     enabled: !!user,
   });
 
-  // Mutation for creating timeline steps (without toast calls)
+  // Timeline data is now handled individually by each ActiveBakeCard
+
+  // Mutation for creating timeline steps
   const createTimelineStepsMutation = useMutation({
     mutationFn: async ({ bake, recipe }: { bake: Bake; recipe?: Recipe }) => {
       if (!recipe) {
         throw new Error('Recipe is required to create timeline steps');
       }
       
+      // Generate timeline steps based on recipe steps
       const recipeSteps = Array.isArray(recipe.steps) ? recipe.steps : [];
       const timelineSteps = recipeSteps.map((step, index) => ({
         bakeId: bake.id,
         stepIndex: index,
         name: step.name || `Step ${index + 1}`,
         description: step.instructions || step.description || '',
-        estimatedDuration: step.durationMinutes || 60,
+        estimatedDuration: step.durationMinutes || 60, // Default 1 hour if not specified
         actualDuration: null,
         startTime: null,
         endTime: null,
@@ -144,6 +166,7 @@ export default function Home() {
         autoAdjustments: {}
       })) || [];
 
+      // Create each timeline step in Supabase
       const createdSteps = [];
       for (const stepData of timelineSteps) {
         const created = await safeTimelineStepQueries.create(stepData);
@@ -153,45 +176,59 @@ export default function Home() {
       return createdSteps;
     },
     onSuccess: (steps) => {
+      // Invalidate and refetch timeline data for the bake
       queryClient.invalidateQueries({ 
         queryKey: ["timeline", steps[0]?.bakeId] 
       });
-      console.log('Timeline created successfully:', steps.length, 'steps');
+      
+      // toast({
+      //   title: "Timeline Created",
+      //   description: `Created ${steps.length} timeline steps for your bake`,
+      // });
     },
     onError: (error) => {
       console.error('Error creating timeline steps:', error);
+      // toast({
+      //   title: "Timeline Creation Failed",
+      //   description: error instanceof Error ? error.message : "Failed to create timeline steps",
+      //   variant: "destructive",
+      // });
     },
   });
 
-  const handleLogout = async () => {
-    await signOut();
+  // Helper function to create timeline steps for existing bake
+  const createTimelineSteps = async (bake: Bake) => {
+    try {
+      // Find the recipe for this bake
+      const recipe = recipes?.find(r => r.id === bake.recipeId);
+      if (!recipe) {
+        throw new Error('Recipe not found for this bake');
+      }
+
+      // Check if timeline steps already exist for this bake
+      const existingSteps = await safeTimelineStepQueries.getByBakeId(bake.id);
+      if (existingSteps && existingSteps.length > 0) {
+        // toast({
+        //   title: "Timeline Already Exists",
+        //   description: "This bake already has timeline steps",
+        //   variant: "destructive",
+        // });
+        return;
+      }
+
+      // Create the timeline steps
+      createTimelineStepsMutation.mutate({ bake, recipe });
+    } catch (error) {
+      console.error('Error in createTimelineSteps:', error);
+      // toast({
+      //   title: "Timeline Creation Failed",
+      //   description: error instanceof Error ? error.message : "Failed to create timeline",
+      //   variant: "destructive",
+      // });
+    }
   };
 
-  const getUserDisplayName = () => {
-    if (user?.user_metadata?.firstName && user?.user_metadata?.lastName) {
-      return `${user.user_metadata.firstName} ${user.user_metadata.lastName}`;
-    }
-    if (user?.user_metadata?.firstName) {
-      return user.user_metadata.firstName;
-    }
-    if (user?.email) {
-      return user.email;
-    }
-    return "User";
-  };
-
-  const getUserInitials = () => {
-    if (user?.user_metadata?.firstName && user?.user_metadata?.lastName) {
-      return `${user.user_metadata.firstName[0]}${user.user_metadata.lastName[0]}`.toUpperCase();
-    }
-    if (user?.user_metadata?.firstName) {
-      return user.user_metadata.firstName[0].toUpperCase();
-    }
-    if (user?.email) {
-      return user.email[0].toUpperCase();
-    }
-    return "U";
-  };
+  // Timeline creation is now handled by individual ActiveBakeCard components
 
   return (
     <div className="min-h-screen bg-sourdough-50">
@@ -241,6 +278,7 @@ export default function Home() {
         {/* Active Bake Cards */}
         {activeBakes.length > 0 ? (
           <div className="space-y-4">
+            {/* Show all active bakes */}
             {activeBakes.map((bake) => (
               <ActiveBakeCard key={bake.id} bake={bake} />
             ))}
@@ -251,7 +289,8 @@ export default function Home() {
               <div className="w-16 h-16 bg-sourdough-200 rounded-full mx-auto mb-3 flex items-center justify-center">
                 <span className="text-2xl">🍞</span>
               </div>
-              <p className="text-sm sm:text-base text-sourdough-600">No active bake. Start one to get a live timeline and reminders.</p>
+              <p className="text-sm sm:text-base text-sourdough-600 mb-2">No active bakes</p>
+              <p className="text-xs sm:text-sm text-sourdough-500">Start a new bake to begin your sourdough journey</p>
             </div>
           </div>
         )}
@@ -259,15 +298,22 @@ export default function Home() {
         {/* Sensor Data */}
         <SensorWidget reading={latestSensor || undefined} />
 
+        
         {/* Quick Actions */}
         <QuickActions
-          onOpenCamera={() => console.log('Camera disabled for now')}
-          onOpenNotes={() => console.log('Notes disabled for now')}
-          onStartBake={() => console.log('Start bake disabled for now')}
-          onNewRecipe={() => console.log('New recipe disabled for now')}
+          onOpenCamera={() => setCameraOpen(true)}
+          onOpenNotes={() => setNotesOpen(true)}
+          onStartBake={() => {
+            if (!startBakeOpen && !isCreatingBake) {
+              setStartBakeOpen(true);
+            }
+          }}
+          onNewRecipe={() => setNewRecipeOpen(true)}
           hasActiveBake={activeBakes.length > 0}
           isCreatingBake={isCreatingBake}
         />
+
+        {/* Note: Timeline view is now integrated into each ActiveBakeCard */}
 
         {/* AI Features */}
         <div className="px-4 mb-6 space-y-4">
@@ -284,7 +330,7 @@ export default function Home() {
                 </p>
               </div>
               <Button 
-                onClick={() => console.log('Bread analysis disabled for now')}
+                onClick={() => setBreadAnalysisOpen(true)}
                 className="bg-white text-accent-orange-600 hover:bg-orange-50 ml-4 shadow-md"
                 size="sm"
               >
@@ -292,6 +338,8 @@ export default function Home() {
               </Button>
             </div>
           </div>
+
+          {/* Ask Gemini Feature - Completely removed */}
         </div>
 
         {/* Tutorial Preview */}
@@ -301,24 +349,39 @@ export default function Home() {
         <RecentBakes />
       </div>
 
-      {/* Next Step Tile */}
-      {nextStepInfo && (
-        <NextStepTile
-          stepName={nextStepInfo.stepName}
-          startTime={nextStepInfo.startTime}
-          duration={nextStepInfo.duration}
-          onClick={() => {
-            // Scroll to the active bake card
-            const activeBakeElement = document.querySelector('[data-active-bake]');
-            if (activeBakeElement) {
-              activeBakeElement.scrollIntoView({ behavior: 'smooth' });
-            }
-          }}
-        />
-      )}
-
       {/* Bottom Navigation */}
       <BottomNavigation currentPath="/" />
+
+      {/* Modals - Temporarily disabled for testing */}
+      {/* <CameraModal
+        isOpen={cameraOpen}
+        onClose={() => setCameraOpen(false)}
+        bakeId={activeBakes[0]?.id}
+      />
+      <NotesModal
+        isOpen={notesOpen}
+        onClose={() => setNotesOpen(false)}
+        bakeId={activeBakes[0]?.id}
+      />
+      <StartBakeModal
+        isOpen={startBakeOpen}
+        onClose={() => {
+          setStartBakeOpen(false);
+          setIsCreatingBake(false);
+        }}
+        onBakeStarted={() => setIsCreatingBake(true)}
+      />
+      <RecipeModal
+        isOpen={newRecipeOpen}
+        onClose={() => setNewRecipeOpen(false)}
+      /> */}
+      {/* BreadAnalysisModal temporarily disabled for testing */}
+      {/* Ask Gemini component disabled for now */}
+      {/* <AskGemini
+        open={askGeminiOpen || false}
+        onOpenChange={setAskGeminiOpen}
+        context={activeBakes?.length > 0 ? `Active bake: ${activeBakes[0]?.recipeName}` : undefined}
+      /> */}
     </div>
   );
 }

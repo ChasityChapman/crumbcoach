@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { X, Clock, Users, ChefHat } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSensors } from "@/hooks/use-sensors";
+import { timelineAnalytics } from "@/lib/timeline-analytics";
 
 interface RecipeStep {
   id: string;
@@ -88,6 +89,22 @@ export default function StartBakeModal({ isOpen, onClose, onBakeStarted }: Start
           hasSteps: !!(recipe?.steps),
           hasBake: !!newBake,
           hasBakeId: !!(newBake?.id)
+        });
+      }
+
+      // Track bake start analytics
+      const recipe = recipes?.find(r => r.id === selectedRecipeId);
+      if (recipe && newBake) {
+        const steps = recipe.steps as RecipeStep[] || [];
+        const totalDuration = steps.reduce((sum, step) => sum + (step.duration || 0), 0);
+        
+        timelineAnalytics.trackBakeStart({
+          bakeId: newBake.id,
+          recipeId: recipe.id,
+          recipeName: recipe.name,
+          totalSteps: steps.length,
+          estimatedDurationMinutes: totalDuration,
+          startTime: new Date()
         });
       }
 
