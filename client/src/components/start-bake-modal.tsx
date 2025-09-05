@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { safeFind, safeMap } from "@/lib/safeArray";
+import { safeRecipeQueries } from "@/lib/safeQueries";
 import type { Recipe, Bake, InsertBake } from "@shared/schema";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -35,9 +36,21 @@ export default function StartBakeModal({ isOpen, onClose, onBakeStarted }: Start
   const { toast } = useToast();
   const { sensorData } = useSensors();
 
-  const { data: recipes, isLoading } = useQuery<Recipe[]>({
-    queryKey: ["/api/recipes"],
+  const { data: recipes, isLoading, error } = useQuery<Recipe[]>({
+    queryKey: ["recipes"],
+    queryFn: safeRecipeQueries.getAll,
+    staleTime: 10 * 60 * 1000,
   });
+
+  // Debug logging for recipes
+  useEffect(() => {
+    console.log('StartBakeModal - Recipes data:', {
+      recipes,
+      recipesLength: recipes?.length,
+      isLoading,
+      error
+    });
+  }, [recipes, isLoading, error]);
 
   const startBakeMutation = useMutation({
     mutationFn: async (bakeData: InsertBake) => {
@@ -208,14 +221,22 @@ export default function StartBakeModal({ isOpen, onClose, onBakeStarted }: Start
                   <SelectValue placeholder="Select a recipe" />
                 </SelectTrigger>
                 <SelectContent>
-                  {safeMap(recipes, (recipe) => (
-                    <SelectItem key={recipe.id} value={recipe.id}>
-                      <div className="flex items-center space-x-2">
-                        <ChefHat className="w-4 h-4" />
-                        <span>{recipe.name}</span>
+                  {recipes && recipes.length > 0 ? (
+                    safeMap(recipes, (recipe) => (
+                      <SelectItem key={recipe.id} value={recipe.id}>
+                        <div className="flex items-center space-x-2">
+                          <ChefHat className="w-4 h-4" />
+                          <span>{recipe.name}</span>
+                        </div>
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="no-recipes" disabled>
+                      <div className="text-gray-500 text-sm">
+                        No recipes found. Create a recipe first.
                       </div>
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             )}

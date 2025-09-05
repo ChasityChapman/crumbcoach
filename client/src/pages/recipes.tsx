@@ -41,7 +41,7 @@ export default function Recipes() {
     return (
       <div className="min-h-screen bg-sourdough-50">
         <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-sourdough-100">
-          <div className="px-4 py-3">
+          <div className="px-4 safe-top pb-3 min-h-[60px] flex items-center">
             <h1 className="font-display font-semibold text-lg text-sourdough-800">Recipes</h1>
           </div>
         </header>
@@ -64,7 +64,7 @@ export default function Recipes() {
     <div className="min-h-screen bg-sourdough-50">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-sourdough-100">
-        <div className="px-4 py-3 flex items-center justify-between">
+        <div className="px-4 safe-top pb-3 flex items-center justify-between min-h-[60px]">
           <h1 className="font-display font-semibold text-lg text-sourdough-800">Recipes</h1>
           <Button 
             onClick={() => {
@@ -72,7 +72,7 @@ export default function Recipes() {
               setModalTab("manual");
               setRecipeModalOpen(true);
             }}
-            className="bg-sourdough-500 hover:bg-sourdough-600 text-white"
+            className="bg-sourdough-500 hover:bg-sourdough-600 text-white touch-manipulation"
             size="sm"
           >
             <Plus className="w-4 h-4 mr-1" />
