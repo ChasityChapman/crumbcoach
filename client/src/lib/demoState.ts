@@ -39,10 +39,6 @@ export const demoState = {
     return newStep;
   },
 
-  // Reset demo state (useful for testing)
-  reset: () => {
-    mutableDemoTimelineSteps = [...initialDemoTimelineSteps];
-  },
 
   // Get all timeline steps (for debugging)
   getAllTimelineSteps: () => [...mutableDemoTimelineSteps],

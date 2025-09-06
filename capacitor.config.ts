@@ -8,6 +8,7 @@ const useDevServer = process.env.CAPACITOR_DEV_SERVER === 'true'
 const config: CapacitorConfig = {
   appId: 'com.crumbcoach.app',
   appName: 'Crumb Coach',
+  version: '1.0.0',
   webDir: 'dist/public',
   bundledWebRuntime: false,
   
@@ -31,6 +32,40 @@ const config: CapacitorConfig = {
     PushNotifications: {
       presentationOptions: ["badge", "sound", "alert"],
     },
+    LocalNotifications: {
+      smallIcon: "ic_stat_icon_config_sample",
+      iconColor: "#3A6E6C",
+      sound: "beep.wav",
+    },
+    Haptics: {
+      // No configuration needed
+    },
+    Camera: {
+      permissions: {
+        camera: "This app uses the camera to take photos of your sourdough starter progress."
+      }
+    },
+    Geolocation: {
+      permissions: {
+        location: "This app uses location to provide ambient temperature defaults."
+      }
+    },
+    CapacitorSQLite: {
+      iosDatabaseLocation: 'Library/CapacitorDatabase',
+      iosIsEncryption: false,
+      iosKeychainPrefix: 'crumbcoach',
+      iosBiometric: {
+        biometricAuth: false,
+        biometricTitle: "Biometric login for Crumb Coach"
+      },
+      androidIsEncryption: false,
+      androidBiometric: {
+        biometricAuth: false,
+        biometricTitle: "Biometric login for Crumb Coach", 
+        biometricSubTitle: "Log in using your biometric credential",
+        biometricHint: "Touch sensor"
+      }
+    }
   }
 }
 

@@ -22,6 +22,7 @@ import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
 import TimelinePlanner from "@/pages/timeline-planner";
 import StarterLog from "@/pages/starter-log";
+import Starter from "@/pages/starter";
 
 function Router() {
   const { user, loading } = useSupabaseAuth();
@@ -78,6 +79,7 @@ function Router() {
           <Route path="/profile" component={Profile} />
           <Route path="/timeline-planner" component={TimelinePlanner} />
           <Route path="/starter-log" component={StarterLog} />
+          <Route path="/starter" component={Starter} />
           <Route path="/privacy-policy" component={PrivacyPolicy} />
           <Route path="/terms-of-service" component={TermsOfService} />
         </>

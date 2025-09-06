@@ -233,7 +233,94 @@ export const userSessions = pgTable("user_sessions", {
   index("IDX_user_sessions_start").on(table.sessionStart),
 ]);
 
-// Starter logs table for tracking sourdough starter maintenance
+// Flour types for starter management
+export const flours = pgTable("flours", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull().unique(), // Bread Flour, All-Purpose, Whole Wheat, etc.
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Starters table for sourdough starter management
+export const starters = pgTable("starters", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(), // e.g., "Odin", "Starter #1"
+  avatar: text("avatar"), // emoji or image URL
+  unitMass: varchar("unit_mass").notNull().default("g"), // 'g' or 'oz'
+  unitTemp: varchar("unit_temp").notNull().default("C"), // 'C' or 'F'
+  archived: boolean("archived").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("IDX_starters_user_id").on(table.userId),
+]);
+
+// Starter defaults for quick entry
+export const starterDefaults = pgTable("starter_defaults", {
+  starterId: varchar("starter_id").primaryKey().references(() => starters.id, { onDelete: "cascade" }),
+  ratioS: integer("ratio_s").notNull().default(1), // Starter ratio
+  ratioF: integer("ratio_f").notNull().default(1), // Flour ratio  
+  ratioW: integer("ratio_w").notNull().default(1), // Water ratio
+  totalGrams: integer("total_grams").notNull().default(150),
+  hydrationTargetPct: integer("hydration_target_pct"), // Optional override
+  reminderHours: integer("reminder_hours").default(24),
+  quietStart: text("quiet_start").default("22:00"), // Quiet hours start
+  quietEnd: text("quiet_end").default("07:00"), // Quiet hours end
+});
+
+// Default flour mix for starters
+export const starterDefaultFlour = pgTable("starter_default_flour", {
+  starterId: varchar("starter_id").notNull().references(() => starters.id, { onDelete: "cascade" }),
+  flourId: varchar("flour_id").notNull().references(() => flours.id, { onDelete: "cascade" }),
+  pct: integer("pct").notNull(), // Percentage (should sum to 100 for a starter)
+}, (table) => [
+  index("IDX_starter_default_flour_starter").on(table.starterId),
+]);
+
+// Starter entries for feeding logs
+export const starterEntries = pgTable("starter_entries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  starterId: varchar("starter_id").notNull().references(() => starters.id, { onDelete: "cascade" }),
+  timestamp: timestamp("timestamp").notNull().defaultNow(),
+  ratioS: integer("ratio_s").notNull(),
+  ratioF: integer("ratio_f").notNull(), 
+  ratioW: integer("ratio_w").notNull(),
+  totalGrams: integer("total_grams").notNull(),
+  hydrationPct: integer("hydration_pct").notNull(),
+  riseTimeHrs: integer("rise_time_hrs"), // Hours to peak
+  ambientTemp: integer("ambient_temp"), // In user's preferred unit
+  discardUse: text("discard_use"), // What discard was used for
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("IDX_starter_entries_starter_id").on(table.starterId),
+  index("IDX_starter_entries_timestamp").on(table.timestamp),
+]);
+
+// Flour mix for each starter entry
+export const starterEntryFlour = pgTable("starter_entry_flour", {
+  entryId: varchar("entry_id").notNull().references(() => starterEntries.id, { onDelete: "cascade" }),
+  flourId: varchar("flour_id").notNull().references(() => flours.id, { onDelete: "cascade" }),
+  pct: integer("pct").notNull(),
+}, (table) => [
+  index("IDX_starter_entry_flour_entry").on(table.entryId),
+]);
+
+// Health snapshots for starter status
+export const healthSnapshots = pgTable("health_snapshots", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  starterId: varchar("starter_id").notNull().references(() => starters.id, { onDelete: "cascade" }),
+  status: varchar("status").notNull(), // 'healthy', 'watch', 'sluggish'
+  reason: text("reason").notNull(),
+  computedAt: timestamp("computed_at").defaultNow(),
+}, (table) => [
+  index("IDX_health_snapshots_starter").on(table.starterId),
+  index("IDX_health_snapshots_computed").on(table.computedAt),
+]);
+
+// Legacy starter logs table (keeping for backward compatibility)
 export const starterLogs = pgTable("starter_logs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
@@ -282,6 +369,7 @@ export const userRelations = relations(users, ({ many }) => ({
   passwordResetTokens: many(passwordResetTokens),
   timelinePlans: many(timelinePlans),
   starterLogs: many(starterLogs),
+  starters: many(starters),
   entitlements: many(userEntitlements),
 }));
 
@@ -374,6 +462,70 @@ export const starterLogRelations = relations(starterLogs, ({ one }) => ({
   }),
 }));
 
+export const starterRelations = relations(starters, ({ one, many }) => ({
+  user: one(users, {
+    fields: [starters.userId],
+    references: [users.id],
+  }),
+  defaults: one(starterDefaults, {
+    fields: [starters.id],
+    references: [starterDefaults.starterId],
+  }),
+  entries: many(starterEntries),
+  healthSnapshots: many(healthSnapshots),
+  defaultFlours: many(starterDefaultFlour),
+}));
+
+export const starterDefaultsRelations = relations(starterDefaults, ({ one, many }) => ({
+  starter: one(starters, {
+    fields: [starterDefaults.starterId],
+    references: [starters.id],
+  }),
+  flourMix: many(starterDefaultFlour),
+}));
+
+export const starterDefaultFlourRelations = relations(starterDefaultFlour, ({ one }) => ({
+  starter: one(starters, {
+    fields: [starterDefaultFlour.starterId],
+    references: [starters.id],
+  }),
+  flour: one(flours, {
+    fields: [starterDefaultFlour.flourId],
+    references: [flours.id],
+  }),
+}));
+
+export const starterEntryRelations = relations(starterEntries, ({ one, many }) => ({
+  starter: one(starters, {
+    fields: [starterEntries.starterId],
+    references: [starters.id],
+  }),
+  flourMix: many(starterEntryFlour),
+}));
+
+export const starterEntryFlourRelations = relations(starterEntryFlour, ({ one }) => ({
+  entry: one(starterEntries, {
+    fields: [starterEntryFlour.entryId],
+    references: [starterEntries.id],
+  }),
+  flour: one(flours, {
+    fields: [starterEntryFlour.flourId],
+    references: [flours.id],
+  }),
+}));
+
+export const flourRelations = relations(flours, ({ many }) => ({
+  defaultFlours: many(starterDefaultFlour),
+  entryFlours: many(starterEntryFlour),
+}));
+
+export const healthSnapshotRelations = relations(healthSnapshots, ({ one }) => ({
+  starter: one(starters, {
+    fields: [healthSnapshots.starterId],
+    references: [starters.id],
+  }),
+}));
+
 export const userEntitlementRelations = relations(userEntitlements, ({ one }) => ({
   user: one(users, {
     fields: [userEntitlements.userId],
@@ -415,6 +567,17 @@ export const insertStarterLogSchema = createInsertSchema(starterLogs)
   .extend({
     logDate: z.union([z.date(), z.string().datetime().transform((str) => new Date(str))]).optional(),
   });
+export const insertFlourSchema = createInsertSchema(flours).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertStarterSchema = createInsertSchema(starters).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertStarterDefaultsSchema = createInsertSchema(starterDefaults);
+export const insertStarterDefaultFlourSchema = createInsertSchema(starterDefaultFlour);
+export const insertStarterEntrySchema = createInsertSchema(starterEntries)
+  .omit({ id: true, createdAt: true, updatedAt: true })
+  .extend({
+    timestamp: z.union([z.date(), z.string().datetime().transform((str) => new Date(str))]).optional(),
+  });
+export const insertStarterEntryFlourSchema = createInsertSchema(starterEntryFlour);
+export const insertHealthSnapshotSchema = createInsertSchema(healthSnapshots).omit({ id: true, computedAt: true });
 export const insertUserEntitlementSchema = createInsertSchema(userEntitlements).omit({ id: true, createdAt: true, updatedAt: true });
 
 // Types
@@ -446,5 +609,19 @@ export type DataDeletionRequest = typeof dataDeletionRequests.$inferSelect;
 export type InsertDataDeletionRequest = z.infer<typeof insertDataDeletionRequestSchema>;
 export type StarterLog = typeof starterLogs.$inferSelect;
 export type InsertStarterLog = z.infer<typeof insertStarterLogSchema>;
+export type Flour = typeof flours.$inferSelect;
+export type InsertFlour = z.infer<typeof insertFlourSchema>;
+export type Starter = typeof starters.$inferSelect;
+export type InsertStarter = z.infer<typeof insertStarterSchema>;
+export type StarterDefaults = typeof starterDefaults.$inferSelect;
+export type InsertStarterDefaults = z.infer<typeof insertStarterDefaultsSchema>;
+export type StarterDefaultFlour = typeof starterDefaultFlour.$inferSelect;
+export type InsertStarterDefaultFlour = z.infer<typeof insertStarterDefaultFlourSchema>;
+export type StarterEntry = typeof starterEntries.$inferSelect;
+export type InsertStarterEntry = z.infer<typeof insertStarterEntrySchema>;
+export type StarterEntryFlour = typeof starterEntryFlour.$inferSelect;
+export type InsertStarterEntryFlour = z.infer<typeof insertStarterEntryFlourSchema>;
+export type HealthSnapshot = typeof healthSnapshots.$inferSelect;
+export type InsertHealthSnapshot = z.infer<typeof insertHealthSnapshotSchema>;
 export type UserEntitlement = typeof userEntitlements.$inferSelect;
 export type InsertUserEntitlement = z.infer<typeof insertUserEntitlementSchema>;

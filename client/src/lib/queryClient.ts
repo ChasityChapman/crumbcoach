@@ -80,7 +80,23 @@ function getMockApiResponse(method: string, url: string, data?: unknown): any {
       };
     }
     if (method === 'GET') {
-      return []; // Return empty timeline steps for GET requests
+      // Return demo timeline steps with proper timestamps
+      return [
+        {
+          id: 'demo-timeline-step-1',
+          bakeId: 'demo-bake-1',
+          name: 'Mix ingredients',
+          description: 'Combine flour, water, starter, and salt',
+          duration: 15,
+          order: 1,
+          startTime: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+          endTime: new Date(Date.now() - 3600000 + 900000).toISOString(), // 45 min ago
+          status: 'completed',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          demo: true
+        }
+      ];
     }
   }
 
@@ -100,7 +116,24 @@ function getMockApiResponse(method: string, url: string, data?: unknown): any {
       return { success: true, recalibrated: true };
     }
     if (method === 'GET') {
-      return []; // Return empty bakes for GET requests
+      // Return demo bake data with proper timestamps
+      return [
+        {
+          id: 'demo-bake-1',
+          userId: 'demo-user',
+          recipeId: 'demo-recipe-1',
+          recipeName: 'Classic Sourdough Loaf',
+          status: 'active',
+          startTime: new Date(Date.now() - 3600000).toISOString(), // Started 1 hour ago
+          endTime: null,
+          notes: 'Demo bake in progress',
+          finalWeight: null,
+          finalScore: null,
+          createdAt: new Date(Date.now() - 3600000).toISOString(),
+          updatedAt: new Date().toISOString(),
+          demo: true
+        }
+      ];
     }
   }
 
@@ -156,7 +189,18 @@ function getMockApiResponse(method: string, url: string, data?: unknown): any {
       };
     }
     if (method === 'GET') {
-      return []; // Return empty photos for GET requests
+      // Return demo photos with proper timestamps
+      return [
+        {
+          id: 'demo-photo-1',
+          bakeId: 'demo-bake-1',
+          url: '/placeholder-image.jpg',
+          description: 'Demo bread photo',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          demo: true
+        }
+      ];
     }
   }
 
@@ -171,7 +215,17 @@ function getMockApiResponse(method: string, url: string, data?: unknown): any {
       };
     }
     if (method === 'GET') {
-      return []; // Return empty notes for GET requests
+      // Return demo notes with proper timestamps
+      return [
+        {
+          id: 'demo-note-1',
+          bakeId: 'demo-bake-1',
+          content: 'This is a demo note for the bake',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          demo: true
+        }
+      ];
     }
   }
 
@@ -185,7 +239,84 @@ function getMockApiResponse(method: string, url: string, data?: unknown): any {
     };
   }
 
-  // Default mock response
+  // Handle recipes
+  if (url.includes('/api/recipes') || url.includes('recipes')) {
+    return [
+      {
+        id: 'demo-recipe-1',
+        userId: 'demo-user',
+        name: 'Classic Sourdough Loaf',
+        description: 'A traditional sourdough bread perfect for beginners',
+        ingredients: JSON.stringify([
+          { name: 'Bread flour', amount: 500, unit: 'g' },
+          { name: 'Water', amount: 350, unit: 'ml' },
+          { name: 'Sourdough starter', amount: 100, unit: 'g' },
+          { name: 'Salt', amount: 10, unit: 'g' }
+        ]),
+        instructions: JSON.stringify([
+          'Mix flour and water, let rest 30 minutes',
+          'Add starter and salt, mix well',
+          'Bulk ferment 4-6 hours with folds every 30 minutes',
+          'Shape and final proof 2-4 hours',
+          'Bake at 450°F for 45 minutes'
+        ]),
+        totalTimeMinutes: 480,
+        difficulty: 'beginner',
+        yieldAmount: 1,
+        yieldUnit: 'loaf',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        demo: true
+      }
+    ];
+  }
+
+  // Handle timeline plans
+  if (url.includes('/api/timeline-plans') || url.includes('timeline-plans')) {
+    return [
+      {
+        id: 'demo-timeline-plan-1',
+        userId: 'demo-user',
+        name: 'Basic Sourdough Timeline',
+        description: 'Standard timeline for sourdough bread',
+        totalDurationMinutes: 480,
+        steps: JSON.stringify([
+          {
+            name: 'Mix ingredients',
+            duration: 15,
+            order: 1,
+            description: 'Combine flour, water, starter, and salt'
+          },
+          {
+            name: 'Bulk fermentation',
+            duration: 300,
+            order: 2,
+            description: 'Let dough rise with periodic folds'
+          },
+          {
+            name: 'Final proof',
+            duration: 120,
+            order: 3,
+            description: 'Shape and final rise'
+          },
+          {
+            name: 'Bake',
+            duration: 45,
+            order: 4,
+            description: 'Bake in preheated oven'
+          }
+        ]),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        demo: true
+      }
+    ];
+  }
+
+  // Default mock response - ensure it returns an array for most queries
+  if (method === 'GET') {
+    return [];
+  }
   return { success: true, demo: true };
 }
 

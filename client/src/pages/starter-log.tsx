@@ -15,13 +15,15 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { CalendarIcon, Camera, Plus, Thermometer, FlaskConical, Clock, TrendingUp, FileText, BookOpen, Settings } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { CalendarIcon, Camera, Plus, Thermometer, FlaskConical, Clock, TrendingUp, FileText, BookOpen, Settings, Calculator, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { insertStarterLogSchema, type StarterLog, type Recipe } from "@shared/schema";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import BottomNavigation from "@/components/bottom-navigation";
 import { safeStarterLogQueries, safeRecipeQueries } from "@/lib/safeQueries";
 import RecipeModal from "@/components/recipe-modal";
+import HydrationCalculatorModal from "@/components/hydration-calculator-modal";
 
 // Form schema with validation - exclude userId since it's added automatically
 const starterLogFormSchema = insertStarterLogSchema.omit({ userId: true }).extend({
@@ -40,13 +42,25 @@ type StarterLogFormData = z.infer<typeof starterLogFormSchema>;
 
 const flourTypeOptions = [
   "White All-Purpose",
-  "White Bread Flour",
+  "White Bread Flour", 
   "Whole Wheat",
   "Whole Wheat Pastry",
   "Rye",
   "Spelt",
   "Einkorn",
   "Rice",
+  "Buckwheat",
+  "Kamut",
+  "Other"
+];
+
+const discardUsageOptions = [
+  "Pancakes",
+  "Crackers",
+  "Waffles",
+  "Focaccia", 
+  "Pizza Dough",
+  "Naan",
   "Other"
 ];
 
@@ -59,12 +73,15 @@ const starterStageOptions = [
 
 export default function StarterLogPage() {
   const [, navigate] = useLocation();
-  const [activeTab, setActiveTab] = useState("new-log");
+  const [activeTab, setActiveTab] = useState("new-entry");
   const [tempUnit, setTempUnit] = useState<'celsius' | 'fahrenheit'>('celsius');
   const [discardUsageType, setDiscardUsageType] = useState<"notes" | "existing-recipe" | "new-recipe">("notes");
   const [selectedRecipeId, setSelectedRecipeId] = useState<string>("");
   const [recipeModalOpen, setRecipeModalOpen] = useState(false);
-  const [starterName, setStarterName] = useState<string>('My Starter');
+  const [hydrationCalculatorOpen, setHydrationCalculatorOpen] = useState(false);
+  const [starterName, setStarterName] = useState<string>('Odin');
+  const [starterHealth, setStarterHealth] = useState<'healthy' | 'watch' | 'sluggish'>('healthy');
+  const [lastFeedTime, setLastFeedTime] = useState<Date | null>(null);
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -100,7 +117,7 @@ export default function StarterLogPage() {
     defaultValues: {
       logDate: new Date(),
       flourTypes: [{ type: "White All-Purpose", percentage: 100 }],
-      feedRatio: { starter: 1, flour: 2, water: 2 },
+      feedRatio: { starter: 1, flour: 1, water: 1 },
       feedAmountGrams: 50,
       starterStage: "just_fed",
       conditionNotes: "",
@@ -125,6 +142,56 @@ export default function StarterLogPage() {
       form.setValue("hydrationPercent", hydrationPercent);
     }
   }, [watchedFeedRatio?.flour, watchedFeedRatio?.water, form]);
+
+  // Calculate last feed time and ETA
+  useEffect(() => {
+    if (starterLogs.length > 0) {
+      const lastLog = starterLogs[0]; // Assuming sorted by date desc
+      if (lastLog.logDate) {
+        setLastFeedTime(new Date(lastLog.logDate));
+      }
+    }
+  }, [starterLogs]);
+
+  // Auto-calculate feeding allocations
+  const calculateAllocations = () => {
+    const totalAmount = form.watch("feedAmountGrams") || 0;
+    const ratio = watchedFeedRatio;
+    if (!ratio || !totalAmount) return { starter: 0, flour: 0, water: 0 };
+
+    const totalRatio = ratio.starter + ratio.flour + ratio.water;
+    const starter = Math.round((totalAmount * ratio.starter) / totalRatio);
+    const flour = Math.round((totalAmount * ratio.flour) / totalRatio);
+    const water = Math.round((totalAmount * ratio.water) / totalRatio);
+    
+    return { starter, flour, water };
+  };
+
+  const allocations = calculateAllocations();
+
+  // Calculate health status
+  const getHealthColor = () => {
+    switch (starterHealth) {
+      case 'healthy': return 'bg-green-500';
+      case 'watch': return 'bg-yellow-500';
+      case 'sluggish': return 'bg-red-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
+  const getNextFeedETA = () => {
+    if (!lastFeedTime) return 'No previous feeding';
+    const hoursSinceLastFeed = (Date.now() - lastFeedTime.getTime()) / (1000 * 60 * 60);
+    const nextFeedHours = 24 - hoursSinceLastFeed;
+    
+    if (nextFeedHours <= 0) {
+      return 'Due now';
+    } else if (nextFeedHours <= 6) {
+      return `Due in ${Math.round(nextFeedHours)}h`;
+    } else {
+      return `Next feed ETA ${Math.round(nextFeedHours/4)*4}–${Math.round(nextFeedHours/4)*4 + 4}h`;
+    }
+  };
 
   // Load starter defaults from settings after form is initialized
   useEffect(() => {
