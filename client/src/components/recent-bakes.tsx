@@ -6,6 +6,7 @@ import type { Bake, BakePhoto } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Share2, RefreshCw, FileText, X, RotateCcw } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { safeParseDate } from "@/lib/utils";
 // import { useToast } from "@/hooks/use-toast"; // Disabled to prevent JavaScript errors
 import { useState } from "react";
 import { useLocation } from "wouter";
@@ -118,7 +119,12 @@ export default function RecentBakes() {
                 <h4 className="font-medium text-sm text-sourdough-800">{bake.name}</h4>
                 <p className="text-xs text-sourdough-500 mb-2">
                   {bake.actualEndTime 
-                    ? `Completed ${formatDistanceToNow(new Date(bake.actualEndTime), { addSuffix: true })}`
+                    ? `Completed ${(() => {
+                        const endDate = safeParseDate(bake.actualEndTime);
+                        return endDate && !isNaN(endDate.getTime())
+                          ? formatDistanceToNow(endDate, { addSuffix: true })
+                          : 'recently';
+                      })()}`
                     : 'Completed recently'
                   }
                 </p>

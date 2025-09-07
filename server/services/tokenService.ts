@@ -129,13 +129,17 @@ export class TokenService {
 
   /**
    * Generate a human-readable token (for support cases, etc.)
+   * Uses cryptographically secure randomBytes instead of Math.random
    */
   static generateReadableToken(length = 8): SecureToken {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let token = '';
     
+    // Generate cryptographically secure random bytes
+    const secureBytes = this.getSecureRandomBytes(length);
+    
     for (let i = 0; i < length; i++) {
-      const randomIndex = Math.floor(Math.random() * chars.length);
+      const randomIndex = secureBytes[i] % chars.length;
       token += chars[randomIndex];
     }
     
@@ -157,9 +161,16 @@ export class TokenService {
       metadata: {
         createdAt: new Date(),
         purpose: 'human_readable',
-        strength: 'medium'
+        strength: 'high' // Upgraded from 'medium' due to secure randomness
       }
     };
+  }
+
+  /**
+   * Get cryptographically secure random bytes
+   */
+  private static getSecureRandomBytes(length: number): Uint8Array {
+    return randomBytes(length);
   }
 
   /**

@@ -12,6 +12,7 @@ import RecentBakes from "@/components/recent-bakes";
 import BottomNavigation from "@/components/bottom-navigation";
 import NextStepTile from "@/components/next-step-tile";
 import { safeMap, safeFind } from "@/lib/safeArray";
+import { safeParseDate } from "@/lib/utils";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { testSupabaseConnection, testDatabaseTables } from "@/lib/testSupabase";
 import { Button } from "@/components/ui/button";
@@ -85,7 +86,11 @@ export default function Home() {
   const activeBakes = useMemo(() => 
     (allBakes || [])
       .filter((bake: Bake) => bake && bake.id && bake.status === 'active')
-      .sort((a, b) => new Date(b.startTime || 0).getTime() - new Date(a.startTime || 0).getTime()),
+      .sort((a, b) => {
+        const aTime = safeParseDate(a.startTime) || new Date(0);
+        const bTime = safeParseDate(b.startTime) || new Date(0);
+        return bTime.getTime() - aTime.getTime();
+      }),
     [allBakes]
   );
 
@@ -113,7 +118,7 @@ export default function Home() {
     return {
       bakeId: firstActiveBake.id,
       stepName: nextStep.title || nextStep.name || `Step ${nextStep.stepNumber}`,
-      startTime: new Date(nextStep.scheduledTime || nextStep.startTime || Date.now()),
+      startTime: safeParseDate(nextStep.scheduledTime || nextStep.startTime) || new Date(),
       duration: nextStep.estimatedDuration || 30,
     };
   }, [firstActiveBake, firstBakeTimeline]);

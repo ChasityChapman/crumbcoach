@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { X, Camera } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
+import { safeParseDate } from "@/lib/utils";
 
 interface NotesModalProps {
   isOpen: boolean;
@@ -107,7 +108,12 @@ export default function NotesModal({ isOpen, onClose, bakeId }: NotesModalProps)
                       Step {note.stepIndex || 'Unknown'}
                     </span>
                     <span className="text-xs text-green-600">
-                      {note.createdAt ? formatDistanceToNow(new Date(note.createdAt), { addSuffix: true }) : 'Unknown time'}
+                      {(() => {
+                        const createdDate = safeParseDate(note.createdAt);
+                        return createdDate && !isNaN(createdDate.getTime())
+                          ? formatDistanceToNow(createdDate, { addSuffix: true })
+                          : 'Unknown time';
+                      })()}
                     </span>
                   </div>
                   <p className="text-sm text-sourdough-700">{note.content}</p>

@@ -31,37 +31,62 @@ export const safeBakeQueries = {
     try {
       return await bakeQueries.getAll();
     } catch (error: any) {
-      console.warn('Falling back to demo bakes:', error.message);
-      // Always fall back to demo state for consistency
-      return demoState.getAllBakes();
+      console.warn('Bake query failed:', error.message);
+      if (isDemoMode()) {
+        console.warn('Falling back to demo bakes');
+        return demoState.getAllBakes();
+      }
+      throw error; // Re-throw error in production mode
     }
   },
   create: async (bakeData: any) => {
     try {
       return await bakeQueries.create(bakeData);
     } catch (error: any) {
-      console.warn('Demo mode: Creating bake in demo state:', error.message);
-      // Always fall back to demo state
-      return demoState.createBake(bakeData);
+      console.warn('Bake creation failed:', error.message);
+      if (isDemoMode()) {
+        console.warn('Creating bake in demo state');
+        return demoState.createBake(bakeData);
+      }
+      throw error; // Re-throw error in production mode
     }
   },
   delete: async (bakeId: string) => {
     try {
       return await bakeQueries.delete(bakeId);
     } catch (error: any) {
-      console.warn('Cannot delete bake, deleting from demo state:', error.message);
-      // Actually delete from demo state
-      const deleted = demoState.deleteBake(bakeId);
-      return { success: true, deleted };
+      console.warn('Bake deletion failed:', error.message);
+      if (isDemoMode()) {
+        console.warn('Deleting from demo state');
+        const deleted = demoState.deleteBake(bakeId);
+        return { success: true, deleted };
+      }
+      throw error; // Re-throw error in production mode
     }
   },
   update: async (bakeId: string, updates: any) => {
     try {
       return await bakeQueries.update(bakeId, updates);
     } catch (error: any) {
-      console.warn('Cannot update bake, updating demo state:', error.message);
-      // For now, just return success - we could extend demo state to handle bake updates
-      return { success: true, updated: true };
+      console.warn('Bake update failed:', error.message);
+      if (isDemoMode()) {
+        console.warn('Updating demo state');
+        return { success: true, updated: true };
+      }
+      throw error; // Re-throw error in production mode
+    }
+  },
+  getById: async (bakeId: string) => {
+    try {
+      return await bakeQueries.getById(bakeId);
+    } catch (error: any) {
+      console.warn('Bake getById failed:', error.message);
+      if (isDemoMode()) {
+        console.warn('Getting bake from demo state');
+        const allBakes = demoState.getAllBakes();
+        return allBakes.find(bake => bake.id === bakeId) || null;
+      }
+      throw error; // Re-throw error in production mode
     }
   }
 };

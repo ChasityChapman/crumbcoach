@@ -2,6 +2,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import type { Bake, Recipe, SensorReading, TimelineStep } from "@shared/schema";
 import { safeBakeQueries, safeSensorQueries, safeRecipeQueries, safeTimelineStepQueries } from "@/lib/safeQueries";
+import { safeParseDate } from "@/lib/utils";
 import type { User } from "@supabase/supabase-js";
 import ActiveBakeCard from "@/components/active-bake-card";
 import SensorWidget from "@/components/sensor-widget";
@@ -123,7 +124,11 @@ export default function Home() {
   const activeBakes = useMemo(() => 
     (allBakes || [])
       .filter((bake: Bake) => bake && bake.id && bake.status === 'active')
-      .sort((a, b) => new Date(b.startTime || 0).getTime() - new Date(a.startTime || 0).getTime()),
+      .sort((a, b) => {
+        const aTime = safeParseDate(a.startTime) || new Date(0);
+        const bTime = safeParseDate(b.startTime) || new Date(0);
+        return bTime.getTime() - aTime.getTime();
+      }),
     [allBakes]
   ); // Memoize expensive filtering and sorting
 

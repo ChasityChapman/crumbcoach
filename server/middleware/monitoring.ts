@@ -1,10 +1,11 @@
 import type { Request, Response, NextFunction } from 'express';
+import { randomBytes } from 'crypto';
 
 // Enhanced request logging middleware with security monitoring
 export const requestLogger = (req: Request, res: Response, next: NextFunction) => {
   const start = Date.now();
   const timestamp = new Date().toISOString();
-  const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const requestId = `req_${Date.now()}_${randomBytes(6).toString('hex')}`;
   
   // Add request ID to request for tracing
   (req as any).requestId = requestId;
@@ -77,7 +78,7 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
 // Error tracking middleware
 export const errorHandler = (error: Error | unknown, req: Request, res: Response, next: NextFunction) => {
   const timestamp = new Date().toISOString();
-  const errorId = `err_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const errorId = `err_${Date.now()}_${randomBytes(6).toString('hex')}`;
   
   // Log detailed error information
   console.error(JSON.stringify({

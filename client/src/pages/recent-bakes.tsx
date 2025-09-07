@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
 import { ArrowLeft, Clock, FileText, Camera, X, Brain, RotateCcw, Thermometer, Plus } from "lucide-react";
+import { safeParseDate } from "@/lib/utils";
 import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_1756224893332.png";
 import BottomNavigation from "@/components/bottom-navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -97,8 +98,8 @@ function BakeDetailModal({ bake, isOpen, onClose }: BakeDetailModalProps) {
       bake.environmentalData) : 
     null;
 
-  const startTime = new Date(bake.startTime || Date.now());
-  const endTime = bake.actualEndTime ? new Date(bake.actualEndTime) : new Date(bake.estimatedEndTime || Date.now());
+  const startTime = safeParseDate(bake.startTime) || new Date();
+  const endTime = bake.actualEndTime ? safeParseDate(bake.actualEndTime) || new Date() : safeParseDate(bake.estimatedEndTime) || new Date();
   const totalDuration = endTime.getTime() - startTime.getTime();
   const hours = Math.floor(totalDuration / (1000 * 60 * 60));
   const minutes = Math.floor((totalDuration % (1000 * 60 * 60)) / (1000 * 60));
@@ -180,11 +181,15 @@ function BakeDetailModal({ bake, isOpen, onClose }: BakeDetailModalProps) {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-sourdough-600">Started:</span>
-                <span className="text-sourdough-800">{startTime.toLocaleString()}</span>
+                <span className="text-sourdough-800">
+                  {!isNaN(startTime.getTime()) ? startTime.toLocaleString() : 'Unknown'}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sourdough-600">Completed:</span>
-                <span className="text-sourdough-800">{endTime.toLocaleString()}</span>
+                <span className="text-sourdough-800">
+                  {!isNaN(endTime.getTime()) ? endTime.toLocaleString() : 'Unknown'}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sourdough-600">Total Time:</span>
@@ -229,7 +234,12 @@ function BakeDetailModal({ bake, isOpen, onClose }: BakeDetailModalProps) {
                   <div key={note.id} className="bg-sourdough-50 rounded-lg p-3">
                     <p className="text-sm text-sourdough-800">{note.content}</p>
                     <p className="text-xs text-sourdough-500 mt-1">
-                      {note.createdAt ? formatDistanceToNow(new Date(note.createdAt), { addSuffix: true }) : 'Recently added'}
+                      {(() => {
+                        const noteDate = safeParseDate(note.createdAt);
+                        return noteDate && !isNaN(noteDate.getTime()) 
+                          ? formatDistanceToNow(noteDate, { addSuffix: true })
+                          : 'Recently added';
+                      })()}
                     </p>
                   </div>
                 ))}
@@ -299,8 +309,15 @@ export default function RecentBakesPage() {
   const sortedBakes = completedBakes.sort((a, b) => {
     const aTime = a.actualEndTime || a.estimatedEndTime || a.startTime;
     const bTime = b.actualEndTime || b.estimatedEndTime || b.startTime;
-    if (!aTime || !bTime) return 0;
-    return new Date(bTime).getTime() - new Date(aTime).getTime();
+    
+    const aParsed = safeParseDate(aTime);
+    const bParsed = safeParseDate(bTime);
+    
+    // Handle invalid dates by putting them at the end
+    if (!aParsed || isNaN(aParsed.getTime())) return 1;
+    if (!bParsed || isNaN(bParsed.getTime())) return -1;
+    
+    return bParsed.getTime() - aParsed.getTime();
   });
 
   return (
@@ -343,10 +360,12 @@ export default function RecentBakesPage() {
                     <div className="flex-1">
                       <h3 className="font-medium text-sourdough-800 mb-1">{bake.name}</h3>
                       <p className="text-sm text-sourdough-600 mb-2">
-                        Completed {bake.actualEndTime 
-                          ? formatDistanceToNow(new Date(bake.actualEndTime), { addSuffix: true })
-                          : 'recently'
-                        }
+                        Completed {(() => {
+                          const endDate = safeParseDate(bake.actualEndTime);
+                          return endDate && !isNaN(endDate.getTime())
+                            ? formatDistanceToNow(endDate, { addSuffix: true })
+                            : 'recently';
+                        })()}
                       </p>
                       <div className="flex space-x-2">
                         <Button
@@ -393,10 +412,12 @@ export default function RecentBakesPage() {
                 >
                   <div className="font-medium text-sourdough-800">{bake.name}</div>
                   <div className="text-xs text-sourdough-500 truncate">
-                    {bake.actualEndTime 
-                      ? `Completed ${formatDistanceToNow(new Date(bake.actualEndTime), { addSuffix: true })}`
-                      : 'Completed recently'
-                    }
+                    {(() => {
+                      const endDate = safeParseDate(bake.actualEndTime);
+                      return endDate && !isNaN(endDate.getTime())
+                        ? `Completed ${formatDistanceToNow(endDate, { addSuffix: true })}`
+                        : 'Completed recently';
+                    })()}
                   </div>
                 </button>
               ))}

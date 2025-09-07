@@ -3,6 +3,7 @@ import TimelineView from "@/components/timeline-view";
 import { Bake } from "@shared/schema";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
+import { safeParseDate } from "@/lib/utils";
 
 export default function TimelinePage() {
   const { data: bakes } = useQuery<Bake[]>({
@@ -40,11 +41,17 @@ export default function TimelinePage() {
                     {activeBake.name}
                   </h2>
                   <p className="text-sourdough-600 text-sm">
-                    Started {activeBake.startTime ? new Date(activeBake.startTime).toLocaleDateString() : 'Unknown date'} at{' '}
-                    {activeBake.startTime ? new Date(activeBake.startTime).toLocaleTimeString([], { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    }) : 'Unknown time'}
+                    Started {(() => {
+                      const startDate = safeParseDate(activeBake.startTime);
+                      return startDate && !isNaN(startDate.getTime()) ? startDate.toLocaleDateString() : 'Unknown date';
+                    })()} at{' '}
+                    {(() => {
+                      const startDate = safeParseDate(activeBake.startTime);
+                      return startDate && !isNaN(startDate.getTime()) ? startDate.toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      }) : 'Unknown time';
+                    })()}
                   </p>
                 </div>
                 <div className="bg-sourdough-500 text-white px-3 py-1 rounded-lg text-sm font-medium">

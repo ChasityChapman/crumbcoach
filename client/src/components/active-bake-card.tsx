@@ -7,6 +7,7 @@ import { safeRecipeQueries, safeTimelineStepQueries, safeBakeQueries } from "@/l
 import { bakeNotifications } from "@/lib/notifications";
 import { timelineAnalytics } from "@/lib/timeline-analytics";
 import { safeFind } from "@/lib/safeArray";
+import { safeParseDate as utilSafeParseDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { MoreVertical, RefreshCw, Pause, CheckCircle, FileText, Thermometer, SkipForward, X } from "lucide-react";
 import TimelineView from "./timeline-view";
@@ -50,8 +51,9 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
     const safeParseDate = (dateValue: any, fallback: Date): Date => {
       if (!dateValue) return fallback;
       try {
-        const parsed = new Date(dateValue);
-        return isNaN(parsed.getTime()) ? fallback : parsed;
+        const parsed = utilSafeParseDate(dateValue);
+        if (!parsed) return fallback;
+        return parsed;
       } catch {
         return fallback;
       }
@@ -91,7 +93,7 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
 
   // Calculate ETA
   const lastStep = timelineItems[timelineItems.length - 1];
-  const eta = lastStep ? lastStep.endAt : addMinutes(new Date(bake.startTime || now), 480);
+  const eta = lastStep ? lastStep.endAt : addMinutes(utilSafeParseDate(bake.startTime) || now, 480);
 
   // Get active step for next-step tile
   const activeStep = safeFind(timelineItems, item => item.status === 'active');
@@ -134,7 +136,7 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
       const step = safeFind(timelineSteps, s => s.id === stepId);
       if (!step) return;
 
-      const startTime = new Date(step.scheduledTime || step.startTime || now);
+      const startTime = utilSafeParseDate(step.scheduledTime || step.startTime) || now;
       const actualDuration = Math.floor((now.getTime() - startTime.getTime()) / (1000 * 60));
       const estimatedDuration = step.estimatedDuration || 30;
       const delta = actualDuration - estimatedDuration;
@@ -235,7 +237,7 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
     mutationFn: () => {
       const completedSteps = timelineSteps?.filter(s => s.status === 'completed').length || 0;
       const skippedSteps = timelineSteps?.filter(s => s.status === 'skipped').length || 0;
-      const startTime = new Date(bake.createdAt);
+      const startTime = utilSafeParseDate(bake.createdAt) || now;
       const actualDuration = Math.floor((now.getTime() - startTime.getTime()) / (1000 * 60));
       
       // Track bake completion analytics
@@ -307,7 +309,7 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
         mode = 'shift_all';
         
         for (const step of remainingSteps) {
-          const newStartTime = addMinutes(new Date(step.scheduledTime || step.startTime || now), delta);
+          const newStartTime = addMinutes(utilSafeParseDate(step.scheduledTime || step.startTime) || now, delta);
           await safeTimelineStepQueries.update(step.id, {
             scheduledTime: newStartTime.toISOString(),
             startTime: step.status === 'active' ? step.startTime : newStartTime.toISOString(),
@@ -324,7 +326,7 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
         
         for (const step of pendingSteps) {
           accumulatedCompression += compressionPerStep;
-          const newStartTime = addMinutes(new Date(step.scheduledTime || step.startTime || now), -accumulatedCompression);
+          const newStartTime = addMinutes(utilSafeParseDate(step.scheduledTime || step.startTime) || now, -accumulatedCompression);
           await safeTimelineStepQueries.update(step.id, {
             scheduledTime: newStartTime.toISOString(),
           });
@@ -373,7 +375,7 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
           <div>
             <h3 className="font-medium text-foreground">{recipe?.name || bake.name}</h3>
             <p className="text-sm text-muted-foreground">
-              Started {formatDistanceToNow(new Date(bake.startTime || now), { addSuffix: true })} • 
+              Started {formatDistanceToNow(utilSafeParseDate(bake.startTime) || now, { addSuffix: true })} • 
               ETA {format(eta, 'h:mm a')}
             </p>
           </div>

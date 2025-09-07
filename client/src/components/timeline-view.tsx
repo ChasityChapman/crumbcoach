@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import SkipConfirmationModal from "./skip-confirmation-modal";
 import { timelineAnalytics } from "@/lib/timeline-analytics";
 import { safeMap } from "@/lib/safeArray";
+import { safeParseDate } from "@/lib/utils";
 
 interface TimelineItem {
   id: string;
@@ -320,15 +321,15 @@ export default function TimelineView({
                       onClick={() => {
                         // Default bedtime 10 PM, wakeup 7 AM
                         // Ensure item.startAt is a valid Date
-                        const startDate = item.startAt instanceof Date ? item.startAt : new Date(item.startAt);
-                        if (isNaN(startDate.getTime())) {
+                        const startDate = item.startAt instanceof Date ? item.startAt : safeParseDate(item.startAt);
+                        if (!startDate || isNaN(startDate.getTime())) {
                           console.error('Invalid startAt date for step:', item.id);
                           return;
                         }
                         
-                        const bedtime = new Date(startDate);
+                        const bedtime = new Date(startDate.getTime());
                         bedtime.setHours(22, 0, 0, 0);
-                        const wakeup = new Date(startDate);
+                        const wakeup = new Date(startDate.getTime());
                         wakeup.setDate(wakeup.getDate() + 1);
                         wakeup.setHours(7, 0, 0, 0);
                         

@@ -122,6 +122,16 @@ export function setupAuthRoutes(router: Router) {
       // Remove password from response
       const { password: _, ...userWithoutPassword } = user;
       
+      // Log successful login
+      await GDPRService.logAuditEvent(
+        user.id,
+        user.email,
+        'user_login',
+        'auth',
+        { loginMethod: 'email_password' },
+        req
+      );
+      
       // Use Supabase session - no need for custom JWT tokens
       // Return success without custom tokens since Supabase handles this
       res.status(200).json({
@@ -133,22 +143,6 @@ export function setupAuthRoutes(router: Router) {
           firstName: userWithoutPassword.firstName || undefined,
           lastName: userWithoutPassword.lastName || undefined
         }
-      });
-      
-      // Log successful login
-      await GDPRService.logAuditEvent(
-        user.id,
-        user.email,
-        'user_login',
-        'auth',
-        { loginMethod: 'email_password' },
-        req
-      );
-      
-      res.json({
-        user: userWithoutPassword,
-        tokens: { message: 'Handled by Supabase client' }, // Placeholder - Supabase handles tokens
-        message: 'Login successful'
       });
     } catch (error) {
       console.error('Login error:', error);

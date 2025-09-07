@@ -4,6 +4,7 @@ import { safeMap } from "@/lib/safeArray";
 import { Camera, Image as ImageIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import type { BakePhoto } from "@shared/schema";
+import { safeParseDate } from "@/lib/utils";
 
 interface PhotoGalleryProps {
   bakeId: string;
@@ -95,7 +96,12 @@ export default function PhotoGallery({ bakeId, className = "" }: PhotoGalleryPro
                       <p className="font-medium truncate">{photoWithUrl.caption}</p>
                     )}
                     <p className="opacity-75">
-                      {photoWithUrl.createdAt ? new Date(photoWithUrl.createdAt).toLocaleDateString() : 'Unknown date'}
+                      {(() => {
+                        const createdDate = safeParseDate(photoWithUrl.createdAt);
+                        return createdDate && !isNaN(createdDate.getTime())
+                          ? createdDate.toLocaleDateString()
+                          : 'Unknown date';
+                      })()}
                     </p>
                   </div>
                 </div>
