@@ -154,15 +154,15 @@ export default function AuthPage() {
 
   // Always render consistent structure - no conditional returns
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sourdough-50 to-sourdough-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-primary/30 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Show redirecting message if user is authenticated */}
         {(user || isRedirecting) ? (
           <div className="text-center">
-            <div className="w-8 h-8 bg-sourdough-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4">
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
             </div>
-            <p className="text-sourdough-600">Redirecting...</p>
+            <p className="text-muted-foreground">Redirecting...</p>
           </div>
         ) : (
           <>
@@ -175,16 +175,16 @@ export default function AuthPage() {
               className="w-16 h-16 object-contain"
             />
           </div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-sourdough-900">Crumb Coach</h1>
-          <p className="text-sm sm:text-base text-sourdough-600 mt-2">Your sourdough baking companion</p>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">Crumb Coach</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-2">Your sourdough baking companion</p>
         </div>
 
-        <Card className="shadow-lg border-sourdough-200 bg-white/95 backdrop-blur-sm">
+        <Card className="shadow-lg bg-white/95 backdrop-blur-sm">
           <CardHeader className="text-center">
-            <CardTitle className="text-xl sm:text-2xl text-sourdough-900">
+            <CardTitle className="text-xl sm:text-2xl text-foreground">
               Get Started
             </CardTitle>
-            <CardDescription className="text-sm sm:text-base text-sourdough-600">
+            <CardDescription className="text-sm sm:text-base text-muted-foreground">
               Sign in to your account or create a new one
             </CardDescription>
           </CardHeader>
@@ -203,11 +203,11 @@ export default function AuthPage() {
               <TabsContent value="login">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="login-email" className="text-sm sm:text-base text-sourdough-800">
+                    <Label htmlFor="login-email" className="text-sm sm:text-base text-foreground">
                       Email
                     </Label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-sourdough-400" />
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="login-email"
                         type="email"
@@ -216,18 +216,18 @@ export default function AuthPage() {
                         onChange={(e) =>
                           setLoginData({ ...loginData, email: e.target.value })
                         }
-                        className="pl-10 border-sourdough-200 focus:border-sourdough-500"
+                        className="pl-10 "
                         required
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="login-password" className="text-sm sm:text-base text-sourdough-800">
+                    <Label htmlFor="login-password" className="text-sm sm:text-base text-foreground">
                       Password
                     </Label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-sourdough-400" />
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="login-password"
                         type="password"
@@ -236,7 +236,7 @@ export default function AuthPage() {
                         onChange={(e) =>
                           setLoginData({ ...loginData, password: e.target.value })
                         }
-                        className="pl-10 border-sourdough-200 focus:border-sourdough-500"
+                        className="pl-10 "
                         required
                       />
                     </div>
@@ -244,8 +244,7 @@ export default function AuthPage() {
 
                   <Button
                     type="submit"
-                    className="w-full text-black hover:opacity-90 !bg-transparent"
-                    style={{ backgroundColor: '#f7c12d', borderColor: '#f7c12d' }}
+                    className="w-full"
                     disabled={isLoading}
                     data-testid="button-login"
                   >
@@ -257,7 +256,7 @@ export default function AuthPage() {
                   <Button
                     variant="ghost"
                     onClick={() => setLocation("/forgot-password")}
-                    className="text-sourdough-600 hover:text-sourdough-800 text-sm"
+                    className="text-muted-foreground hover:text-primary text-sm"
                     data-testid="link-forgot-password"
                   >
                     Forgot your password?
@@ -269,11 +268,11 @@ export default function AuthPage() {
               <TabsContent value="register">
                 <form onSubmit={handleRegister} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="register-email" className="text-sm sm:text-base text-sourdough-800">
+                    <Label htmlFor="register-email" className="text-sm sm:text-base text-foreground">
                       Email *
                     </Label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-sourdough-400" />
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="register-email"
                         type="email"
@@ -282,18 +281,18 @@ export default function AuthPage() {
                         onChange={(e) =>
                           setRegisterData({ ...registerData, email: e.target.value })
                         }
-                        className="pl-10 border-sourdough-200 focus:border-sourdough-500"
+                        className="pl-10 "
                         required
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="register-password" className="text-sm sm:text-base text-sourdough-800">
+                    <Label htmlFor="register-password" className="text-sm sm:text-base text-foreground">
                       Password *
                     </Label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-sourdough-400" />
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="register-password"
                         type="password"
@@ -302,7 +301,7 @@ export default function AuthPage() {
                         onChange={(e) =>
                           setRegisterData({ ...registerData, password: e.target.value })
                         }
-                        className="pl-10 border-sourdough-200 focus:border-sourdough-500"
+                        className="pl-10 "
                         required
                       />
                     </div>
@@ -310,7 +309,7 @@ export default function AuthPage() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <Label htmlFor="register-firstname" className="text-sm sm:text-base text-sourdough-800">
+                      <Label htmlFor="register-firstname" className="text-sm sm:text-base text-foreground">
                         First Name
                       </Label>
                       <Input
@@ -321,12 +320,12 @@ export default function AuthPage() {
                         onChange={(e) =>
                           setRegisterData({ ...registerData, firstName: e.target.value })
                         }
-                        className="border-sourdough-200 focus:border-sourdough-500"
+                        className=""
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="register-lastname" className="text-sm sm:text-base text-sourdough-800">
+                      <Label htmlFor="register-lastname" className="text-sm sm:text-base text-foreground">
                         Last Name
                       </Label>
                       <Input
@@ -337,15 +336,14 @@ export default function AuthPage() {
                         onChange={(e) =>
                           setRegisterData({ ...registerData, lastName: e.target.value })
                         }
-                        className="border-sourdough-200 focus:border-sourdough-500"
+                        className=""
                       />
                     </div>
                   </div>
 
                   <Button
                     type="submit"
-                    className="w-full text-black hover:opacity-90 !bg-transparent"
-                    style={{ backgroundColor: '#f7c12d', borderColor: '#f7c12d' }}
+                    className="w-full"
                     disabled={isLoading}
                     data-testid="button-register"
                   >
@@ -357,7 +355,7 @@ export default function AuthPage() {
           </CardContent>
         </Card>
 
-            <p className="text-center text-xs sm:text-sm text-sourdough-500 mt-6">
+            <p className="text-center text-xs sm:text-sm text-muted-foreground mt-6">
               Start your sourdough journey with expert guidance every step of the way
             </p>
           </>
