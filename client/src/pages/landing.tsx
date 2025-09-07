@@ -8,13 +8,13 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 dark:from-orange-950 dark:via-black dark:to-amber-950">
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-white to-primary/10 dark:from-primary/20 dark:via-black dark:to-primary/20">
       <div className="container mx-auto px-4 py-16">
         {/* Header */}
         <div className="text-center mb-16">
           <div className="flex items-center justify-center mb-6">
-            <div className="bg-orange-100 dark:bg-orange-900 rounded-full p-4">
-              <ChefHat className="h-12 w-12 text-orange-600 dark:text-orange-400" />
+            <div className="bg-primary/20 dark:bg-primary/20 rounded-full p-4">
+              <ChefHat className="h-12 w-12 text-primary dark:text-primary" />
             </div>
           </div>
           <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-4">
@@ -28,10 +28,10 @@ export default function Landing() {
 
         {/* Features Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-          <Card className="border-orange-200 dark:border-orange-800">
+          <Card className="border-primary/20 dark:border-primary/20">
             <CardHeader>
-              <div className="bg-orange-100 dark:bg-orange-900 rounded-full p-3 w-fit">
-                <Thermometer className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+              <div className="bg-primary/20 dark:bg-primary/20 rounded-full p-3 w-fit">
+                <Thermometer className="h-6 w-6 text-primary dark:text-primary" />
               </div>
               <CardTitle>Smart Environmental Monitoring</CardTitle>
               <CardDescription>
@@ -40,10 +40,10 @@ export default function Landing() {
             </CardHeader>
           </Card>
 
-          <Card className="border-orange-200 dark:border-orange-800">
+          <Card className="border-primary/20 dark:border-primary/20">
             <CardHeader>
-              <div className="bg-orange-100 dark:bg-orange-900 rounded-full p-3 w-fit">
-                <Clock className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+              <div className="bg-primary/20 dark:bg-primary/20 rounded-full p-3 w-fit">
+                <Clock className="h-6 w-6 text-primary dark:text-primary" />
               </div>
               <CardTitle>Intelligent Timeline Management</CardTitle>
               <CardDescription>
@@ -52,10 +52,10 @@ export default function Landing() {
             </CardHeader>
           </Card>
 
-          <Card className="border-orange-200 dark:border-orange-800">
+          <Card className="border-primary/20 dark:border-primary/20">
             <CardHeader>
-              <div className="bg-orange-100 dark:bg-orange-900 rounded-full p-3 w-fit">
-                <Camera className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+              <div className="bg-primary/20 dark:bg-primary/20 rounded-full p-3 w-fit">
+                <Camera className="h-6 w-6 text-primary dark:text-primary" />
               </div>
               <CardTitle>Photo Documentation</CardTitle>
               <CardDescription>
@@ -64,10 +64,10 @@ export default function Landing() {
             </CardHeader>
           </Card>
 
-          <Card className="border-orange-200 dark:border-orange-800">
+          <Card className="border-primary/20 dark:border-primary/20">
             <CardHeader>
-              <div className="bg-orange-100 dark:bg-orange-900 rounded-full p-3 w-fit">
-                <BookOpen className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+              <div className="bg-primary/20 dark:bg-primary/20 rounded-full p-3 w-fit">
+                <BookOpen className="h-6 w-6 text-primary dark:text-primary" />
               </div>
               <CardTitle>Recipe Management</CardTitle>
               <CardDescription>
@@ -76,10 +76,10 @@ export default function Landing() {
             </CardHeader>
           </Card>
 
-          <Card className="border-orange-200 dark:border-orange-800">
+          <Card className="border-primary/20 dark:border-primary/20">
             <CardHeader>
-              <div className="bg-orange-100 dark:bg-orange-900 rounded-full p-3 w-fit">
-                <Lightbulb className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+              <div className="bg-primary/20 dark:bg-primary/20 rounded-full p-3 w-fit">
+                <Lightbulb className="h-6 w-6 text-primary dark:text-primary" />
               </div>
               <CardTitle>Interactive Tutorials</CardTitle>
               <CardDescription>
@@ -88,10 +88,10 @@ export default function Landing() {
             </CardHeader>
           </Card>
 
-          <Card className="border-orange-200 dark:border-orange-800">
+          <Card className="border-primary/20 dark:border-primary/20">
             <CardHeader>
-              <div className="bg-orange-100 dark:bg-orange-900 rounded-full p-3 w-fit">
-                <ChefHat className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+              <div className="bg-primary/20 dark:bg-primary/20 rounded-full p-3 w-fit">
+                <ChefHat className="h-6 w-6 text-primary dark:text-primary" />
               </div>
               <CardTitle>Personal Baking Data</CardTitle>
               <CardDescription>
@@ -103,7 +103,7 @@ export default function Landing() {
 
         {/* CTA Section */}
         <div className="text-center">
-          <Card className="max-w-md mx-auto border-orange-200 dark:border-orange-800">
+          <Card className="max-w-md mx-auto border-primary/20 dark:border-primary/20">
             <CardHeader>
               <CardTitle>Ready to Perfect Your Sourdough?</CardTitle>
               <CardDescription>
@@ -113,7 +113,7 @@ export default function Landing() {
             <CardContent>
               <Button 
                 onClick={handleLogin}
-                className="w-full bg-orange-600 hover:bg-orange-700 dark:bg-orange-700 dark:hover:bg-orange-800"
+                className="w-full"
                 size="lg"
               >
                 Sign In to Get Started
