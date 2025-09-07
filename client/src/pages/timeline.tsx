@@ -1,17 +1,30 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import TimelineView from "@/components/timeline-view";
 import { Bake } from "@shared/schema";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Clock, CheckCircle, Calendar } from "lucide-react";
 import { Link } from "wouter";
 import { safeParseDate } from "@/lib/utils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function TimelinePage() {
+  const [activeTab, setActiveTab] = useState("current");
+  
   const { data: bakes } = useQuery<Bake[]>({
     queryKey: ["/api/bakes"],
   });
 
   // Get the first active bake
   const activeBake = bakes?.find(bake => bake.status === 'active');
+  
+  // Get recent completed bakes for history
+  const recentBakes = bakes?.filter(bake => bake.status === 'completed')
+    .sort((a, b) => {
+      const aTime = safeParseDate(a.endTime || a.startTime) || new Date(0);
+      const bTime = safeParseDate(b.endTime || b.startTime) || new Date(0);
+      return bTime.getTime() - aTime.getTime();
+    })
+    .slice(0, 10) || [];
 
   return (
     <div className="min-h-screen bg-sourdough-50 pb-20 safe-x">

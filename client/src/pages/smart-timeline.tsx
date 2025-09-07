@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import SmartTimelineHeader from "@/components/smart-timeline-header";
 import SmartTimelineRecommendations from "@/components/smart-timeline-recommendations";
 import SmartTimelineStep from "@/components/smart-timeline-step";
+import BottomNavigation from "@/components/bottom-navigation";
 import { useSmartTimeline, type SmartTimelineStep } from "@/hooks/use-smart-timeline";
 import { safeMap } from "@/lib/safeArray";
 import type { Bake } from "@shared/schema";
@@ -333,6 +334,9 @@ export default function SmartTimelinePage() {
           </div>
         </div>
       </div>
+
+      {/* Bottom Navigation */}
+      <BottomNavigation currentPath="/smart-timeline" />
     </div>
   );
 }
