@@ -436,7 +436,7 @@ export default function StarterLogPage() {
                               <SelectValue placeholder="Select flour type" />
                             </SelectTrigger>
                             <SelectContent>
-                              {flourTypeOptions.map((type) => (
+                              {flourTypeOptions.filter(type => type && type.trim() !== '').map((type) => (
                                 <SelectItem key={type} value={type}>{type}</SelectItem>
                               ))}
                             </SelectContent>
@@ -688,7 +688,7 @@ export default function StarterLogPage() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {starterStageOptions.map((stage) => (
+                            {starterStageOptions.filter(stage => stage.value && stage.value.trim() !== '').map((stage) => (
                               <SelectItem key={stage.value} value={stage.value}>
                                 {stage.label}
                               </SelectItem>
@@ -875,7 +875,7 @@ export default function StarterLogPage() {
                                     No recipes found - create one first
                                   </SelectItem>
                                 ) : (
-                                  recipes.map((recipe) => (
+                                  recipes.filter(recipe => recipe.id && recipe.id.trim() !== '').map((recipe) => (
                                     <SelectItem key={recipe.id} value={recipe.id}>
                                       {recipe.name}
                                     </SelectItem>

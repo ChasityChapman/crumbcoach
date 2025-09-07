@@ -223,7 +223,7 @@ export default function StartBakeModal({ isOpen, onClose, onBakeStarted }: Start
                 <SelectContent>
                   <SelectItem value="none">Choose a recipe...</SelectItem>
                   {recipes && recipes.length > 0 ? (
-                    safeMap(recipes, (recipe) => (
+                    safeMap(recipes.filter(recipe => recipe.id && recipe.id.trim() !== ''), (recipe) => (
                       <SelectItem key={recipe.id} value={recipe.id}>
                         <div className="flex items-center space-x-2">
                           <ChefHat className="w-4 h-4" />

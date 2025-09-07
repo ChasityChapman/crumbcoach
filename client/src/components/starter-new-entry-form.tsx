@@ -205,7 +205,7 @@ export default function StarterNewEntryForm({ starter }: StarterNewEntryFormProp
                 <SelectValue placeholder="Select flour type" />
               </SelectTrigger>
               <SelectContent>
-                {safeMap(flours, (flour) => (
+                {safeMap(flours.filter(flour => flour.id && flour.id.trim() !== ''), (flour) => (
                   <SelectItem key={flour.id} value={flour.id}>
                     {flour.name}
                   </SelectItem>

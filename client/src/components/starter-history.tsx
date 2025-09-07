@@ -146,7 +146,7 @@ export default function StarterHistory({ starter }: StarterHistoryProps) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All flours</SelectItem>
-                  {safeMap(flours, flour => (
+                  {safeMap(flours.filter(flour => flour.id && flour.id.trim() !== ''), flour => (
                     <SelectItem key={flour.id} value={flour.id}>
                       {flour.name}
                     </SelectItem>

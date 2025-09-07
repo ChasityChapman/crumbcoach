@@ -340,7 +340,7 @@ export default function StarterProfileModal({
                               <SelectValue placeholder="Select flour type" />
                             </SelectTrigger>
                             <SelectContent>
-                              {flours.map((f) => (
+                              {flours.filter(f => f.id && f.id.trim() !== '').map((f) => (
                                 <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
                               ))}
                             </SelectContent>
