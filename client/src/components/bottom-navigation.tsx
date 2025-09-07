@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Home, BookOpen, Play, User, Clock, CalendarClock, FlaskConical, Cookie } from "lucide-react";
+import { Home, BookOpen, Play, User, Clock, CalendarClock, FlaskConical, Cookie, Brain } from "lucide-react";
 
 interface BottomNavigationProps {
   currentPath: string;
@@ -42,12 +42,12 @@ export default function BottomNavigation({ currentPath }: BottomNavigationProps)
           </button>
         </Link>
         
-        <Link href="/timeline-planner">
+        <Link href="/smart-timeline">
           <button className={`flex flex-col items-center py-2 px-1 ${
-            isActive('/timeline-planner') ? 'text-accent-orange-500' : 'text-sourdough-500'
+            isActive('/smart-timeline') ? 'text-accent-orange-500' : 'text-sourdough-500'
           }`}>
-            <CalendarClock className="w-5 h-5 mb-1" />
-            <span className="text-xs">Timeline</span>
+            <Brain className="w-5 h-5 mb-1" />
+            <span className="text-xs">Smart</span>
           </button>
         </Link>
         

@@ -21,6 +21,7 @@ import TermsOfService from "@/pages/terms-of-service";
 import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
 import TimelinePlanner from "@/pages/timeline-planner";
+import SmartTimeline from "@/pages/smart-timeline";
 import StarterLog from "@/pages/starter-log";
 import Starter from "@/pages/starter";
 
@@ -78,6 +79,7 @@ function Router() {
           <Route path="/tutorials" component={Tutorials} />
           <Route path="/profile" component={Profile} />
           <Route path="/timeline-planner" component={TimelinePlanner} />
+          <Route path="/smart-timeline" component={SmartTimeline} />
           <Route path="/starter-log" component={StarterLog} />
           <Route path="/starter" component={Starter} />
           <Route path="/privacy-policy" component={PrivacyPolicy} />

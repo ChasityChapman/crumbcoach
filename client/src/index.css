@@ -3,6 +3,27 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Circular Progress Styles */
+.circular-progress {
+  transform: rotate(-90deg);
+}
+
+.circular-progress .circle-bg {
+  stroke: #e5e5e5;
+}
+
+.circular-progress .circle {
+  stroke: #8B4513;
+  stroke-linecap: round;
+  animation: progress 1s ease-in-out;
+}
+
+@keyframes progress {
+  0% {
+    stroke-dasharray: 0, 100;
+  }
+}
+
 :root {
   --background: hsl(60 12% 98%);
   --foreground: hsl(0 0% 18%);
