@@ -14,12 +14,14 @@ import NextStepTile from "@/components/next-step-tile";
 import { safeMap, safeFind } from "@/lib/safeArray";
 import { safeParseDate } from "@/lib/utils";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { useToast } from "@/hooks/use-toast";
 import { testSupabaseConnection, testDatabaseTables } from "@/lib/testSupabase";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import StartBakeModal from "@/components/start-bake-modal";
 import NotesModal from "@/components/notes-modal";
 import RecipeModal from "@/components/recipe-modal";
+import CameraModal from "@/components/camera-modal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   DropdownMenu, 
@@ -33,12 +35,14 @@ import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_175622489
 export default function Home() {
   const { user, signOut } = useSupabaseAuth();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
 
   // State for modals
   const [isCreatingBake, setIsCreatingBake] = useState(false);
   const [showStartBakeModal, setShowStartBakeModal] = useState(false);
   const [showNotesModal, setShowNotesModal] = useState(false);
   const [showNewRecipeModal, setShowNewRecipeModal] = useState(false);
+  const [showCameraModal, setShowCameraModal] = useState(false);
 
   // Initialize data and test connection
   useEffect(() => {
@@ -214,12 +218,16 @@ export default function Home() {
   };
 
   const handleOpenCamera = () => {
-    // Navigate to photo gallery or camera for first active bake
+    // Open camera modal for photo capture
     if (activeBakes.length > 0) {
-      setLocation(`/recent-bakes?bake=${activeBakes[0].id}&tab=photos`);
+      setShowCameraModal(true);
     } else {
-      // No active bake, could show a message or open camera anyway
-      console.log('No active bake to add photo to');
+      // No active bake, show message
+      toast({
+        title: "No Active Bake",
+        description: "Start a bake to capture progress photos.",
+        variant: "default",
+      });
     }
   };
 
@@ -385,6 +393,12 @@ export default function Home() {
       <RecipeModal
         isOpen={showNewRecipeModal}
         onClose={() => setShowNewRecipeModal(false)}
+      />
+
+      <CameraModal
+        isOpen={showCameraModal}
+        onClose={() => setShowCameraModal(false)}
+        bakeId={activeBakes.length > 0 ? activeBakes[0].id : undefined}
       />
     </div>
   );
