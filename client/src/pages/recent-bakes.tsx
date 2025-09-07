@@ -323,7 +323,7 @@ export default function RecentBakesPage() {
   return (
     <div className="min-h-screen bg-sourdough-50">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-sourdough-100">
+      <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-sourdough-100 safe-top">
         <div className="px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <img 

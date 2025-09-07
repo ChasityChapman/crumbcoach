@@ -40,7 +40,7 @@ export default function Recipes() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-sourdough-50">
-        <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-sourdough-100">
+        <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-sourdough-100 safe-top">
           <div className="px-4 safe-top pb-3 min-h-[60px] flex items-center">
             <h1 className="font-display font-semibold text-lg text-sourdough-800">Recipes</h1>
           </div>
@@ -63,7 +63,7 @@ export default function Recipes() {
   return (
     <div className="min-h-screen bg-sourdough-50">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-sourdough-100">
+      <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-sourdough-100 safe-top">
         <div className="px-4 safe-top pb-3 flex items-center justify-between min-h-[60px]">
           <h1 className="font-display font-semibold text-lg text-sourdough-800">Recipes</h1>
           <Button 

@@ -167,7 +167,7 @@ export default function SmartTimelinePage() {
     return (
       <div className="min-h-screen bg-sourdough-50 pb-20">
         {/* Header */}
-        <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-sourdough-100">
+        <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-sourdough-100 safe-top">
           <div className="px-4 py-3 flex items-center space-x-3">
             <Link href="/">
               <button className="p-2 hover:bg-sourdough-100 rounded-lg transition-colors">
@@ -206,7 +206,7 @@ export default function SmartTimelinePage() {
   return (
     <div className="min-h-screen bg-sourdough-50 pb-20">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-sourdough-100">
+      <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-sourdough-100 safe-top">
         <div className="px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Link href="/">
