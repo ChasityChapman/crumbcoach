@@ -20,6 +20,7 @@ import { CalendarIcon, Camera, Plus, Thermometer, FlaskConical, Clock, TrendingU
 import { useToast } from "@/hooks/use-toast";
 import { insertStarterLogSchema, type StarterLog, type Recipe } from "@shared/schema";
 import { format, formatDistanceToNow } from "date-fns";
+import { safeParseDate } from "@/lib/utils";
 import BottomNavigation from "@/components/bottom-navigation";
 import { safeStarterLogQueries, safeRecipeQueries } from "@/lib/safeQueries";
 import RecipeModal from "@/components/recipe-modal";
@@ -984,7 +985,15 @@ export default function StarterLogPage() {
                     <div key={log.id} className="border rounded-lg p-4 space-y-3" data-testid={`starter-log-${log.id}`}>
                       <div className="flex items-center justify-between">
                         <h3 className="font-semibold">
-                          {log.logDate ? format(new Date(log.logDate), "PPP 'at' p") : "No date"}
+                          {log.logDate ? (() => {
+                            try {
+                              const safeDate = safeParseDate(log.logDate) || new Date();
+                              return format(safeDate, "PPP 'at' p");
+                            } catch (error) {
+                              console.warn('Date formatting error for log date:', error);
+                              return "Invalid date";
+                            }
+                          })() : "No date"}
                         </h3>
                         <Badge variant={log.starterStage === "peak" ? "default" : "secondary"}>
                           {log.starterStage?.replace("_", " ")}

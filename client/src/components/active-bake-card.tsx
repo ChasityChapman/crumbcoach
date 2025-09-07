@@ -376,7 +376,15 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
             <h3 className="font-medium text-foreground">{recipe?.name || bake.name}</h3>
             <p className="text-sm text-muted-foreground">
               Started {formatDistanceToNow(utilSafeParseDate(bake.startTime) || now, { addSuffix: true })} • 
-              ETA {format(eta, 'h:mm a')}
+              ETA {(() => {
+                try {
+                  const safeEta = utilSafeParseDate(eta) || new Date();
+                  return format(safeEta, 'h:mm a');
+                } catch (error) {
+                  console.warn('Date formatting error for ETA:', error);
+                  return format(new Date(), 'h:mm a');
+                }
+              })()}
             </p>
           </div>
         </div>

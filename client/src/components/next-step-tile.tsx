@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { safeParseDate } from "@/lib/utils";
 import { Clock, ChevronRight } from "lucide-react";
 
 interface NextStepTileProps {
@@ -24,7 +25,15 @@ export default function NextStepTile({ stepName, startTime, duration, onClick }:
               Next: {stepName}
             </p>
             <p className="text-xs opacity-90">
-              {format(startTime, 'h:mm a')} • {duration} min
+              {(() => {
+                try {
+                  const safeDate = safeParseDate(startTime) || new Date();
+                  return format(safeDate, 'h:mm a');
+                } catch (error) {
+                  console.warn('Date formatting error in NextStepTile:', error);
+                  return format(new Date(), 'h:mm a');
+                }
+              })()} • {duration} min
             </p>
           </div>
         </div>
