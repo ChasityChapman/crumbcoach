@@ -13,11 +13,11 @@ export default function BottomNavigation({ currentPath }: BottomNavigationProps)
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-sourdough-100 safe-area-pb z-40">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-border safe-area-pb z-40">
       <div className="grid grid-cols-6 py-3 px-1 max-w-lg mx-auto">
         <Link href="/">
           <button className={`flex flex-col items-center py-2 px-1 ${
-            isActive('/') ? 'text-accent-orange-500' : 'text-sourdough-500'
+            isActive('/') ? 'text-primary' : 'text-muted-foreground'
           }`}>
             <Home className="w-5 h-5 mb-1" />
             <span className="text-xs font-medium">Home</span>
@@ -26,7 +26,7 @@ export default function BottomNavigation({ currentPath }: BottomNavigationProps)
         
         <Link href="/recipes">
           <button className={`flex flex-col items-center py-2 px-1 ${
-            isActive('/recipes') ? 'text-accent-orange-500' : 'text-sourdough-500'
+            isActive('/recipes') ? 'text-primary' : 'text-muted-foreground'
           }`}>
             <BookOpen className="w-5 h-5 mb-1" />
             <span className="text-xs">Recipes</span>
@@ -35,7 +35,7 @@ export default function BottomNavigation({ currentPath }: BottomNavigationProps)
         
         <Link href="/starter">
           <button className={`flex flex-col items-center py-2 px-1 ${
-            isActive('/starter') ? 'text-accent-orange-500' : 'text-sourdough-500'
+            isActive('/starter') ? 'text-primary' : 'text-muted-foreground'
           }`}>
             <FlaskConical className="w-5 h-5 mb-1" />
             <span className="text-xs">Starter</span>
@@ -44,7 +44,7 @@ export default function BottomNavigation({ currentPath }: BottomNavigationProps)
         
         <Link href="/smart-timeline">
           <button className={`flex flex-col items-center py-2 px-1 ${
-            isActive('/smart-timeline') ? 'text-accent-orange-500' : 'text-sourdough-500'
+            isActive('/smart-timeline') ? 'text-primary' : 'text-muted-foreground'
           }`}>
             <Brain className="w-5 h-5 mb-1" />
             <span className="text-xs">Smart</span>
@@ -53,7 +53,7 @@ export default function BottomNavigation({ currentPath }: BottomNavigationProps)
         
         <Link href="/recent-bakes">
           <button className={`flex flex-col items-center py-2 px-1 ${
-            isActive('/recent-bakes') ? 'text-accent-orange-500' : 'text-sourdough-500'
+            isActive('/recent-bakes') ? 'text-primary' : 'text-muted-foreground'
           }`}>
             <Cookie className="w-5 h-5 mb-1" />
             <span className="text-xs">Bakes</span>
@@ -62,7 +62,7 @@ export default function BottomNavigation({ currentPath }: BottomNavigationProps)
         
         <Link href="/profile">
           <button className={`flex flex-col items-center py-2 px-1 ${
-            isActive('/profile') ? 'text-accent-orange-500' : 'text-sourdough-500'
+            isActive('/profile') ? 'text-primary' : 'text-muted-foreground'
           }`}>
             <User className="w-5 h-5 mb-1" />
             <span className="text-xs">Profile</span>
