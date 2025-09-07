@@ -237,7 +237,7 @@ export default function TimelineView({
                 </p>
               </div>
 
-              {/* Right side: Status chip and menu */}
+              {/* Right side: Status chip, arrow, and menu */}
               <div className="flex items-center space-x-2">
                 {/* Status chip */}
                 <div className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -251,6 +251,11 @@ export default function TimelineView({
                    : item.status === 'completed' ? 'Done' 
                    : 'Pending'}
                 </div>
+
+                {/* Arrow for active steps */}
+                {item.status === 'active' && (
+                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                )}
 
                 {/* Kebab menu */}
                 <Button
@@ -361,13 +366,7 @@ export default function TimelineView({
               </div>
             )}
           </div>
-
-                    {/* Arrow for active steps */}
-                    {item.status === 'active' && (
-                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                    )}
-                  </div>
-                );
+        );
               })}
             </div>
           </div>

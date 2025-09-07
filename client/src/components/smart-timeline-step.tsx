@@ -186,6 +186,14 @@ export default function SmartTimelineStep({
                 </div>
               )}
 
+              {/* Arrow for active steps */}
+              {step.status === 'active' && (
+                <ChevronRight 
+                  className="w-4 h-4 text-sourdough-400 cursor-pointer" 
+                  onClick={() => onOpenStepSheet(step.id)}
+                />
+              )}
+
               {/* Menu Button */}
               <Button
                 variant="ghost"
@@ -318,13 +326,6 @@ export default function SmartTimelineStep({
           )}
         </div>
 
-        {/* Arrow for active steps */}
-        {step.status === 'active' && (
-          <ChevronRight 
-            className="w-4 h-4 text-sourdough-400" 
-            onClick={() => onOpenStepSheet(step.id)}
-          />
-        )}
       </div>
     </div>
   );
