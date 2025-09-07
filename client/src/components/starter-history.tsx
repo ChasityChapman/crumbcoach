@@ -22,7 +22,7 @@ type DateRange = "7d" | "30d" | "custom";
 export default function StarterHistory({ starter }: StarterHistoryProps) {
   // Filter state
   const [dateRange, setDateRange] = useState<DateRange>("30d");
-  const [flourFilter, setFlourFilter] = useState<string>("");
+  const [flourFilter, setFlourFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [showTrends, setShowTrends] = useState(false);
 
@@ -65,7 +65,7 @@ export default function StarterHistory({ starter }: StarterHistoryProps) {
     );
 
     // Flour filter
-    if (flourFilter) {
+    if (flourFilter && flourFilter !== "all") {
       filtered = filtered.filter(entry => 
         entry.flourMix?.some(mix => mix.flourId === flourFilter)
       );
@@ -145,7 +145,7 @@ export default function StarterHistory({ starter }: StarterHistoryProps) {
                   <SelectValue placeholder="All flours" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All flours</SelectItem>
+                  <SelectItem value="all">All flours</SelectItem>
                   {safeMap(flours, flour => (
                     <SelectItem key={flour.id} value={flour.id}>
                       {flour.name}

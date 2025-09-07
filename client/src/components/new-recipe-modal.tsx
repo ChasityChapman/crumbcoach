@@ -34,7 +34,7 @@ interface RecipeIngredient {
 export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps) {
   const [recipeName, setRecipeName] = useState("");
   const [description, setDescription] = useState("");
-  const [difficulty, setDifficulty] = useState("");
+  const [difficulty, setDifficulty] = useState("beginner");
   const [steps, setSteps] = useState<RecipeStep[]>([
     { id: "1", name: "", duration: 30, description: "" }
   ]);

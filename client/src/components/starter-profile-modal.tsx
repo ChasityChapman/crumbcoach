@@ -124,7 +124,7 @@ export default function StarterProfileModal({
     } else if (isOpen && !starter) {
       // Reset for new starter
       form.reset();
-      setDefaultFlours([{ flourId: "", pct: 100 }]);
+      setDefaultFlours([{ flourId: "all-purpose", pct: 100 }]);
     }
   }, [isOpen, starter, form]);
 

@@ -76,7 +76,7 @@ export default function StarterLogPage() {
   const [activeTab, setActiveTab] = useState("new-entry");
   const [tempUnit, setTempUnit] = useState<'celsius' | 'fahrenheit'>('celsius');
   const [discardUsageType, setDiscardUsageType] = useState<"notes" | "existing-recipe" | "new-recipe">("notes");
-  const [selectedRecipeId, setSelectedRecipeId] = useState<string>("");
+  const [selectedRecipeId, setSelectedRecipeId] = useState<string>("none");
   const [recipeModalOpen, setRecipeModalOpen] = useState(false);
   const [hydrationCalculatorOpen, setHydrationCalculatorOpen] = useState(false);
   const [starterName, setStarterName] = useState<string>('Odin');
@@ -680,7 +680,7 @@ export default function StarterLogPage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Starter Stage</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                        <Select onValueChange={field.onChange} value={field.value ?? "just_fed"}>
                           <FormControl>
                             <SelectTrigger data-testid="select-starter-stage">
                               <SelectValue placeholder="Select starter stage" />
@@ -868,6 +868,7 @@ export default function StarterLogPage() {
                                 <SelectValue placeholder="Choose a saved recipe" />
                               </SelectTrigger>
                               <SelectContent>
+                                <SelectItem value="none">Choose a recipe...</SelectItem>
                                 {recipes.length === 0 ? (
                                   <SelectItem value="no-recipes" disabled>
                                     No recipes found - create one first

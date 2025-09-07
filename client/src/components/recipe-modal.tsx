@@ -48,7 +48,7 @@ export default function RecipeModal({ isOpen, onClose, recipe, initialTab = "man
   const [hasExtractedData, setHasExtractedData] = useState(false);
   const [recipeName, setRecipeName] = useState("");
   const [description, setDescription] = useState("");
-  const [difficulty, setDifficulty] = useState("");
+  const [difficulty, setDifficulty] = useState("beginner");
   const [totalHours, setTotalHours] = useState(24);
   const [ingredients, setIngredients] = useState<Ingredient[]>([
     { name: "Sourdough starter", amount: "100g" },

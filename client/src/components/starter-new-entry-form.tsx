@@ -95,7 +95,7 @@ export default function StarterNewEntryForm({ starter }: StarterNewEntryFormProp
       const entryData = {
         starterId: starter.id,
         timestamp: timestamp,
-        flourMix: flourMix.length > 0 ? flourMix : [{ flourId: flours[0]?.id || "", pct: 100 }],
+        flourMix: flourMix.length > 0 ? flourMix : [{ flourId: flours[0]?.id || "all-purpose", pct: 100 }],
         ratio,
         totalGrams,
         hydrationPct,
@@ -198,7 +198,7 @@ export default function StarterNewEntryForm({ starter }: StarterNewEntryFormProp
         <CardContent className="p-4">
           <Label>Flour Type(s)</Label>
           {flours.length > 0 ? (
-            <Select value={flourMix[0]?.flourId || ""} onValueChange={(flourId) => {
+            <Select value={flourMix[0]?.flourId || "all-purpose"} onValueChange={(flourId) => {
               setFlourMix([{ flourId, pct: 100 }]);
             }}>
               <SelectTrigger className="mt-1">

@@ -30,7 +30,7 @@ interface StartBakeModalProps {
 }
 
 export default function StartBakeModal({ isOpen, onClose, onBakeStarted }: StartBakeModalProps) {
-  const [selectedRecipeId, setSelectedRecipeId] = useState("");
+  const [selectedRecipeId, setSelectedRecipeId] = useState("none");
   const [bakeName, setBakeName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -221,6 +221,7 @@ export default function StartBakeModal({ isOpen, onClose, onBakeStarted }: Start
                   <SelectValue placeholder="Select a recipe" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">Choose a recipe...</SelectItem>
                   {recipes && recipes.length > 0 ? (
                     safeMap(recipes, (recipe) => (
                       <SelectItem key={recipe.id} value={recipe.id}>
