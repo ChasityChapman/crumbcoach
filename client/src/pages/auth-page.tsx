@@ -245,7 +245,7 @@ export default function AuthPage() {
                   <Button
                     type="submit"
                     className="w-full text-black hover:opacity-90 !bg-transparent"
-                    style={{ backgroundColor: 'hsl(44, 93%, 57%)', borderColor: 'hsl(44, 93%, 57%)' }}
+                    style={{ backgroundColor: '#f7c12d', borderColor: '#f7c12d' }}
                     disabled={isLoading}
                     data-testid="button-login"
                   >
