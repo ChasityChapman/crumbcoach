@@ -18,6 +18,7 @@ import { setupStarterLogsRoutes } from "./routes/starter-logs";
 import { setupTutorialsRoutes } from "./routes/tutorials";
 import { setupUserEntitlementsRoutes } from "./routes/user-entitlements";
 import { setupAnalyticsRoutes } from "./routes/analytics";
+import { setupBreadAnalysisRoutes } from "./routes/bread-analysis";
 
 export function registerRoutes(app: Express): Server {
   // Create a router instance
@@ -39,6 +40,7 @@ export function registerRoutes(app: Express): Server {
   setupTutorialsRoutes(router);
   setupUserEntitlementsRoutes(router);
   setupAnalyticsRoutes(router);
+  setupBreadAnalysisRoutes(router);
   
   // Add metrics endpoint
   router.get('/api/metrics', (req, res) => {

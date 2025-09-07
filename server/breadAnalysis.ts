@@ -11,32 +11,45 @@ const anthropic = new Anthropic({
 });
 
 export interface BreadAnalysis {
-  overallScore: number;
-  crumbStructure: {
-    score: number;
+  overallScore: number; // 1-10 rating
+  crumb: {
+    score: number; // 1-10
     feedback: string;
+    structure: 'open' | 'tight' | 'uneven' | 'perfect';
+    notes: string;
   };
   crust: {
-    score: number;
+    score: number; // 1-10
     feedback: string;
+    color: 'pale' | 'golden' | 'dark' | 'perfect';
+    thickness: 'thin' | 'medium' | 'thick';
+    notes: string;
   };
   shape: {
-    score: number;
+    score: number; // 1-10
     feedback: string;
+    symmetry: 'poor' | 'fair' | 'good' | 'excellent';
+    notes: string;
   };
-  suggestions: string[];
   strengths: string[];
+  improvements: string[];
+  tips: string[];
+  confidence: number; // 0-1, AI confidence in analysis
 }
 
 interface BreadContext {
   temperature?: number;
   humidity?: number;
-  recipeName?: string;
-  recipeHydration?: number;
-  starterAge?: string;
-  starterHydration?: number;
-  proofingTime?: string;
-  additionalNotes?: string;
+  recipe?: {
+    name?: string;
+    flourType?: string;
+    hydration?: number;
+    fermentationTime?: number;
+    bakingTime?: number;
+    bakingTemperature?: number;
+  };
+  bakingStage?: string;
+  notes?: string;
 }
 
 export async function analyzeBreadFromImage(base64Image: string, context?: BreadContext): Promise<BreadAnalysis> {
@@ -72,7 +85,7 @@ export async function analyzeBreadFromImage(base64Image: string, context?: Bread
     const analysis = JSON.parse(content.text);
     
     // Validate the response structure
-    if (!analysis.overallScore || !analysis.crumbStructure || !analysis.crust || !analysis.shape) {
+    if (!analysis.overallScore || !analysis.crumb || !analysis.crust || !analysis.shape) {
       throw new Error('Invalid analysis response structure');
     }
 

@@ -562,13 +562,13 @@ function BreadAnalysisModal({ open, onOpenChange, initialImage }: BreadAnalysisM
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center justify-between">
                       Crumb Structure
-                      <span className={`font-bold ${getScoreColor(analysis.crumbStructure.score)}`}>
-                        {analysis.crumbStructure.score}/10
+                      <span className={`font-bold ${getScoreColor(analysis.crumb.score)}`}>
+                        {analysis.crumb.score}/10
                       </span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <p className="text-sm text-sourdough-600">{analysis.crumbStructure.feedback}</p>
+                    <p className="text-sm text-sourdough-600">{analysis.crumb.feedback}</p>
                   </CardContent>
                 </Card>
 
@@ -623,21 +623,43 @@ function BreadAnalysisModal({ open, onOpenChange, initialImage }: BreadAnalysisM
                 </Card>
               )}
 
-              {/* Suggestions */}
-              {analysis.suggestions.length > 0 && (
+              {/* Improvements */}
+              {analysis.improvements && analysis.improvements.length > 0 && (
                 <Card>
                   <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-blue-700">
+                    <CardTitle className="flex items-center gap-2 text-orange-700">
                       <AlertCircle className="w-5 h-5" />
-                      Suggestions for Improvement
+                      Areas for Improvement
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
                     <ul className="space-y-2">
-                      {safeMap(analysis.suggestions, (suggestion, index) => (
+                      {safeMap(analysis.improvements, (improvement, index) => (
+                        <li key={index} className="flex items-start gap-2">
+                          <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0" />
+                          <span className="text-sm text-sourdough-700">{improvement}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Expert Tips */}
+              {analysis.tips && analysis.tips.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-blue-700">
+                      <Sparkles className="w-5 h-5" />
+                      Expert Tips for Next Time
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <ul className="space-y-2">
+                      {safeMap(analysis.tips, (tip, index) => (
                         <li key={index} className="flex items-start gap-2">
                           <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
-                          <span className="text-sm text-sourdough-700">{suggestion}</span>
+                          <span className="text-sm text-sourdough-700">{tip}</span>
                         </li>
                       ))}
                     </ul>

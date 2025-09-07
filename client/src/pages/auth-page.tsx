@@ -179,7 +179,7 @@ export default function AuthPage() {
           <p className="text-sm sm:text-base text-sourdough-600 mt-2">Your sourdough baking companion</p>
         </div>
 
-        <Card className="shadow-lg border-sourdough-200">
+        <Card className="shadow-lg border-sourdough-200 bg-white/95 backdrop-blur-sm">
           <CardHeader className="text-center">
             <CardTitle className="text-xl sm:text-2xl text-sourdough-900">
               Get Started
@@ -191,8 +191,12 @@ export default function AuthPage() {
           <CardContent>
             <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="login">Sign In</TabsTrigger>
-                <TabsTrigger value="register">Create Account</TabsTrigger>
+                <TabsTrigger value="login" className="font-medium">
+                  Sign In
+                </TabsTrigger>
+                <TabsTrigger value="register" className="font-medium">
+                  Create Account
+                </TabsTrigger>
               </TabsList>
 
               {/* Login Tab */}
@@ -240,7 +244,8 @@ export default function AuthPage() {
 
                   <Button
                     type="submit"
-                    className="w-full bg-sourdough-600 hover:bg-sourdough-700 text-white"
+                    className="w-full text-black hover:opacity-90 !bg-transparent"
+                    style={{ backgroundColor: 'hsl(44, 93%, 57%)', borderColor: 'hsl(44, 93%, 57%)' }}
                     disabled={isLoading}
                     data-testid="button-login"
                   >
@@ -339,7 +344,8 @@ export default function AuthPage() {
 
                   <Button
                     type="submit"
-                    className="w-full bg-sourdough-600 hover:bg-sourdough-700 text-white"
+                    className="w-full text-black hover:opacity-90 !bg-transparent"
+                    style={{ backgroundColor: '#f7c12d', borderColor: '#f7c12d' }}
                     disabled={isLoading}
                     data-testid="button-register"
                   >

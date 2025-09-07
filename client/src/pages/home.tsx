@@ -22,6 +22,7 @@ import StartBakeModal from "@/components/start-bake-modal";
 import NotesModal from "@/components/notes-modal";
 import RecipeModal from "@/components/recipe-modal";
 import CameraModal from "@/components/camera-modal";
+import BreadAnalysisModal from "@/components/bread-analysis-modal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   DropdownMenu, 
@@ -43,6 +44,7 @@ export default function Home() {
   const [showNotesModal, setShowNotesModal] = useState(false);
   const [showNewRecipeModal, setShowNewRecipeModal] = useState(false);
   const [showCameraModal, setShowCameraModal] = useState(false);
+  const [showBreadAnalysisModal, setShowBreadAnalysisModal] = useState(false);
 
   // Initialize data and test connection
   useEffect(() => {
@@ -341,7 +343,7 @@ export default function Home() {
                 </p>
               </div>
               <Button 
-                onClick={() => console.log('Bread analysis disabled for now')}
+                onClick={() => setShowBreadAnalysisModal(true)}
                 className="bg-white text-accent-orange-600 hover:bg-orange-50 ml-4 shadow-md"
                 size="sm"
               >
@@ -399,6 +401,11 @@ export default function Home() {
         isOpen={showCameraModal}
         onClose={() => setShowCameraModal(false)}
         bakeId={activeBakes.length > 0 ? activeBakes[0].id : undefined}
+      />
+
+      <BreadAnalysisModal
+        open={showBreadAnalysisModal}
+        onOpenChange={setShowBreadAnalysisModal}
       />
     </div>
   );

@@ -26,39 +26,52 @@ export const MODEL_CONFIG = {
 } as const;
 
 // System prompt for bread analysis
-export const BREAD_ANALYSIS_SYSTEM_PROMPT = `You are an expert sourdough baker and bread evaluator. Analyze the bread image and provide detailed, constructive feedback to help the baker improve their technique. Focus on crumb structure, crust development, shape, and overall appearance.
+export const BREAD_ANALYSIS_SYSTEM_PROMPT = `You are an expert sourdough baker and bread evaluator with years of professional experience. Analyze the bread image and provide detailed, constructive feedback to help the baker improve their technique. Focus on crumb structure, crust development, shape, and overall appearance.
 
-When evaluating the bread, consider the environmental conditions, recipe details, and starter information provided to give more accurate and personalized feedback. Take into account how these factors should influence the expected outcome.
+When evaluating the bread, consider the environmental conditions, recipe details, and baking context provided to give more accurate and personalized feedback. Take into account how these factors should influence the expected outcome.
 
 Return your analysis as a JSON object with this exact structure:
 {
   "overallScore": number (1-10),
-  "crumbStructure": {
+  "crumb": {
     "score": number (1-10),
-    "feedback": "detailed feedback about the crumb texture, holes, density"
+    "feedback": "detailed feedback about the crumb texture, holes, density",
+    "structure": "open" | "tight" | "uneven" | "perfect",
+    "notes": "additional technical observations"
   },
   "crust": {
     "score": number (1-10), 
-    "feedback": "feedback about crust color, thickness, crackling"
+    "feedback": "feedback about crust color, thickness, crackling",
+    "color": "pale" | "golden" | "dark" | "perfect",
+    "thickness": "thin" | "medium" | "thick",
+    "notes": "additional crust observations"
   },
   "shape": {
     "score": number (1-10),
-    "feedback": "feedback about bread shape, rise, symmetry"
+    "feedback": "feedback about bread shape, rise, symmetry",
+    "symmetry": "poor" | "fair" | "good" | "excellent",
+    "notes": "additional shape observations"
   },
-  "suggestions": ["specific actionable improvements"],
-  "strengths": ["what the baker did well"]
+  "strengths": ["what the baker did well"],
+  "improvements": ["specific actionable improvements"],
+  "tips": ["expert tips for next bake"],
+  "confidence": number (0-1, your confidence in this analysis)
 }`;
 
 // User prompt template for bread analysis
 export function buildBreadAnalysisPrompt(context?: {
   temperature?: number;
   humidity?: number;
-  recipeName?: string;
-  recipeHydration?: number;
-  starterAge?: string;
-  starterHydration?: number;
-  proofingTime?: string;
-  additionalNotes?: string;
+  recipe?: {
+    name?: string;
+    flourType?: string;
+    hydration?: number;
+    fermentationTime?: number;
+    bakingTime?: number;
+    bakingTemperature?: number;
+  };
+  bakingStage?: string;
+  notes?: string;
 }): string {
   const basePrompt = `Please analyze this sourdough bread and provide detailed feedback on how to improve it. Look at the crumb structure, crust development, shape, and overall appearance.`;
   
@@ -69,12 +82,14 @@ export function buildBreadAnalysisPrompt(context?: {
   const contextDetails = [
     context.temperature ? `- Room Temperature: ${context.temperature}°C` : '',
     context.humidity ? `- Humidity: ${context.humidity}%` : '',
-    context.recipeName ? `- Recipe Used: ${context.recipeName}` : '',
-    context.recipeHydration ? `- Dough Hydration: ${context.recipeHydration}%` : '',
-    context.starterAge ? `- Starter Status: ${context.starterAge}` : '',
-    context.starterHydration ? `- Starter Hydration: ${context.starterHydration}%` : '',
-    context.proofingTime ? `- Proofing Time: ${context.proofingTime}` : '',
-    context.additionalNotes ? `- Additional Notes: ${context.additionalNotes}` : ''
+    context.recipe?.name ? `- Recipe Used: ${context.recipe.name}` : '',
+    context.recipe?.flourType ? `- Flour Type: ${context.recipe.flourType}` : '',
+    context.recipe?.hydration ? `- Dough Hydration: ${context.recipe.hydration}%` : '',
+    context.recipe?.fermentationTime ? `- Fermentation Time: ${context.recipe.fermentationTime} hours` : '',
+    context.recipe?.bakingTime ? `- Baking Time: ${context.recipe.bakingTime} minutes` : '',
+    context.recipe?.bakingTemperature ? `- Baking Temperature: ${context.recipe.bakingTemperature}°C` : '',
+    context.bakingStage ? `- Baking Stage: ${context.bakingStage}` : '',
+    context.notes ? `- Additional Notes: ${context.notes}` : ''
   ].filter(Boolean);
 
   if (contextDetails.length === 0) {
