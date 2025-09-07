@@ -403,6 +403,7 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
             <Button
               variant="ghost"
               size="sm"
+              className="hover:bg-muted/80 bg-muted/30 hover:bg-muted"
               onClick={() => setShowOverflowMenu(!showOverflowMenu)}
             >
               <MoreVertical className="w-4 h-4" />

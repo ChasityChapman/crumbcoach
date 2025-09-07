@@ -256,7 +256,11 @@ export default function TimelineView({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0"
+                  className={`h-8 w-8 p-0 hover:bg-muted/80 ${
+                    item.status === 'active' 
+                      ? 'bg-muted/50 text-foreground hover:bg-muted' 
+                      : ''
+                  }`}
                   onClick={(e) => {
                     e.stopPropagation();
                     setSelectedStep(selectedStep === item.id ? null : item.id);

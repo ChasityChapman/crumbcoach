@@ -190,7 +190,11 @@ export default function SmartTimelineStep({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0"
+                className={`h-8 w-8 p-0 hover:bg-muted/80 ${
+                  step.status === 'active' 
+                    ? 'bg-muted/50 text-foreground hover:bg-muted' 
+                    : ''
+                }`}
                 onClick={(e) => {
                   e.stopPropagation();
                   setSelectedStep(selectedStep === step.id ? null : step.id);
