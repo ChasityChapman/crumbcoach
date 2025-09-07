@@ -45,16 +45,16 @@ export default function Starter() {
 
   if (startersLoading) {
     return (
-      <div className="min-h-screen bg-sourdough-50 safe-x">
-        <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-sourdough-100 safe-top">
+      <div className="min-h-screen bg-muted/30 safe-x">
+        <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-border safe-top">
           <div className="px-4 safe-top pb-3 min-h-[60px] flex items-center">
-            <h1 className="font-display font-semibold text-lg text-sourdough-800">Starter Health</h1>
+            <h1 className="font-display font-semibold text-lg text-foreground">Starter Health</h1>
           </div>
         </header>
         <div className="p-4">
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-sourdough-100 animate-pulse">
-            <div className="h-4 bg-sourdough-200 rounded w-3/4 mb-2" />
-            <div className="h-3 bg-sourdough-200 rounded w-1/2" />
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-border animate-pulse">
+            <div className="h-4 bg-muted rounded w-3/4 mb-2" />
+            <div className="h-3 bg-muted rounded w-1/2" />
           </div>
         </div>
         <BottomNavigation currentPath="/starter" />
@@ -64,25 +64,25 @@ export default function Starter() {
 
   if (!primaryStarter) {
     return (
-      <div className="min-h-screen bg-sourdough-50 safe-x">
-        <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-sourdough-100 safe-top">
+      <div className="min-h-screen bg-muted/30 safe-x">
+        <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-border safe-top">
           <div className="px-4 safe-top pb-3 min-h-[60px] flex items-center">
-            <h1 className="font-display font-semibold text-lg text-sourdough-800">Starter Health</h1>
+            <h1 className="font-display font-semibold text-lg text-foreground">Starter Health</h1>
           </div>
         </header>
         
         <div className="p-4 pb-20">
           <div className="text-center py-12">
-            <div className="w-16 h-16 bg-sourdough-200 rounded-full mx-auto mb-4 flex items-center justify-center">
+            <div className="w-16 h-16 bg-muted rounded-full mx-auto mb-4 flex items-center justify-center">
               <span className="text-2xl">🧬</span>
             </div>
-            <h3 className="font-display font-semibold text-lg text-sourdough-800 mb-2">
+            <h3 className="font-display font-semibold text-lg text-foreground mb-2">
               No Starter Yet
             </h3>
-            <p className="text-sourdough-600 mb-6">Create your first sourdough starter to begin tracking its health and feeding schedule.</p>
+            <p className="text-muted-foreground mb-6">Create your first sourdough starter to begin tracking its health and feeding schedule.</p>
             <Button 
               onClick={() => setShowProfileModal(true)}
-              className="bg-sourdough-500 hover:bg-sourdough-600 text-white"
+              className="bg-muted/300  text-white"
             >
               <Plus className="w-4 h-4 mr-2" />
               Create Starter
@@ -106,26 +106,26 @@ export default function Starter() {
     : null;
 
   return (
-    <div className="min-h-screen bg-sourdough-50 safe-x">
+    <div className="min-h-screen bg-muted/30 safe-x">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-sourdough-100 safe-top">
+      <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-border safe-top">
         <div className="px-4 safe-top pb-3 min-h-[60px] flex flex-col">
-          <h1 className="font-display font-semibold text-lg text-sourdough-800 mb-2">Starter Health</h1>
+          <h1 className="font-display font-semibold text-lg text-foreground mb-2">Starter Health</h1>
           
           {/* Starter Card */}
           <Card 
-            className="cursor-pointer border-sourdough-200 bg-sourdough-25"
+            className="cursor-pointer border-border bg-card"
             onClick={() => setShowProfileModal(true)}
           >
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-sourdough-500 rounded-full flex items-center justify-center text-white font-medium">
+                  <div className="w-10 h-10 bg-muted/300 rounded-full flex items-center justify-center text-white font-medium">
                     {primaryStarter.avatar || primaryStarter.name.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h3 className="font-medium text-sourdough-800">{primaryStarter.name}</h3>
-                    <div className="flex items-center space-x-2 text-sm text-sourdough-600">
+                    <h3 className="font-medium text-foreground">{primaryStarter.name}</h3>
+                    <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                       {timeSinceLastFeed && (
                         <>
                           <Clock className="w-3 h-3" />
@@ -141,14 +141,14 @@ export default function Starter() {
                       {getHealthStatusEmoji(healthStatus.status)} {healthStatus.status}
                     </Badge>
                   )}
-                  <Settings className="w-4 h-4 text-sourdough-400" />
+                  <Settings className="w-4 h-4 text-muted-foreground" />
                 </div>
               </div>
               
               {/* Next Feed ETA */}
               {primaryStarter.defaults?.reminderHours && latestEntry && (
-                <div className="mt-2 pt-2 border-t border-sourdough-100">
-                  <p className="text-xs text-sourdough-500">
+                <div className="mt-2 pt-2 border-t border-border">
+                  <p className="text-xs text-muted-foreground">
                     Next feed ETA in {Math.max(0, primaryStarter.defaults.reminderHours - 
                       Math.round((Date.now() - new Date(latestEntry.timestamp).getTime()) / (1000 * 60 * 60)))}h
                   </p>

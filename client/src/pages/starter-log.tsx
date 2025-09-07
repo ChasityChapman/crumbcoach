@@ -892,7 +892,7 @@ export default function StarterLogPage() {
                             <Button
                               type="button"
                               onClick={() => setRecipeModalOpen(true)}
-                              className="w-full border border-dashed border-sourdough-300 bg-sourdough-50 hover:bg-sourdough-100 text-sourdough-700"
+                              className="w-full border border-dashed border-border/50 bg-muted/50 hover:bg-muted text-muted-foreground"
                               variant="outline"
                               data-testid="button-create-recipe-from-discard"
                             >
