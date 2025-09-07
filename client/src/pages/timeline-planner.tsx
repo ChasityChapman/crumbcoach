@@ -228,7 +228,7 @@ export default function TimelinePlanner() {
 
   if (recipesLoading) {
     return (
-      <div className="min-h-screen bg-sourdough-50 flex items-center justify-center">
+      <div className="min-h-screen bg-sourdough-50 flex items-center justify-center safe-x">
         <div className="text-center">
           <Clock className="w-8 h-8 animate-spin text-sourdough-500 mx-auto mb-4" />
           <p className="text-sourdough-600">Loading your recipes...</p>
@@ -238,9 +238,9 @@ export default function TimelinePlanner() {
   }
 
   return (
-    <div className="min-h-screen bg-sourdough-50">
+    <div className="min-h-screen bg-sourdough-50 safe-x">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-sourdough-100">
+      <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-sourdough-100 safe-top">
         <div className="px-4 py-3">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-sourdough-500 rounded-lg flex items-center justify-center">

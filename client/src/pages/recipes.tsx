@@ -39,7 +39,7 @@ export default function Recipes() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-sourdough-50">
+      <div className="min-h-screen bg-sourdough-50 safe-x">
         <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-sourdough-100 safe-top">
           <div className="px-4 safe-top pb-3 min-h-[60px] flex items-center">
             <h1 className="font-display font-semibold text-lg text-sourdough-800">Recipes</h1>
@@ -61,7 +61,7 @@ export default function Recipes() {
   }
 
   return (
-    <div className="min-h-screen bg-sourdough-50">
+    <div className="min-h-screen bg-sourdough-50 safe-x">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-sourdough-100 safe-top">
         <div className="px-4 safe-top pb-3 flex items-center justify-between min-h-[60px]">
@@ -72,7 +72,7 @@ export default function Recipes() {
               setModalTab("manual");
               setRecipeModalOpen(true);
             }}
-            className="bg-sourdough-500 hover:bg-sourdough-600 text-white touch-manipulation"
+            className="bg-sourdough-50 safe-x0 hover:bg-sourdough-600 text-white touch-manipulation"
             size="sm"
           >
             <Plus className="w-4 h-4 mr-1" />
@@ -158,7 +158,7 @@ export default function Recipes() {
                   setModalTab("manual");
                   setRecipeModalOpen(true);
                 }}
-                className="bg-sourdough-500 hover:bg-sourdough-600 text-white"
+                className="bg-sourdough-50 safe-x0 hover:bg-sourdough-600 text-white"
                 data-testid="button-create-first-recipe"
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -171,7 +171,7 @@ export default function Recipes() {
                   setRecipeModalOpen(true);
                 }}
                 variant="outline"
-                className="border-sourdough-300 text-sourdough-700 hover:bg-sourdough-50"
+                className="border-sourdough-300 text-sourdough-700 hover:bg-sourdough-50 safe-x"
                 data-testid="button-add-saved-recipe"
               >
                 <Link className="w-4 h-4 mr-2" />

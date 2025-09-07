@@ -253,7 +253,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-sourdough-50">
+    <div className="min-h-screen bg-sourdough-50 safe-x">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white dark:bg-gray-900 shadow-sm border-b border-sourdough-100 dark:border-gray-700 safe-top">
         <div className="px-4 py-3 flex items-center justify-between">

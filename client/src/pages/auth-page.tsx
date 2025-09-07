@@ -154,7 +154,7 @@ export default function AuthPage() {
 
   // Always render consistent structure - no conditional returns
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-primary/30 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-primary/30 flex items-center justify-center p-4 safe-all">
       <div className="w-full max-w-md">
         {/* Show redirecting message if user is authenticated */}
         {(user || isRedirecting) ? (

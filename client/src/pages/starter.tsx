@@ -45,7 +45,7 @@ export default function Starter() {
 
   if (startersLoading) {
     return (
-      <div className="min-h-screen bg-sourdough-50">
+      <div className="min-h-screen bg-sourdough-50 safe-x">
         <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-sourdough-100 safe-top">
           <div className="px-4 safe-top pb-3 min-h-[60px] flex items-center">
             <h1 className="font-display font-semibold text-lg text-sourdough-800">Starter Health</h1>
@@ -64,7 +64,7 @@ export default function Starter() {
 
   if (!primaryStarter) {
     return (
-      <div className="min-h-screen bg-sourdough-50">
+      <div className="min-h-screen bg-sourdough-50 safe-x">
         <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-sourdough-100 safe-top">
           <div className="px-4 safe-top pb-3 min-h-[60px] flex items-center">
             <h1 className="font-display font-semibold text-lg text-sourdough-800">Starter Health</h1>
@@ -106,7 +106,7 @@ export default function Starter() {
     : null;
 
   return (
-    <div className="min-h-screen bg-sourdough-50">
+    <div className="min-h-screen bg-sourdough-50 safe-x">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-sourdough-100 safe-top">
         <div className="px-4 safe-top pb-3 min-h-[60px] flex flex-col">

@@ -14,9 +14,9 @@ export default function TimelinePage() {
   const activeBake = bakes?.find(bake => bake.status === 'active');
 
   return (
-    <div className="min-h-screen bg-sourdough-50 pb-20">
+    <div className="min-h-screen bg-sourdough-50 pb-20 safe-x">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-sourdough-100">
+      <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-sourdough-100 safe-top">
         <div className="px-4 py-3 flex items-center space-x-3">
           <Link href="/">
             <button className="p-2 hover:bg-sourdough-100 rounded-lg transition-colors">
