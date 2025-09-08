@@ -296,7 +296,7 @@ CrumbCoach Team
         </div>
         
         <div style="background-color: ${colors.email.cardBackground}; padding: 20px; border-radius: 8px;">
-          <p style="color: ${colors.email.body};">${message.replace(/\n/g, '</p><p style="color: ' + colors.email.body + ';">'})</p>
+          <p style="color: ${colors.email.body};">${message.replace(/\n/g, `</p><p style="color: ${colors.email.body};">`)}</p>
         </div>
         
         <div style="text-align: center; color: #666; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-top: 20px;">

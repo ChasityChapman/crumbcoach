@@ -13,6 +13,7 @@ import type { Bake } from "@shared/schema";
 
 export default function SmartTimelinePage() {
   const [showEnvironmentPanel, setShowEnvironmentPanel] = useState(false);
+  const [showSettingsPanel, setShowSettingsPanel] = useState(false);
   
   const { data: bakes } = useQuery<Bake[]>({
     queryKey: ["/api/bakes"],
@@ -229,7 +230,11 @@ export default function SmartTimelinePage() {
             >
               <BarChart3 className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowSettingsPanel(!showSettingsPanel)}
+            >
               <Settings className="w-4 h-4" />
             </Button>
           </div>
@@ -261,7 +266,14 @@ export default function SmartTimelinePage() {
           <div className="bg-white rounded-lg border border-sourdough-200 p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-medium text-sourdough-800">Environment Status</h3>
-              <Button variant="ghost" size="sm">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => {
+                  console.log('Refreshing environment data...');
+                  // TODO: Refresh sensor readings and recalculate factors
+                }}
+              >
                 <RefreshCw className="w-4 h-4" />
               </Button>
             </div>
@@ -293,6 +305,68 @@ export default function SmartTimelinePage() {
           </div>
         )}
 
+        {/* Settings Panel */}
+        {showSettingsPanel && (
+          <div className="bg-white rounded-lg border border-sourdough-200 p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-medium text-sourdough-800">Smart Timeline Settings</h3>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setShowSettingsPanel(false)}
+              >
+                <RefreshCw className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-sourdough-700 block mb-2">
+                  Auto-adjustment Sensitivity
+                </label>
+                <select className="w-full p-2 border border-sourdough-200 rounded-lg text-sm">
+                  <option value="conservative">Conservative</option>
+                  <option value="balanced" selected>Balanced</option>
+                  <option value="aggressive">Aggressive</option>
+                </select>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <label className="flex items-center space-x-2 text-sm">
+                  <input type="checkbox" defaultChecked className="rounded border-sourdough-300" />
+                  <span>Auto-adjust timing</span>
+                </label>
+                <label className="flex items-center space-x-2 text-sm">
+                  <input type="checkbox" defaultChecked className="rounded border-sourdough-300" />
+                  <span>Smart notifications</span>
+                </label>
+                <label className="flex items-center space-x-2 text-sm">
+                  <input type="checkbox" className="rounded border-sourdough-300" />
+                  <span>Voice alerts</span>
+                </label>
+                <label className="flex items-center space-x-2 text-sm">
+                  <input type="checkbox" defaultChecked className="rounded border-sourdough-300" />
+                  <span>Weather sync</span>
+                </label>
+              </div>
+
+              <div className="pt-2 border-t border-sourdough-200">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => {
+                    console.log('Resetting settings to defaults...');
+                    // TODO: Reset all settings to their default values
+                  }}
+                >
+                  Reset to Defaults
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Timeline Steps */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
@@ -319,16 +393,35 @@ export default function SmartTimelinePage() {
         <div className="bg-white rounded-lg border border-sourdough-200 p-4">
           <h3 className="font-medium text-sourdough-800 mb-3">Timeline Controls</h3>
           <div className="grid grid-cols-2 gap-3">
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => console.log('Pausing bake timeline...')}
+            >
               Pause Bake
             </Button>
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                console.log('Recalibrating all steps...');
+                initializeDemoSteps(); // Reset the demo steps
+              }}
+            >
               Recalibrate All
             </Button>
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => console.log('Saving timeline as template...')}
+            >
               Save as Template
             </Button>
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => console.log('Viewing original timeline...')}
+            >
               View Original
             </Button>
           </div>
