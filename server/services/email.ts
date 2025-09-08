@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
+import { colors } from '../shared/colors';
 
 interface EmailConfig {
   host: string;
@@ -131,20 +132,20 @@ export class EmailService {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Reset Your Password - CrumbCoach</title>
       </head>
-      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: ${colors.email.body}; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #8B4513; margin-bottom: 10px;">🍞 CrumbCoach</h1>
-          <h2 style="color: #666; font-weight: normal;">Password Reset Request</h2>
+          <h1 style="color: ${colors.email.title}; margin-bottom: 10px;">🍞 CrumbCoach</h1>
+          <h2 style="color: ${colors.email.subtitle}; font-weight: normal;">Password Reset Request</h2>
         </div>
         
-        <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+        <div style="background-color: ${colors.email.cardBackground}; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
           <p>Hello ${data.userName},</p>
           
           <p>We received a request to reset your CrumbCoach account password. If you made this request, click the button below to reset your password:</p>
           
           <div style="text-align: center; margin: 30px 0;">
             <a href="${resetUrl}" 
-               style="background-color: #8B4513; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+               style="background-color: ${colors.primary}; color: ${colors.primaryForeground}; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
               Reset Your Password
             </a>
           </div>
@@ -152,17 +153,17 @@ export class EmailService {
           <p><strong>This link will expire on ${expiryTimeFormatted}</strong> (in 1 hour).</p>
           
           <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
-          <p style="word-break: break-all; background-color: #f0f0f0; padding: 10px; border-radius: 4px;">
+          <p style="word-break: break-all; background-color: ${colors.muted}; padding: 10px; border-radius: 4px;">
             ${resetUrl}
           </p>
         </div>
         
-        <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+        <div style="background-color: ${colors.email.warningBackground}; border: 1px solid ${colors.email.warningBorder}; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
           <p style="margin: 0;"><strong>⚠️ Security Notice:</strong></p>
           <p style="margin: 5px 0 0 0;">If you didn't request this password reset, please ignore this email. Your password will remain unchanged, and no further action is needed.</p>
         </div>
         
-        <div style="text-align: center; color: #666; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px;">
+        <div style="text-align: center; color: ${colors.email.footer}; font-size: 14px; border-top: 1px solid ${colors.border}; padding-top: 20px;">
           <p>This email was sent automatically by CrumbCoach.</p>
           <p>If you have questions, please contact our support team.</p>
         </div>
@@ -208,18 +209,18 @@ CrumbCoach Team
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Account Deletion Confirmation - CrumbCoach</title>
       </head>
-      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: ${colors.email.body}; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #8B4513; margin-bottom: 10px;">🍞 CrumbCoach</h1>
-          <h2 style="color: #666; font-weight: normal;">Account Deletion Confirmation</h2>
+          <h1 style="color: ${colors.email.title}; margin-bottom: 10px;">🍞 CrumbCoach</h1>
+          <h2 style="color: ${colors.email.subtitle}; font-weight: normal;">Account Deletion Confirmation</h2>
         </div>
         
-        <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+        <div style="background-color: ${colors.email.cardBackground}; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
           <p>Hello ${data.userName},</p>
           
           <p>This email confirms that your CrumbCoach account has been successfully deleted on ${data.deletionDate.toLocaleDateString()}.</p>
           
-          <div style="background-color: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <div style="background-color: ${colors.email.successBackground}; border: 1px solid ${colors.email.successBorder}; padding: 15px; border-radius: 5px; margin: 20px 0;">
             <p style="margin: 0;"><strong>✅ What has been deleted:</strong></p>
             <ul style="margin: 10px 0 0 0; padding-left: 20px;">
               <li>Your user account and profile information</li>
@@ -236,7 +237,7 @@ CrumbCoach Team
           <p>If you have any questions about this deletion or believe this was done in error, please contact our support team within 7 days.</p>
         </div>
         
-        <div style="text-align: center; color: #666; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px;">
+        <div style="text-align: center; color: ${colors.email.footer}; font-size: 14px; border-top: 1px solid ${colors.border}; padding-top: 20px;">
           <p>Thank you for being part of the CrumbCoach community.</p>
           <p>We're sorry to see you go!</p>
         </div>
@@ -289,13 +290,13 @@ CrumbCoach Team
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>${subject} - CrumbCoach</title>
       </head>
-      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: ${colors.email.body}; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #8B4513; margin-bottom: 10px;">🍞 CrumbCoach</h1>
+          <h1 style="color: ${colors.email.title}; margin-bottom: 10px;">🍞 CrumbCoach</h1>
         </div>
         
-        <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px;">
-          <p>${message.replace(/\n/g, '</p><p>')}</p>
+        <div style="background-color: ${colors.email.cardBackground}; padding: 20px; border-radius: 8px;">
+          <p style="color: ${colors.email.body};">${message.replace(/\n/g, '</p><p style="color: ' + colors.email.body + ';">'})</p>
         </div>
         
         <div style="text-align: center; color: #666; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; margin-top: 20px;">
