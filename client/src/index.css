@@ -43,12 +43,26 @@
 }
 
 .safe-header {
-  padding-top: max(calc(env(safe-area-inset-top) + 0.5rem), 1rem);
+  padding-top: max(calc(env(safe-area-inset-top) + 1rem), 2rem);
 }
 
-/* Status bar safe area specifically for headers */
+/* Status bar safe area specifically for headers - Enhanced */
 .safe-status-bar {
   padding-top: max(env(safe-area-inset-top), 44px);
+}
+
+/* Force minimum safe area when env() isn't available */
+.safe-top-fallback {
+  padding-top: max(env(safe-area-inset-top, 44px), 44px);
+}
+
+.safe-header-fallback {
+  padding-top: max(calc(env(safe-area-inset-top, 44px) + 0.75rem), 1.75rem);
+}
+
+/* Ultra-safe header for main app title */
+.safe-header-ultra {
+  padding-top: max(calc(env(safe-area-inset-top) + 2rem), 3rem);
 }
 
 /* Circular Progress Styles */
@@ -206,6 +220,9 @@
     font-family: var(--font-sans);
     background-color: hsl(60 12% 98%);
     overflow: auto; /* Override any hidden overflow */
+    /* Ensure safe area support */
+    min-height: 100vh;
+    min-height: 100dvh; /* Dynamic viewport height for mobile */
   }
   
   .safe-area-pb {
@@ -296,14 +313,36 @@ html, body {
   touch-action: manipulation;
 }
 
+/* Universal safe area fallback - ensures all content respects mobile status bars */
+@supports (padding: max(0px)) {
+  /* For browsers that support env() and max() */
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left); 
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* Fallback for older browsers - minimum status bar height */
+@media screen and (max-width: 768px) {
+  body:not([data-safe-area-supported="true"]) {
+    padding-top: 44px; /* Standard iOS status bar height */
+  }
+}
+
 /* Safe area responsive adjustments */
 @media screen and (max-width: 768px) {
   .safe-header {
-    padding-top: max(calc(env(safe-area-inset-top) + 0.75rem), 1.25rem);
+    padding-top: max(calc(env(safe-area-inset-top) + 1.5rem), 2.5rem);
+  }
+  
+  .safe-header-ultra {
+    padding-top: max(calc(env(safe-area-inset-top) + 2.5rem), 4rem);
   }
   
   .safe-top-lg {
-    padding-top: max(env(safe-area-inset-top), 1.25rem);
+    padding-top: max(env(safe-area-inset-top), 1.5rem);
   }
 }
 
@@ -311,6 +350,10 @@ html, body {
 @media screen and (max-height: 500px) and (orientation: landscape) {
   .safe-header {
     padding-top: max(calc(env(safe-area-inset-top) + 0.25rem), 0.75rem);
+  }
+  
+  .safe-header-ultra {
+    padding-top: max(calc(env(safe-area-inset-top) + 1rem), 1.5rem);
   }
   
   .safe-top-lg {
@@ -322,10 +365,12 @@ html, body {
   min-height: 100dvh; /* Dynamic viewport height for mobile */
 }
 
-/* Custom styling for auth page tabs */
+/* Enhanced styling for auth page tabs with prominent brand colors */
 .auth-tabs [data-radix-tabs-list] {
   background-color: hsl(35 30% 92%) !important;
-  padding: 4px !important;
+  padding: 6px !important;
+  border-radius: 12px !important;
+  border: 1px solid hsl(32 25% 85%) !important;
 }
 
 .auth-tabs [data-radix-tabs-trigger] {
@@ -336,13 +381,52 @@ html, body {
   align-items: center !important;
   justify-content: center !important;
   text-align: center !important;
-  height: 40px !important;
-  transition: all 0.2s ease !important;
-  border-radius: 6px !important;
+  height: 44px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border-radius: 8px !important;
+  position: relative !important;
+  overflow: hidden !important;
 }
 
+/* Hover state for inactive tabs */
+.auth-tabs [data-radix-tabs-trigger]:not([data-state="active"]):hover {
+  background-color: hsl(35 30% 88%) !important;
+  color: hsl(20 40% 55%) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Active state with prominent brand colors */
 .auth-tabs [data-radix-tabs-trigger][data-state="active"] {
-  background-color: white !important;
-  color: hsl(0 0% 18%) !important;
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1) !important;
+  background: linear-gradient(135deg, hsl(44 92% 57%) 0%, hsl(25 82% 68%) 100%) !important;
+  color: white !important;
+  font-weight: 600 !important;
+  box-shadow: 
+    0 4px 14px 0 hsl(44 92% 57% / 0.35),
+    0 2px 4px 0 hsl(44 92% 57% / 0.2),
+    inset 0 1px 0 hsl(44 92% 67%) !important;
+  transform: translateY(-1px) !important;
+  border: 1px solid hsl(44 92% 47%) !important;
+}
+
+/* Subtle animation effect */
+.auth-tabs [data-radix-tabs-trigger][data-state="active"]::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: -100% !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent) !important;
+  animation: shimmer 2s infinite !important;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* Focus states for accessibility */
+.auth-tabs [data-radix-tabs-trigger]:focus-visible {
+  outline: 2px solid hsl(44 92% 57%) !important;
+  outline-offset: 2px !important;
 }
