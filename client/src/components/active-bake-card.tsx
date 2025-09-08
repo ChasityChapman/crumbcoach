@@ -509,15 +509,53 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
 
       {/* Quick actions */}
       <div className="flex space-x-2 p-4 border-t bg-muted/20">
-        <Button variant="outline" size="sm" className="flex-1">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="flex-1"
+          onClick={() => {
+            // TODO: Implement note taking functionality
+            console.log('Add note for bake:', bake.id);
+            // Could open a modal or navigate to note-taking interface
+            alert('Note-taking feature coming soon!');
+          }}
+        >
           <FileText className="w-4 h-4 mr-1" />
           Add note
         </Button>
-        <Button variant="outline" size="sm" className="flex-1">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="flex-1"
+          onClick={() => {
+            // TODO: Implement temperature adjustment functionality
+            console.log('Adjust temperature for bake:', bake.id);
+            // Could open a temperature adjustment modal or sheet
+            alert('Temperature adjustment feature coming soon!');
+          }}
+        >
           <Thermometer className="w-4 h-4 mr-1" />
           Adjust temp
         </Button>
-        <Button variant="outline" size="sm" className="flex-1">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="flex-1"
+          onClick={() => {
+            // Skip current active step
+            const currentActiveStep = activeStep;
+            if (currentActiveStep) {
+              const confirmSkip = window.confirm(
+                `Skip "${currentActiveStep.stepName}"? This will mark it as complete and move to the next step.`
+              );
+              if (confirmSkip) {
+                skipStepMutation.mutate(currentActiveStep.id);
+              }
+            } else {
+              alert('No active step to skip');
+            }
+          }}
+        >
           <SkipForward className="w-4 h-4 mr-1" />
           Skip step
         </Button>

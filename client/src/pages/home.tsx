@@ -30,7 +30,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Bell, LogOut, User as UserIcon, Sparkles } from "lucide-react";
+import { LogOut, User as UserIcon, Sparkles } from "lucide-react";
 import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_1756224893332.png";
 
 export default function Home() {
