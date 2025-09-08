@@ -79,7 +79,7 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sourdough-50 to-sourdough-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-sourdough-50 to-sourdough-100 flex items-center justify-center p-4 safe-all">
       <div className="w-full max-w-md">
         {/* Logo and App Name */}
         <div className="text-center mb-8">

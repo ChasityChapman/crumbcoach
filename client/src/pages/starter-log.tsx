@@ -311,7 +311,7 @@ export default function StarterLogPage() {
   };
 
   return (
-    <div className="p-4 max-w-4xl mx-auto space-y-6 pb-20 safe-x">
+    <div className="p-4 max-w-4xl mx-auto space-y-6 pb-20 safe-x safe-top-lg">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Starter Log</h1>

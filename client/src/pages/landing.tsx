@@ -8,7 +8,7 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-white to-primary/10 dark:from-primary/20 dark:via-black dark:to-primary/20">
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-white to-primary/10 dark:from-primary/20 dark:via-black dark:to-primary/20 safe-top">
       <div className="container mx-auto px-4 py-16">
         {/* Header */}
         <div className="text-center mb-16">

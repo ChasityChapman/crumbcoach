@@ -12,6 +12,7 @@ vite.config.ts.*
 .env.server
 .env.server.local
 .env.server.production
+.env.test
 
 # Firebase configuration
 google-services.json

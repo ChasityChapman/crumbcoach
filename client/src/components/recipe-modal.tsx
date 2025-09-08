@@ -294,9 +294,12 @@ export default function RecipeModal({ isOpen, onClose, recipe, initialTab = "man
             <DialogPrimitive.Title className="text-base sm:text-lg font-semibold leading-none tracking-tight font-display text-sourdough-800">
               {recipe?.id ? "Edit Recipe" : "Create New Recipe"}
             </DialogPrimitive.Title>
-            <Button variant="ghost" size="icon" onClick={onClose}>
-              <X className="w-4 h-4" />
-            </Button>
+            <DialogPrimitive.Close asChild>
+              <Button variant="ghost" size="icon">
+                <X className="w-4 h-4" />
+                <span className="sr-only">Close</span>
+              </Button>
+            </DialogPrimitive.Close>
           </div>
 
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
@@ -474,17 +477,18 @@ export default function RecipeModal({ isOpen, onClose, recipe, initialTab = "man
               </p>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {safeMap(HYDRATION_PRESETS, (preset) => (
                   <Button
                     key={preset.percentage}
                     variant={selectedHydration === preset.percentage ? "default" : "outline"}
                     onClick={() => applyHydrationPreset(preset.percentage)}
-                    className="text-left justify-start h-auto p-3"
+                    className="text-left justify-start h-auto p-4 min-h-[4rem] flex-col items-start space-y-1"
                   >
-                    <div>
-                      <div className="font-medium">{preset.name}</div>
-                      <div className="text-xs opacity-75">{preset.percentage}% - {preset.description}</div>
+                    <div className="w-full space-y-1">
+                      <div className="font-medium text-sm leading-tight">{preset.name}</div>
+                      <div className="text-xs opacity-75 leading-tight">{preset.percentage}% hydration</div>
+                      <div className="text-xs opacity-60 leading-tight">{preset.description}</div>
                     </div>
                   </Button>
                 ))}

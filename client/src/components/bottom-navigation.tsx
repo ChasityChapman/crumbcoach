@@ -13,7 +13,7 @@ export default function BottomNavigation({ currentPath }: BottomNavigationProps)
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-border safe-area-pb z-40">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-border safe-bottom z-40">
       <div className="grid grid-cols-6 py-3 px-1 max-w-lg mx-auto">
         <Link href="/">
           <button className={`flex flex-col items-center py-2 px-1 ${
