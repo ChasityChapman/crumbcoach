@@ -31,6 +31,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { LogOut, User as UserIcon, Sparkles } from "lucide-react";
+import { Card } from "@/components/ui/card";
 import crumbCoachLogo from "@assets/Coaching Business Logo Crumb Coach_1756224893332.png";
 
 export default function Home() {
@@ -214,6 +215,32 @@ export default function Home() {
     return "U";
   };
 
+  const getTimeBasedGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "morning";
+    if (hour < 17) return "afternoon";
+    return "evening";
+  };
+
+  const getTodayDateString = () => {
+    return new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const getStatusLine = () => {
+    const activeBakeCount = activeBakes.length;
+    if (activeBakeCount === 0) {
+      return getTodayDateString();
+    }
+    if (activeBakeCount === 1) {
+      return "1 active bake";
+    }
+    return `${activeBakeCount} active bakes`;
+  };
+
   // Quick action handlers
   const handleStartBake = () => {
     setShowStartBakeModal(true);
@@ -257,13 +284,20 @@ export default function Home() {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white dark:bg-gray-900 shadow-sm border-b border-sourdough-100 dark:border-gray-700 safe-header-ultra">
         <div className="px-4 py-4 pb-3 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 flex-1 min-w-0">
             <img 
               src={crumbCoachLogo} 
               alt="Crumb Coach" 
-              className="w-8 h-8 object-contain"
+              className="w-8 h-8 object-contain flex-shrink-0"
             />
-            <h1 className="font-display font-semibold text-lg sm:text-xl md:text-2xl text-sourdough-800 dark:text-white">Crumb Coach</h1>
+            <div className="flex-1 min-w-0">
+              <h1 className="font-display font-semibold text-lg sm:text-xl text-sourdough-800 dark:text-white truncate">
+                Good {getTimeBasedGreeting()}, {getUserDisplayName()}
+              </h1>
+              <p className="text-xs sm:text-sm text-sourdough-500 dark:text-gray-400 truncate">
+                {getStatusLine()}
+              </p>
+            </div>
           </div>
           <div className="flex items-center space-x-2">
             <DropdownMenu>
@@ -315,9 +349,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* Sensor Data */}
-        <SensorWidget reading={latestSensor || undefined} />
-
         {/* Quick Actions */}
         <QuickActions
           onOpenCamera={handleOpenCamera}
@@ -328,10 +359,13 @@ export default function Home() {
           isCreatingBake={isCreatingBake}
         />
 
+        {/* Sensor Data */}
+        <SensorWidget reading={latestSensor || undefined} />
+
         {/* AI Features */}
         <div className="px-4 mb-6 space-y-4">
           {/* AI Bread Analysis Feature */}
-          <div className="bg-gradient-to-r from-accent-orange-500 to-accent-orange-600 rounded-xl p-4 shadow-lg">
+          <Card variant="gradient" className="p-4">
             <div className="flex items-center justify-between text-white">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
@@ -350,7 +384,7 @@ export default function Home() {
                 Try Now
               </Button>
             </div>
-          </div>
+          </Card>
         </div>
 
         {/* Tutorial Preview */}

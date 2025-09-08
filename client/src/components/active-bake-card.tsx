@@ -9,6 +9,7 @@ import { timelineAnalytics } from "@/lib/timeline-analytics";
 import { safeFind } from "@/lib/safeArray";
 import { safeParseDate as utilSafeParseDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { MoreVertical, RefreshCw, Pause, CheckCircle, FileText, Thermometer, SkipForward, X } from "lucide-react";
 import TimelineView from "./timeline-view";
 import RecalibrationSheet from "./recalibration-sheet";
@@ -365,7 +366,7 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
   });
 
   return (
-    <div className="bg-background border rounded-lg shadow-sm" data-active-bake>
+    <Card className="bg-background border rounded-lg shadow-sm" data-active-bake>
       {/* Header pill */}
       <div className="flex items-center justify-between p-4 border-b">
         <div className="flex items-center space-x-3">
@@ -610,6 +611,6 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
 
       {/* Notification Analytics Listener */}
       <NotificationAnalyticsListener bakeId={bake.id} />
-    </div>
+    </Card>
   );
 }

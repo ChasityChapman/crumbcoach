@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import type { Tutorial } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Play } from "lucide-react";
+import { Play, BookOpen } from "lucide-react";
+import { Card, EmptyState } from "@/components/ui/card";
 // import { useToast } from "@/hooks/use-toast"; // Disabled to prevent JavaScript errors
 
 export default function TutorialPreview() {
@@ -16,7 +17,20 @@ export default function TutorialPreview() {
   };
 
   if (!tutorials || tutorials.length === 0) {
-    return null;
+    return (
+      <div className="px-4 mb-6">
+        <EmptyState
+          icon={<BookOpen className="w-8 h-8" />}
+          title="No Tutorials Available"
+          description="Interactive step-by-step tutorials are coming soon to help you master sourdough techniques."
+          action={
+            <Button variant="outline" size="sm">
+              Browse Resources
+            </Button>
+          }
+        />
+      </div>
+    );
   }
 
   const featuredTutorial = tutorials[0]; // Show first tutorial as featured
@@ -28,7 +42,7 @@ export default function TutorialPreview() {
 
   return (
     <div className="px-4 mb-6">
-      <div className="bg-white rounded-xl p-4 shadow-sm border border-sourdough-100">
+      <Card className="p-4">
         <div className="flex items-center justify-between mb-3">
           <h4 className="font-medium text-sourdough-800">{featuredTutorial.title || "Tutorial"}</h4>
           <Badge variant="secondary" className="text-xs">
@@ -62,7 +76,7 @@ export default function TutorialPreview() {
             Start
           </Button>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
