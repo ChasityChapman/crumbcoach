@@ -246,26 +246,80 @@ function getMockApiResponse(method: string, url: string, data?: unknown): any {
         id: 'demo-recipe-1',
         userId: 'demo-user',
         name: 'Classic Sourdough Loaf',
-        description: 'A traditional sourdough bread perfect for beginners',
-        ingredients: JSON.stringify([
-          { name: 'Bread flour', amount: 500, unit: 'g' },
-          { name: 'Water', amount: 350, unit: 'ml' },
-          { name: 'Sourdough starter', amount: 100, unit: 'g' },
-          { name: 'Salt', amount: 10, unit: 'g' }
-        ]),
-        instructions: JSON.stringify([
-          'Mix flour and water, let rest 30 minutes',
-          'Add starter and salt, mix well',
-          'Bulk ferment 4-6 hours with folds every 30 minutes',
-          'Shape and final proof 2-4 hours',
-          'Bake at 450°F for 45 minutes'
-        ]),
-        totalTimeMinutes: 480,
+        description: 'A traditional sourdough bread perfect for beginners with a golden crust and tangy flavor',
+        thumbnailUrl: 'https://images.unsplash.com/photo-1549931319-a545dcf3bc73?w=400&h=400&fit=crop&crop=center',
+        totalTimeHours: 8,
         difficulty: 'beginner',
-        yieldAmount: 1,
-        yieldUnit: 'loaf',
+        ingredients: [
+          { id: '1', name: 'Bread flour', amount: 500, unit: 'g' },
+          { id: '2', name: 'Water', amount: 350, unit: 'ml' },
+          { id: '3', name: 'Sourdough starter', amount: 100, unit: 'g' },
+          { id: '4', name: 'Salt', amount: 10, unit: 'g' }
+        ],
+        steps: [
+          { id: '1', name: 'Autolyse', duration: 30, description: 'Mix flour and water, let rest 30 minutes' },
+          { id: '2', name: 'Mix dough', duration: 15, description: 'Add starter and salt, mix well' },
+          { id: '3', name: 'Bulk ferment', duration: 240, description: 'Bulk ferment 4 hours with folds every 30 minutes' },
+          { id: '4', name: 'Pre-shape', duration: 15, description: 'Shape into loose rounds' },
+          { id: '5', name: 'Final proof', duration: 120, description: 'Shape and final proof 2 hours' },
+          { id: '6', name: 'Bake', duration: 45, description: 'Bake at 450°F for 45 minutes' }
+        ],
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        demo: true
+      },
+      {
+        id: 'demo-recipe-2',
+        userId: 'demo-user',
+        name: 'Artisan Whole Wheat',
+        description: 'A hearty whole wheat sourdough with complex flavors and dense texture',
+        thumbnailUrl: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=400&h=400&fit=crop&crop=center',
+        totalTimeHours: 10,
+        difficulty: 'intermediate',
+        ingredients: [
+          { id: '1', name: 'Whole wheat flour', amount: 300, unit: 'g' },
+          { id: '2', name: 'Bread flour', amount: 200, unit: 'g' },
+          { id: '3', name: 'Water', amount: 375, unit: 'ml' },
+          { id: '4', name: 'Sourdough starter', amount: 125, unit: 'g' },
+          { id: '5', name: 'Salt', amount: 12, unit: 'g' }
+        ],
+        steps: [
+          { id: '1', name: 'Autolyse', duration: 45, description: 'Mix flours and water, rest 45 minutes' },
+          { id: '2', name: 'Mix dough', duration: 20, description: 'Add starter and salt, develop gluten' },
+          { id: '3', name: 'Bulk ferment', duration: 300, description: 'Bulk ferment 5 hours with folds' },
+          { id: '4', name: 'Shape', duration: 20, description: 'Shape into boules' },
+          { id: '5', name: 'Final proof', duration: 180, description: 'Cold retard overnight or 3 hours room temp' },
+          { id: '6', name: 'Bake', duration: 50, description: 'Bake at 425°F for 50 minutes' }
+        ],
+        createdAt: new Date().toISOString(),
+        demo: true
+      },
+      {
+        id: 'demo-recipe-3',
+        userId: 'demo-user',
+        name: 'Seeded Rye Sourdough',
+        description: 'Advanced rye bread with seeds, perfect for experienced bakers seeking complex flavors',
+        thumbnailUrl: 'https://images.unsplash.com/photo-1600214593079-9b0f43a31b23?w=400&h=400&fit=crop&crop=center',
+        totalTimeHours: 12,
+        difficulty: 'advanced',
+        ingredients: [
+          { id: '1', name: 'Rye flour', amount: 200, unit: 'g' },
+          { id: '2', name: 'Bread flour', amount: 300, unit: 'g' },
+          { id: '3', name: 'Water', amount: 400, unit: 'ml' },
+          { id: '4', name: 'Rye starter', amount: 150, unit: 'g' },
+          { id: '5', name: 'Salt', amount: 12, unit: 'g' },
+          { id: '6', name: 'Sunflower seeds', amount: 50, unit: 'g' },
+          { id: '7', name: 'Caraway seeds', amount: 15, unit: 'g' }
+        ],
+        steps: [
+          { id: '1', name: 'Prepare seeds', duration: 30, description: 'Toast and soak seeds' },
+          { id: '2', name: 'Autolyse', duration: 60, description: 'Mix flours and water, rest 1 hour' },
+          { id: '3', name: 'Mix dough', duration: 25, description: 'Add starter, salt, and seeds' },
+          { id: '4', name: 'Bulk ferment', duration: 360, description: 'Long ferment 6 hours with gentle folds' },
+          { id: '5', name: 'Shape', duration: 30, description: 'Shape into batard' },
+          { id: '6', name: 'Final proof', duration: 240, description: 'Cold retard 4+ hours' },
+          { id: '7', name: 'Bake', duration: 55, description: 'Steam bake at 450°F for 55 minutes' }
+        ],
+        createdAt: new Date().toISOString(),
         demo: true
       }
     ];

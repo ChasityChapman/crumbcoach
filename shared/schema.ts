@@ -54,6 +54,7 @@ export const recipes = pgTable("recipes", {
   userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   description: text("description"),
+  thumbnailUrl: text("thumbnail_url"), // URL to recipe thumbnail image
   totalTimeHours: integer("total_time_hours").notNull(),
   difficulty: text("difficulty").notNull(), // 'beginner', 'intermediate', 'advanced'
   ingredients: jsonb("ingredients").notNull(), // Array of {name: string, amount: string}
