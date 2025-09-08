@@ -4,7 +4,7 @@
   "description": "Your smart sourdough baking companion with timeline tracking and environmental monitoring",
   "start_url": "/",
   "display": "standalone",
-  "theme_color": "#d97706",
+  "theme_color": "#f7c12d",
   "background_color": "#fdf6f3",
   "orientation": "portrait-primary",
   "categories": ["food", "productivity", "lifestyle"],
