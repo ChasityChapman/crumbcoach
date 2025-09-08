@@ -1,6 +1,8 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
+import { Capacitor } from "@capacitor/core";
+import { StatusBar, Style } from '@capacitor/status-bar';
 
 // Global error handler for Date parsing issues in mobile app
 const originalDate = Date;
@@ -29,5 +31,12 @@ Object.getOwnPropertyNames(originalDate).forEach(name => {
 });
 
 (globalThis as any).Date = CustomDate;
+
+// Configure StatusBar for mobile platforms
+if (Capacitor.isPluginAvailable('StatusBar')) {
+  StatusBar.setOverlaysWebView({ overlay: false });
+  StatusBar.setStyle({ style: Style.Default });
+  StatusBar.setBackgroundColor({ color: '#f7c12d' }); // Match primary color
+}
 
 createRoot(document.getElementById("root")!).render(<App />);
