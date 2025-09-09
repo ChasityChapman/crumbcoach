@@ -4,17 +4,20 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { safeFind, safeMap } from "@/lib/safeArray";
 import { safeRecipeQueries } from "@/lib/safeQueries";
 import type { Recipe, Bake, InsertBake } from "@shared/schema";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { X, Clock, Users, ChefHat } from "lucide-react";
+import { X, Clock, Users, ChefHat, AlertTriangle, CheckCircle, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSensors } from "@/hooks/use-sensors";
 import { timelineAnalytics } from "@/lib/timeline-analytics";
+import { StarterHealthHelper } from "@/lib/starterHealthHelper";
+import { timelineCalculator } from "@/lib/timeline";
+import type { StarterCondition } from "@/lib/timeline";
 
 interface RecipeStep {
   id: string;
@@ -33,6 +36,8 @@ export default function StartBakeModal({ isOpen, onClose, onBakeStarted }: Start
   const [selectedRecipeId, setSelectedRecipeId] = useState("none");
   const [bakeName, setBakeName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [starterCondition, setStarterCondition] = useState<StarterCondition | null>(null);
+  const [showStarterAdvice, setShowStarterAdvice] = useState(false);
   const { toast } = useToast();
   const { sensorData } = useSensors();
 
@@ -41,6 +46,24 @@ export default function StartBakeModal({ isOpen, onClose, onBakeStarted }: Start
     queryFn: safeRecipeQueries.getAll,
     staleTime: 10 * 60 * 1000,
   });
+
+  // Load starter condition when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      StarterHealthHelper.getCurrentStarterCondition()
+        .then(condition => {
+          setStarterCondition(condition);
+          if (condition && (condition.healthStatus !== 'healthy' || condition.stage !== 'peak')) {
+            setShowStarterAdvice(true);
+          }
+        })
+        .catch(error => {
+          console.warn('Failed to load starter condition:', error);
+          // Fall back to demo healthy condition
+          setStarterCondition(StarterHealthHelper.getDemoStarterCondition('healthy'));
+        });
+    }
+  }, [isOpen]);
 
   // Debug logging for recipes
   useEffect(() => {
@@ -67,16 +90,55 @@ export default function StartBakeModal({ isOpen, onClose, onBakeStarted }: Start
       
       if (recipe && recipe.steps && newBake && newBake.id) {
         const steps = recipe.steps as RecipeStep[];
-        console.log('Creating', steps.length, 'timeline steps');
+        console.log('Creating', steps.length, 'timeline steps with environmental adjustments');
         
-        for (let i = 0; i < steps.length; i++) {
-          const step = steps[i];
+        // Calculate environmental adjustments with starter condition
+        let adjustedSteps = steps;
+        try {
+          const environmentalConditions = {
+            temperature: sensorData?.temperature || 22, // Default room temp
+            humidity: sensorData?.humidity || 60, // Default humidity
+          };
+
+          const timelineSteps = steps.map(step => ({
+            id: step.id,
+            name: step.name,
+            estimatedDuration: step.duration,
+            temperature: step.name.includes('Fermentation') ? 24 : (step.name.includes('Rise') ? 22 : undefined),
+            humidity: step.name.includes('Fermentation') || step.name.includes('Rise') ? 65 : undefined
+          }));
+
+          const adjustments = await timelineCalculator.calculateSmartAdjustments(
+            environmentalConditions,
+            timelineSteps,
+            starterCondition || undefined
+          );
+
+          console.log('Timeline adjustments calculated:', adjustments);
+          
+          // Apply adjustments to steps
+          adjustedSteps = steps.map((step, index) => {
+            const adjustment = adjustments.adjustments.find(adj => adj.stepId === step.id);
+            return {
+              ...step,
+              duration: adjustment ? adjustment.adjustedDuration : step.duration,
+              adjustmentFactors: adjustment?.factors || []
+            };
+          });
+
+        } catch (adjustmentError) {
+          console.warn('Failed to calculate timeline adjustments:', adjustmentError);
+        }
+        
+        for (let i = 0; i < adjustedSteps.length; i++) {
+          const step = adjustedSteps[i];
           console.log('Creating timeline step:', {
             bakeId: newBake.id,
             stepIndex: i,
             name: step.name,
             estimatedDuration: step.duration,
-            status: i === 0 ? 'active' : 'pending'
+            status: i === 0 ? 'active' : 'pending',
+            adjustmentFactors: (step as any).adjustmentFactors
           });
           
           try {
@@ -90,7 +152,15 @@ export default function StartBakeModal({ isOpen, onClose, onBakeStarted }: Start
               startTime: i === 0 ? new Date().toISOString() : null,
               endTime: null,
               actualDuration: null,
-              autoAdjustments: null
+              autoAdjustments: JSON.stringify({
+                factors: (step as any).adjustmentFactors || [],
+                starterCondition: starterCondition,
+                environmentalConditions: {
+                  temperature: sensorData?.temperature || 22,
+                  humidity: sensorData?.humidity || 60,
+                },
+                calculatedAt: new Date().toISOString()
+              })
             });
             console.log('Timeline step created:', timelineStep);
           } catch (error) {
@@ -148,6 +218,33 @@ export default function StartBakeModal({ isOpen, onClose, onBakeStarted }: Start
 
   const selectedRecipe = safeFind(recipes, r => r.id === selectedRecipeId);
 
+  // Helper functions for starter condition display
+  const getHealthStatusIcon = (status: StarterCondition['healthStatus']) => {
+    switch (status) {
+      case 'healthy': return <CheckCircle className="w-4 h-4 text-green-600" />;
+      case 'watch': return <Eye className="w-4 h-4 text-amber-600" />;
+      case 'sluggish': return <AlertTriangle className="w-4 h-4 text-red-600" />;
+    }
+  };
+
+  const getHealthStatusColor = (status: StarterCondition['healthStatus']) => {
+    switch (status) {
+      case 'healthy': return 'bg-green-50 border-green-200';
+      case 'watch': return 'bg-amber-50 border-amber-200';
+      case 'sluggish': return 'bg-red-50 border-red-200';
+    }
+  };
+
+  const getStageDisplayName = (stage: StarterCondition['stage']) => {
+    switch (stage) {
+      case 'just_fed': return 'Just Fed';
+      case 'peak': return 'Peak Activity';
+      case 'collapsing': return 'Past Peak';
+      case 'sluggish': return 'Sluggish';
+      default: return stage;
+    }
+  };
+
   const handleStartBake = () => {
     if (isSubmitting || startBakeMutation.isPending) {
       return; // Prevent multiple submissions
@@ -192,6 +289,9 @@ export default function StartBakeModal({ isOpen, onClose, onBakeStarted }: Start
       <DialogContent className="max-w-lg mx-auto max-h-[90vh] flex flex-col">
         <DialogHeader className="pb-4">
           <DialogTitle className="font-display text-sourdough-800">Start New Bake</DialogTitle>
+          <DialogDescription>
+            Choose a recipe and customize your baking session with timeline tracking and smart notifications.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 flex-1 overflow-y-auto">
@@ -292,6 +392,57 @@ export default function StartBakeModal({ isOpen, onClose, onBakeStarted }: Start
                 </div>
                 <p className="text-xs text-green-600 mt-2">
                   These conditions will be used for timeline adjustments
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Starter Condition */}
+          {starterCondition && (
+            <Card className={`border-2 ${getHealthStatusColor(starterCondition.healthStatus)}`}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-medium text-gray-800 flex items-center gap-2">
+                    {getHealthStatusIcon(starterCondition.healthStatus)}
+                    Starter Condition
+                  </h4>
+                  <Badge 
+                    variant={starterCondition.healthStatus === 'healthy' ? 'secondary' : 
+                            starterCondition.healthStatus === 'watch' ? 'default' : 'destructive'}
+                  >
+                    {starterCondition.healthStatus}
+                  </Badge>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 text-sm mb-3">
+                  <div>
+                    <span className="text-gray-600">Stage</span>
+                    <p className="font-medium text-gray-800">{getStageDisplayName(starterCondition.stage)}</p>
+                  </div>
+                  {starterCondition.riseTimeHours && (
+                    <div>
+                      <span className="text-gray-600">Last Rise</span>
+                      <p className="font-medium text-gray-800">{starterCondition.riseTimeHours}h</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Starter Advice */}
+                {showStarterAdvice && (
+                  <div className="border-t pt-3 mt-3">
+                    <h5 className="font-medium text-gray-700 mb-2">Timeline Adjustments</h5>
+                    <div className="space-y-1">
+                      {timelineCalculator.getStarterRecommendations(starterCondition).map((recommendation, index) => (
+                        <p key={index} className="text-xs text-gray-600 leading-relaxed">
+                          • {recommendation}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-xs text-gray-500 mt-2">
+                  Timeline will be automatically adjusted based on your starter's condition
                 </p>
               </CardContent>
             </Card>
