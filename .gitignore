@@ -20,3 +20,10 @@ GoogleService-Info.plist
 
 # Android local properties
 android/local.properties
+
+# Apple certificates and keys (keep private)
+*.key
+*.p12
+*.cer
+*.pem
+*.csr
