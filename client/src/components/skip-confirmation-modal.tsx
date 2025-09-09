@@ -110,12 +110,12 @@ export default function SkipConfirmationModal({
 
           {/* Warning for important steps */}
           {stepDuration >= 60 && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
               <div className="flex items-center gap-2 mb-1">
-                <AlertTriangle className="w-4 h-4 text-yellow-600" />
-                <span className="text-sm font-medium text-yellow-800">Important Step</span>
+                <AlertTriangle className="w-4 h-4 text-orange-600" />
+                <span className="text-sm font-medium text-orange-800">Important Step</span>
               </div>
-              <p className="text-xs text-yellow-700">
+              <p className="text-xs text-orange-700">
                 This is a long step ({formatDuration(stepDuration)}). Skipping it may significantly affect your bake quality.
               </p>
             </div>

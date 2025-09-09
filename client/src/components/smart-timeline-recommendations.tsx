@@ -24,7 +24,7 @@ export default function SmartTimelineRecommendations({
       case 'critical':
         return <AlertTriangle className="w-4 h-4 text-red-500" />;
       case 'warning':
-        return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
+        return <AlertTriangle className="w-4 h-4 text-orange-500" />;
       case 'info':
       default:
         return <Info className="w-4 h-4 text-blue-500" />;
@@ -36,7 +36,7 @@ export default function SmartTimelineRecommendations({
       case 'critical':
         return 'bg-red-50 border-red-200 text-red-800';
       case 'warning':
-        return 'bg-yellow-50 border-yellow-200 text-yellow-800';
+        return 'bg-orange-50 border-orange-200 text-orange-800';
       case 'info':
       default:
         return 'bg-blue-50 border-blue-200 text-blue-800';

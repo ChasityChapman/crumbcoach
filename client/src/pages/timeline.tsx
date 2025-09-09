@@ -20,8 +20,8 @@ export default function TimelinePage() {
   // Get recent completed bakes for history
   const recentBakes = bakes?.filter(bake => bake.status === 'completed')
     .sort((a, b) => {
-      const aTime = safeParseDate(a.endTime || a.startTime) || new Date(0);
-      const bTime = safeParseDate(b.endTime || b.startTime) || new Date(0);
+      const aTime = safeParseDate(a.actualEndTime || a.estimatedEndTime || a.startTime) || new Date(0);
+      const bTime = safeParseDate(b.actualEndTime || b.estimatedEndTime || b.startTime) || new Date(0);
       return bTime.getTime() - aTime.getTime();
     })
     .slice(0, 10) || [];
@@ -74,7 +74,14 @@ export default function TimelinePage() {
             </div>
 
             {/* Timeline View Component */}
-            <TimelineView bakeId={activeBake.id} />
+            <TimelineView 
+              items={[]} 
+              now={new Date()} 
+              onMarkDone={(stepId) => console.log('Mark done:', stepId)}
+              onSkip={(stepId) => console.log('Skip:', stepId)}
+              onOpenRecalibrate={(stepId) => console.log('Recalibrate:', stepId)}
+              onOpenStepSheet={(stepId) => console.log('Open step sheet:', stepId)}
+            />
           </div>
         ) : (
           <div className="text-center py-12">

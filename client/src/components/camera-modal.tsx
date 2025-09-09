@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { X, Camera, Images, RotateCcw, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -182,6 +182,12 @@ export default function CameraModal({ isOpen, onClose, bakeId }: CameraModalProp
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="p-0 max-w-full h-full bg-black border-none">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Camera Interface</DialogTitle>
+          <DialogDescription>
+            Use your camera to capture photos of your baking progress or select existing photos from your gallery.
+          </DialogDescription>
+        </DialogHeader>
         <div className="relative h-full flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between p-4 text-white">

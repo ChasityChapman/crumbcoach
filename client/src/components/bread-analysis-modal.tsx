@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,8 +14,9 @@ import { analyzeBreadPhoto, convertFileToBase64, type BreadAnalysis, type BreadC
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { safeMap } from "@/lib/safeArray";
-import { safeBakeQueries, safeSensorQueries, safeRecipeQueries, safeTimelineStepQueries } from "@/lib/safeQueries";
+import { safeBakeQueries, safeSensorQueries, safeRecipeQueries, safeTimelineStepQueries, safeBakeNoteQueries } from "@/lib/safeQueries";
 import { useSensors } from "@/hooks/use-sensors";
+import { StarterHealthHelper } from "@/lib/starterHealthHelper";
 
 interface BreadAnalysisModalProps {
   open: boolean;
@@ -77,6 +78,13 @@ function BreadAnalysisModal({ open, onOpenChange, initialImage }: BreadAnalysisM
     enabled: open && !!activeBake?.id,
   });
 
+  // Get bake notes for additional context
+  const { data: bakeNotes = [] } = useQuery<any[]>({
+    queryKey: [`/api/bakes/${activeBake?.id}/notes`],
+    queryFn: activeBake?.id ? () => safeBakeNoteQueries.getByBakeId(activeBake.id) : () => Promise.resolve([]),
+    enabled: open && !!activeBake?.id,
+  });
+
   // Get photos from all recent bakes
   const allPhotos = recentBakes.flatMap((bake: any) => 
     safeMap(bake.photos, (photo: any) => ({ ...photo, bakeName: bake.recipeName || 'Untitled Bake' }))
@@ -86,64 +94,166 @@ function BreadAnalysisModal({ open, onOpenChange, initialImage }: BreadAnalysisM
   useEffect(() => {
     if (!open) return;
 
-    const autoContext: BreadContext = {};
+    const populateContext = async () => {
+      const autoContext: BreadContext = {};
 
-    // Temperature and humidity from sensors
-    if (latestSensor) {
-      autoContext.temperature = latestSensor.temperature ? latestSensor.temperature / 10 : undefined;
-      autoContext.humidity = latestSensor.humidity ? latestSensor.humidity / 10 : undefined;
-    } else if (sensorData) {
-      autoContext.temperature = sensorData.temperature;
-      autoContext.humidity = sensorData.humidity;
-    }
+      // Environmental factors
+      if (latestSensor) {
+        autoContext.temperature = latestSensor.temperature ? latestSensor.temperature / 10 : undefined;
+        autoContext.humidity = latestSensor.humidity ? latestSensor.humidity / 10 : undefined;
+      } else if (sensorData) {
+        autoContext.temperature = sensorData.temperature;
+        autoContext.humidity = sensorData.humidity;
+      }
 
-    // Recipe information from active bake
-    if (activeRecipe) {
-      autoContext.recipeName = activeRecipe.name;
-      // Calculate hydration from ingredients if available
-      if (activeRecipe.ingredients) {
-        let flourWeight = 0;
-        let waterWeight = 0;
-        
-        activeRecipe.ingredients.forEach((ingredient: any) => {
-          const name = ingredient.name?.toLowerCase() || '';
-          const amount = parseInt(ingredient.amount) || 0;
+      // Recipe information from active bake
+      if (activeRecipe) {
+        autoContext.recipe = {
+          name: activeRecipe.name,
+          difficulty: activeRecipe.difficulty,
+          totalTimeHours: activeRecipe.totalTimeHours,
+          ingredients: activeRecipe.ingredients || [],
+          steps: activeRecipe.steps || []
+        };
+
+        // Calculate hydration from ingredients if available
+        if (activeRecipe.ingredients) {
+          let flourWeight = 0;
+          let waterWeight = 0;
           
-          if (name.includes('flour')) {
-            flourWeight += amount;
-          } else if (name.includes('water')) {
-            waterWeight += amount;
+          activeRecipe.ingredients.forEach((ingredient: any) => {
+            const name = ingredient.name?.toLowerCase() || '';
+            const amount = parseInt(ingredient.amount) || 0;
+            
+            if (name.includes('flour')) {
+              flourWeight += amount;
+            } else if (name.includes('water')) {
+              waterWeight += amount;
+            }
+          });
+          
+          if (flourWeight > 0) {
+            autoContext.recipe.hydration = Math.round((waterWeight / flourWeight) * 100);
           }
-        });
-        
-        if (flourWeight > 0) {
-          autoContext.recipeHydration = Math.round((waterWeight / flourWeight) * 100);
+
+          // Try to determine flour type from ingredients
+          const flourIngredients = activeRecipe.ingredients.filter((ing: any) => 
+            ing.name?.toLowerCase().includes('flour')
+          );
+          if (flourIngredients.length > 0) {
+            autoContext.recipe.flourType = flourIngredients.map((ing: any) => ing.name).join(', ');
+          }
+        }
+
+        // Calculate fermentation and baking times from steps
+        if (activeRecipe.steps) {
+          const fermentationSteps = activeRecipe.steps.filter((step: any) => 
+            step.name?.toLowerCase().includes('ferment') || 
+            step.name?.toLowerCase().includes('rise') ||
+            step.name?.toLowerCase().includes('proof')
+          );
+          const bakingSteps = activeRecipe.steps.filter((step: any) => 
+            step.name?.toLowerCase().includes('bake')
+          );
+
+          autoContext.recipe.fermentationTime = fermentationSteps.reduce((total: number, step: any) => 
+            total + (step.duration || 0), 0
+          );
+          autoContext.recipe.bakingTime = bakingSteps.reduce((total: number, step: any) => 
+            total + (step.duration || 0), 0
+          );
         }
       }
-    }
 
-    // Bake information
-    if (activeBake) {
-      autoContext.recipeName = activeBake.recipeName || autoContext.recipeName;
-      
-      // Calculate total proofing time from timeline steps
-      const totalTime = timelineSteps.reduce((total: number, step: any) => {
-        return total + (step.duration || 0);
-      }, 0);
-      
-      if (totalTime > 0) {
-        autoContext.proofingTime = `${Math.floor(totalTime / 60)}h ${totalTime % 60}m`;
+      // Starter health information
+      try {
+        const starterCondition = await StarterHealthHelper.getCurrentStarterCondition();
+        if (starterCondition) {
+          autoContext.starterHealth = {
+            status: starterCondition.healthStatus as 'healthy' | 'watch' | 'sluggish',
+            stage: starterCondition.stage,
+            activityLevel: starterCondition.activityLevel,
+            riseTimeHours: starterCondition.riseTimeHours
+          };
+        }
+      } catch (error) {
+        console.warn('Failed to get starter health for bread analysis:', error);
       }
 
-      // Add starter information if available in bake notes or metadata
-      if (activeBake.notes) {
-        autoContext.additionalNotes = `Active bake notes: ${activeBake.notes}`;
-      }
-    }
+      // Timeline and process information
+      if (timelineSteps.length > 0) {
+        const currentStep = timelineSteps.find((step: any) => step.status === 'active');
+        const completedSteps = timelineSteps.filter((step: any) => step.status === 'completed');
+        
+        autoContext.timeline = {
+          currentStep: currentStep?.name,
+          completedSteps: completedSteps.map((step: any) => step.name),
+          totalDuration: timelineSteps.reduce((total: number, step: any) => total + (step.estimatedDuration || 0), 0)
+        };
 
-    // Set the auto-detected context
-    setContext(autoContext);
-  }, [open, latestSensor, sensorData, activeRecipe, activeBake, timelineSteps]);
+        // Try to determine baking stage from current step
+        if (currentStep) {
+          const stepName = currentStep.name?.toLowerCase() || '';
+          if (stepName.includes('mix')) {
+            autoContext.bakingStage = 'mixing';
+          } else if (stepName.includes('ferment') || stepName.includes('bulk')) {
+            autoContext.bakingStage = 'bulk_fermentation';
+          } else if (stepName.includes('shape')) {
+            autoContext.bakingStage = 'shaping';
+          } else if (stepName.includes('proof') || stepName.includes('rise')) {
+            autoContext.bakingStage = 'final_proof';
+          } else if (stepName.includes('bake')) {
+            autoContext.bakingStage = 'baking';
+          } else if (stepName.includes('cool')) {
+            autoContext.bakingStage = 'cooling';
+          }
+        }
+
+        // Check for timeline adjustments
+        const adjustments: string[] = [];
+        timelineSteps.forEach((step: any) => {
+          if (step.autoAdjustments) {
+            try {
+              const adjustmentData = JSON.parse(step.autoAdjustments);
+              if (adjustmentData.factors) {
+                adjustments.push(...adjustmentData.factors);
+              }
+            } catch (e) {
+              // Ignore parsing errors
+            }
+          }
+        });
+        if (adjustments.length > 0) {
+          autoContext.timeline.adjustments = adjustments;
+        }
+      }
+
+      // Bake notes and observations
+      if (bakeNotes.length > 0) {
+        autoContext.bakeNotes = bakeNotes.map((note: any) => note.content || note.text).filter(Boolean);
+      }
+
+      // Additional bake information
+      if (activeBake) {
+        if (activeBake.notes) {
+          autoContext.userNotes = activeBake.notes;
+        }
+
+        // Count previous attempts (bakes with same recipe)
+        if (activeRecipe) {
+          const previousBakes = allBakes.filter((bake: any) => 
+            bake.recipeId === activeRecipe.id && bake.id !== activeBake.id
+          );
+          autoContext.previousAttempts = previousBakes.length;
+        }
+      }
+
+      // Set the auto-detected context
+      setContext(autoContext);
+    };
+
+    populateContext();
+  }, [open, latestSensor, sensorData, activeRecipe, activeBake, timelineSteps, bakeNotes, allBakes]);
 
   // Camera functionality
   const initializeCamera = async () => {
@@ -277,7 +387,7 @@ function BreadAnalysisModal({ open, onOpenChange, initialImage }: BreadAnalysisM
 
   const getScoreColor = (score: number) => {
     if (score >= 8) return "text-green-600";
-    if (score >= 6) return "text-yellow-600";
+    if (score >= 6) return "text-orange-600";
     return "text-red-600";
   };
 
@@ -295,6 +405,9 @@ function BreadAnalysisModal({ open, onOpenChange, initialImage }: BreadAnalysisM
             <Sparkles className="w-5 h-5 text-accent-orange-500" />
             AI Bread Analysis
           </DialogTitle>
+          <DialogDescription>
+            Upload a photo of your bread to get expert AI feedback on crumb structure, crust quality, and personalized tips for improvement.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -472,15 +585,15 @@ function BreadAnalysisModal({ open, onOpenChange, initialImage }: BreadAnalysisM
                         <div className="flex justify-between">
                           <span className="text-sourdough-600">Recipe:</span>
                           <span className="font-medium flex items-center gap-1">
-                            {context.recipeName || 'Not detected'}
-                            {context.recipeName && <CheckCircle className="w-3 h-3 text-green-500" />}
+                            {context.recipe?.name || 'Not detected'}
+                            {context.recipe?.name && <CheckCircle className="w-3 h-3 text-green-500" />}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sourdough-600">Hydration:</span>
                           <span className="font-medium flex items-center gap-1">
-                            {context.recipeHydration ? `${context.recipeHydration}%` : 'Not detected'}
-                            {context.recipeHydration && <CheckCircle className="w-3 h-3 text-green-500" />}
+                            {context.recipe?.hydration ? `${context.recipe.hydration}%` : 'Not detected'}
+                            {context.recipe?.hydration && <CheckCircle className="w-3 h-3 text-green-500" />}
                           </span>
                         </div>
                       </div>
@@ -493,8 +606,8 @@ function BreadAnalysisModal({ open, onOpenChange, initialImage }: BreadAnalysisM
                         <div className="flex justify-between">
                           <span className="text-sourdough-600">Timeline:</span>
                           <span className="font-medium flex items-center gap-1">
-                            {context.proofingTime || 'Not calculated'}
-                            {context.proofingTime && <CheckCircle className="w-3 h-3 text-green-500" />}
+                            {context.timeline?.currentStep || 'Not calculated'}
+                            {context.timeline?.currentStep && <CheckCircle className="w-3 h-3 text-green-500" />}
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -505,10 +618,10 @@ function BreadAnalysisModal({ open, onOpenChange, initialImage }: BreadAnalysisM
                           </span>
                         </div>
                       </div>
-                      {context.additionalNotes && (
+                      {(context.userNotes || context.notes) && (
                         <div className="mt-3 p-2 bg-white rounded border text-sm">
                           <span className="text-sourdough-600">Notes: </span>
-                          <span className="font-medium">{context.additionalNotes}</span>
+                          <span className="font-medium">{context.userNotes || context.notes}</span>
                         </div>
                       )}
                     </div>

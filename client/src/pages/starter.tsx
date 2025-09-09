@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import type { Starter, HealthSnapshot } from "@shared/schema";
+import type { Starter, HealthSnapshot, StarterEntry, StarterDefaults } from "@shared/schema";
 import { safeStarterLogQueries } from "@/lib/safeQueries";
 import { safeMap } from "@/lib/safeArray";
 import { getHealthStatusColor, getHealthStatusEmoji } from "@shared/src/lib/starterTypes";
@@ -38,10 +38,16 @@ export default function Starter() {
   }, [starters]);
 
   // Mock latest entry data
-  const latestEntry = null;
+  const latestEntry: StarterEntry | null = null;
 
   // Mock health status data
-  const healthStatus = { status: 'healthy', reason: 'All good!' };
+  const healthStatus: HealthSnapshot | null = { 
+    id: 'mock-id',
+    starterId: primaryStarter?.id || '',
+    status: 'healthy' as const, 
+    reason: 'All good!',
+    computedAt: new Date()
+  };
 
   if (startersLoading) {
     return (
@@ -121,7 +127,7 @@ export default function Starter() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-muted/300 rounded-full flex items-center justify-center text-white font-medium">
-                    {primaryStarter.avatar || primaryStarter.name.charAt(0).toUpperCase()}
+                    {primaryStarter?.avatar || primaryStarter?.name?.charAt(0)?.toUpperCase()}
                   </div>
                   <div>
                     <h3 className="font-medium text-foreground">{primaryStarter.name}</h3>
@@ -146,10 +152,10 @@ export default function Starter() {
               </div>
               
               {/* Next Feed ETA */}
-              {primaryStarter.defaults?.reminderHours && latestEntry && (
+              {primaryStarter && latestEntry && (
                 <div className="mt-2 pt-2 border-t border-border">
                   <p className="text-xs text-muted-foreground">
-                    Next feed ETA in {Math.max(0, primaryStarter.defaults.reminderHours - 
+                    Next feed ETA in {Math.max(0, 24 - 
                       Math.round((Date.now() - new Date(latestEntry.timestamp).getTime()) / (1000 * 60 * 60)))}h
                   </p>
                 </div>

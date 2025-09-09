@@ -84,7 +84,7 @@ export default function InAppNotificationBanner({
       case 'bedtime':
         return 'from-purple-500 to-purple-600 border-purple-300';
       case 'wakeup':
-        return 'from-yellow-500 to-orange-500 border-yellow-300';
+        return 'from-orange-500 to-orange-500 border-orange-300';
       case 'adaptive-start':
       case 'adaptive-check':
         return 'from-orange-500 to-orange-600 border-orange-300';

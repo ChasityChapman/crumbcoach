@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { Starter, Flour } from "@shared/schema";
 import { safeStarterLogQueries } from "@/lib/safeQueries";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -199,6 +199,9 @@ export default function StarterProfileModal({
             <Settings className="h-5 w-5" />
             {starter ? "Starter Profile & Defaults" : "Create New Starter"}
           </DialogTitle>
+          <DialogDescription>
+            {starter ? "Manage your sourdough starter profile and feeding defaults." : "Set up a new sourdough starter with personalized feeding preferences."}
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>

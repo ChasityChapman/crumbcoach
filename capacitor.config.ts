@@ -18,12 +18,12 @@ const config: CapacitorConfig = {
       androidScheme: 'http',
       cleartext: true,
       // Use Android emulator's special IP to reach host
-      url: 'http://10.0.2.2:5000',
+      url: 'http://10.0.2.2:5173',
       allowNavigation: [
         'https://*.supabase.co',
         'https://api.openai.com', 
         'https://replit.com',
-        'http://10.0.2.2:5000'
+        'http://10.0.2.2:5173'
       ]
     }
   } : {}),

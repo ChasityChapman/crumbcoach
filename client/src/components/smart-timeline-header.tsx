@@ -20,7 +20,8 @@ export default function SmartTimelineHeader({
   currentStep,
   totalSteps
 }: SmartTimelineHeaderProps) {
-  const { currentReading, error: sensorError } = useSensors();
+  const { sensorData: currentReading, isSupported } = useSensors();
+  const sensorError = !isSupported;
 
   const environmentStatus = useMemo(() => {
     if (!currentReading || sensorError) return 'Unknown';
@@ -49,7 +50,7 @@ export default function SmartTimelineHeader({
       case 'Optimal': return 'text-green-600 bg-green-50 border-green-200';
       case 'Cold': return 'text-blue-600 bg-blue-50 border-blue-200';
       case 'Warm': return 'text-orange-600 bg-orange-50 border-orange-200';
-      case 'Dry': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+      case 'Dry': return 'text-orange-600 bg-orange-50 border-orange-200';
       case 'Humid': return 'text-purple-600 bg-purple-50 border-purple-200';
       case 'Stable': return 'text-gray-600 bg-gray-50 border-gray-200';
       default: return 'text-gray-500 bg-gray-50 border-gray-200';

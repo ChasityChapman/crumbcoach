@@ -60,8 +60,12 @@ Return your analysis as a JSON object with this exact structure:
 
 // User prompt template for bread analysis
 export function buildBreadAnalysisPrompt(context?: {
+  // Environmental factors
   temperature?: number;
   humidity?: number;
+  altitude?: number;
+  
+  // Recipe details
   recipe?: {
     name?: string;
     flourType?: string;
@@ -69,8 +73,47 @@ export function buildBreadAnalysisPrompt(context?: {
     fermentationTime?: number;
     bakingTime?: number;
     bakingTemperature?: number;
+    difficulty?: 'beginner' | 'intermediate' | 'advanced';
+    totalTimeHours?: number;
+    ingredients?: Array<{
+      name?: string;
+      amount?: number;
+      unit?: string;
+    }>;
+    steps?: Array<{
+      name?: string;
+      duration?: number;
+      description?: string;
+    }>;
   };
-  bakingStage?: string;
+  
+  // Starter health information
+  starterHealth?: {
+    status?: 'healthy' | 'watch' | 'sluggish';
+    stage?: 'just_fed' | 'peak' | 'collapsing' | 'sluggish';
+    activityLevel?: 'low' | 'moderate' | 'high';
+    riseTimeHours?: number;
+    lastFeedingTime?: string;
+    feedingRatio?: string;
+  };
+  
+  // Timeline and process information
+  timeline?: {
+    currentStep?: string;
+    completedSteps?: string[];
+    totalDuration?: number;
+    adjustments?: string[];
+  };
+  
+  // Notes and observations
+  bakeNotes?: string[];
+  userNotes?: string;
+  previousAttempts?: number;
+  
+  // Baking stage context
+  bakingStage?: 'mixing' | 'bulk_fermentation' | 'shaping' | 'final_proof' | 'baking' | 'cooling' | 'finished';
+  
+  // Additional context
   notes?: string;
 }): string {
   const basePrompt = `Please analyze this sourdough bread and provide detailed feedback on how to improve it. Look at the crumb structure, crust development, shape, and overall appearance.`;
@@ -80,31 +123,84 @@ export function buildBreadAnalysisPrompt(context?: {
   }
 
   const contextDetails = [
+    // Environmental factors
     context.temperature ? `- Room Temperature: ${context.temperature}°C` : '',
     context.humidity ? `- Humidity: ${context.humidity}%` : '',
+    context.altitude ? `- Altitude: ${context.altitude}m` : '',
+    
+    // Recipe information
     context.recipe?.name ? `- Recipe Used: ${context.recipe.name}` : '',
+    context.recipe?.difficulty ? `- Recipe Difficulty: ${context.recipe.difficulty}` : '',
     context.recipe?.flourType ? `- Flour Type: ${context.recipe.flourType}` : '',
     context.recipe?.hydration ? `- Dough Hydration: ${context.recipe.hydration}%` : '',
     context.recipe?.fermentationTime ? `- Fermentation Time: ${context.recipe.fermentationTime} hours` : '',
     context.recipe?.bakingTime ? `- Baking Time: ${context.recipe.bakingTime} minutes` : '',
     context.recipe?.bakingTemperature ? `- Baking Temperature: ${context.recipe.bakingTemperature}°C` : '',
+    context.recipe?.totalTimeHours ? `- Total Recipe Time: ${context.recipe.totalTimeHours} hours` : '',
+    
+    // Starter health information
+    context.starterHealth?.status ? `- Starter Health: ${context.starterHealth.status} (${context.starterHealth.stage})` : '',
+    context.starterHealth?.activityLevel ? `- Starter Activity: ${context.starterHealth.activityLevel}` : '',
+    context.starterHealth?.riseTimeHours ? `- Starter Rise Time: ${context.starterHealth.riseTimeHours} hours` : '',
+    context.starterHealth?.lastFeedingTime ? `- Last Fed: ${context.starterHealth.lastFeedingTime}` : '',
+    context.starterHealth?.feedingRatio ? `- Feeding Ratio: ${context.starterHealth.feedingRatio}` : '',
+    
+    // Timeline and process information
+    context.timeline?.currentStep ? `- Current Step: ${context.timeline.currentStep}` : '',
+    context.timeline?.totalDuration ? `- Total Bake Duration: ${context.timeline.totalDuration} hours` : '',
+    context.timeline?.adjustments?.length ? `- Timeline Adjustments: ${context.timeline.adjustments.join(', ')}` : '',
+    
+    // Baking stage and notes
     context.bakingStage ? `- Baking Stage: ${context.bakingStage}` : '',
+    context.previousAttempts ? `- Previous Attempts: ${context.previousAttempts}` : '',
+    context.userNotes ? `- User Notes: ${context.userNotes}` : '',
     context.notes ? `- Additional Notes: ${context.notes}` : ''
   ].filter(Boolean);
+  
+  // Add recipe ingredients if available
+  const ingredientDetails = context.recipe?.ingredients?.length ? [
+    '\nRECIPE INGREDIENTS:',
+    ...context.recipe.ingredients.map(ing => `- ${ing.amount || '?'}${ing.unit || ''} ${ing.name || 'ingredient'}`)
+  ] : [];
+  
+  // Add bake notes if available
+  const bakeNotesDetails = context.bakeNotes?.length ? [
+    '\nBAKE NOTES:',
+    ...context.bakeNotes.map(note => `- ${note}`)
+  ] : [];
+  
+  // Add completed timeline steps if available
+  const timelineDetails = context.timeline?.completedSteps?.length ? [
+    '\nCOMPLETED STEPS:',
+    ...context.timeline.completedSteps.map(step => `- ${step}`)
+  ] : [];
 
-  if (contextDetails.length === 0) {
+  const allContextSections = [
+    ...contextDetails,
+    ...ingredientDetails,
+    ...bakeNotesDetails,
+    ...timelineDetails
+  ];
+  
+  if (allContextSections.length === 0) {
     return basePrompt;
   }
 
   return `${basePrompt}
 
 BAKING CONTEXT:
-${contextDetails.join('\n')}
+${allContextSections.join('\n')}
 
 Please consider how these conditions may have affected the bread's development and adjust your analysis accordingly. For example:
 - Lower temperatures typically require longer fermentation times
-- High humidity can affect crust formation  
+- High humidity can affect crust formation
 - Higher hydration doughs create more open crumb structures
-- Starter maturity affects flavor development and rise
-- Proofing time affects texture and flavor development`;
+- Starter health significantly affects flavor development, rise, and fermentation speed
+- Sluggish starters may produce denser bread with less pronounced flavors
+- Healthy, active starters contribute to better rise and more complex flavors
+- Environmental adjustments made during the bake may indicate specific challenges faced
+- Previous baking experience level affects technique and timing decisions
+- Proofing time and conditions affect final texture and flavor development
+
+Take into account the starter health status especially - a sluggish starter would typically result in slower fermentation, potentially requiring longer bulk fermentation or final proof times, and may produce less rise and flavor development compared to a healthy, active starter.`;
 }

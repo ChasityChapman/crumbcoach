@@ -116,7 +116,7 @@ export default function Home() {
 
     // Find the first pending step
     const nextStep = safeFind(
-      firstBakeTimeline?.sort((a, b) => (a.stepNumber || 0) - (b.stepNumber || 0)),
+      firstBakeTimeline?.sort((a, b) => (a.stepIndex || 0) - (b.stepIndex || 0)),
       step => step.status === 'pending'
     );
 
@@ -124,8 +124,8 @@ export default function Home() {
 
     return {
       bakeId: firstActiveBake.id,
-      stepName: nextStep.title || nextStep.name || `Step ${nextStep.stepNumber}`,
-      startTime: safeParseDate(nextStep.scheduledTime || nextStep.startTime) || new Date(),
+      stepName: nextStep.name || `Step ${nextStep.stepIndex + 1}`,
+      startTime: safeParseDate(nextStep.startTime) || new Date(),
       duration: nextStep.estimatedDuration || 30,
     };
   }, [firstActiveBake, firstBakeTimeline]);
@@ -417,7 +417,7 @@ export default function Home() {
       <StartBakeModal
         isOpen={showStartBakeModal}
         onClose={() => setShowStartBakeModal(false)}
-        onBakeStarted={handleBakeCreated}
+        onBakeStarted={() => handleBakeCreated({} as any)}
       />
 
       <NotesModal

@@ -174,7 +174,7 @@ export default function StarterLogPage() {
   const getHealthColor = () => {
     switch (starterHealth) {
       case 'healthy': return 'bg-green-500';
-      case 'watch': return 'bg-yellow-500';
+      case 'watch': return 'bg-orange-500';
       case 'sluggish': return 'bg-red-500';
       default: return 'bg-gray-500';
     }

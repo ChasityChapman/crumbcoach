@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -249,6 +249,9 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
             <Settings className="w-5 h-5" />
             <span>Advanced Settings</span>
           </DialogTitle>
+          <DialogDescription>
+            Configure app preferences, sensor connections, notifications, and advanced baking parameters.
+          </DialogDescription>
         </DialogHeader>
         
         <Tabs defaultValue="profile" className="w-full">

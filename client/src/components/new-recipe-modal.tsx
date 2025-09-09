@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { safeMap } from "@/lib/safeArray";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -176,8 +176,22 @@ export default function NewRecipeModal({ isOpen, onClose }: NewRecipeModalProps)
           "h-[100svh] md:h-auto md:max-h-[85svh]"
         )}
       >
-        <div className="flex-shrink-0 sticky top-0 z-10 bg-white/90 backdrop-blur px-6 pt-6 pb-4 border-b">
-          <DialogTitle className="font-display text-sourdough-800">Create New Recipe</DialogTitle>
+        <div className="flex-shrink-0 sticky top-0 z-[5] bg-white/90 backdrop-blur px-6 pt-6 pb-4 border-b">
+          <div className="flex items-center justify-between">
+            <DialogTitle className="font-display text-sourdough-800">Create New Recipe</DialogTitle>
+            <Button
+              onClick={onClose}
+              variant="ghost"
+              size="icon"
+              className="text-sourdough-600 hover:text-sourdough-800 hover:bg-sourdough-100"
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </Button>
+          </div>
+          <DialogDescription className="sr-only">
+            Create a custom sourdough recipe with ingredients, steps, and timing specifications.
+          </DialogDescription>
         </div>
 
         <div data-new-recipe-scroll className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 py-4 space-y-6">

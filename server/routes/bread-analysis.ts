@@ -19,8 +19,12 @@ const analysisRateLimit = rateLimit({
 const BreadAnalysisRequestSchema = z.object({
   image: z.string().min(1, 'Image data is required'),
   context: z.object({
+    // Environmental factors
     temperature: z.number().optional(),
     humidity: z.number().optional(),
+    altitude: z.number().optional(),
+    
+    // Recipe details
     recipe: z.object({
       name: z.string().optional(),
       flourType: z.string().optional(),
@@ -28,9 +32,48 @@ const BreadAnalysisRequestSchema = z.object({
       fermentationTime: z.number().optional(),
       bakingTime: z.number().optional(),
       bakingTemperature: z.number().optional(),
+      difficulty: z.enum(['beginner', 'intermediate', 'advanced']).optional(),
+      totalTimeHours: z.number().optional(),
+      ingredients: z.array(z.object({
+        name: z.string().optional(),
+        amount: z.number().optional(),
+        unit: z.string().optional()
+      })).optional(),
+      steps: z.array(z.object({
+        name: z.string().optional(),
+        duration: z.number().optional(),
+        description: z.string().optional()
+      })).optional()
     }).optional(),
-    bakingStage: z.string().optional(),
-    notes: z.string().optional(),
+    
+    // Starter health information
+    starterHealth: z.object({
+      status: z.enum(['healthy', 'watch', 'sluggish']).optional(),
+      stage: z.enum(['just_fed', 'peak', 'collapsing', 'sluggish']).optional(),
+      activityLevel: z.enum(['low', 'moderate', 'high']).optional(),
+      riseTimeHours: z.number().optional(),
+      lastFeedingTime: z.string().optional(),
+      feedingRatio: z.string().optional()
+    }).optional(),
+    
+    // Timeline and process information
+    timeline: z.object({
+      currentStep: z.string().optional(),
+      completedSteps: z.array(z.string()).optional(),
+      totalDuration: z.number().optional(),
+      adjustments: z.array(z.string()).optional()
+    }).optional(),
+    
+    // Notes and observations
+    bakeNotes: z.array(z.string()).optional(),
+    userNotes: z.string().optional(),
+    previousAttempts: z.number().optional(),
+    
+    // Baking stage context
+    bakingStage: z.enum(['mixing', 'bulk_fermentation', 'shaping', 'final_proof', 'baking', 'cooling', 'finished']).optional(),
+    
+    // Additional context (backward compatibility)
+    notes: z.string().optional()
   }).optional()
 });
 

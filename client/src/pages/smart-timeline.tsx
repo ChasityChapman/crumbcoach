@@ -7,7 +7,7 @@ import SmartTimelineHeader from "@/components/smart-timeline-header";
 import SmartTimelineRecommendations from "@/components/smart-timeline-recommendations";
 import SmartTimelineStep from "@/components/smart-timeline-step";
 import BottomNavigation from "@/components/bottom-navigation";
-import { useSmartTimeline, type SmartTimelineStep } from "@/hooks/use-smart-timeline";
+import { useSmartTimeline, type SmartTimelineStep as SmartTimelineStepType } from "@/hooks/use-smart-timeline";
 import { safeMap } from "@/lib/safeArray";
 import type { Bake } from "@shared/schema";
 
@@ -45,7 +45,7 @@ export default function SmartTimelinePage() {
 
   const initializeDemoSteps = () => {
     const now = new Date();
-    const demoSteps: SmartTimelineStep[] = [
+    const demoSteps: SmartTimelineStepType[] = [
       {
         id: 'autolyse',
         name: 'Autolyse',
@@ -295,7 +295,7 @@ export default function SmartTimelinePage() {
                 <div className="text-sourdough-600">Status</div>
                 <div className={`font-medium capitalize ${
                   environmentFactors.status === 'optimal' ? 'text-green-600' :
-                  environmentFactors.status === 'suboptimal' ? 'text-yellow-600' :
+                  environmentFactors.status === 'suboptimal' ? 'text-orange-600' :
                   'text-red-600'
                 }`}>
                   {environmentFactors.status}

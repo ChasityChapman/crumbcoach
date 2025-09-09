@@ -29,8 +29,12 @@ export interface BreadAnalysis {
 }
 
 export interface BreadContext {
+  // Environmental factors
   temperature?: number;
   humidity?: number;
+  altitude?: number;
+  
+  // Recipe details
   recipe?: {
     name?: string;
     flourType?: string;
@@ -38,9 +42,48 @@ export interface BreadContext {
     fermentationTime?: number;
     bakingTime?: number;
     bakingTemperature?: number;
+    difficulty?: 'beginner' | 'intermediate' | 'advanced';
+    totalTimeHours?: number;
+    ingredients?: Array<{
+      name: string;
+      amount: number;
+      unit: string;
+    }>;
+    steps?: Array<{
+      name: string;
+      duration: number;
+      description: string;
+    }>;
   };
-  bakingStage?: string;
-  notes?: string;
+  
+  // Starter health information
+  starterHealth?: {
+    status: 'healthy' | 'watch' | 'sluggish';
+    stage: 'just_fed' | 'peak' | 'collapsing' | 'sluggish';
+    activityLevel?: 'low' | 'moderate' | 'high';
+    riseTimeHours?: number;
+    lastFeedingTime?: string;
+    feedingRatio?: string;
+  };
+  
+  // Timeline and process information
+  timeline?: {
+    currentStep?: string;
+    completedSteps?: string[];
+    totalDuration?: number;
+    adjustments?: string[];
+  };
+  
+  // Notes and observations
+  bakeNotes?: string[];
+  userNotes?: string;
+  previousAttempts?: number;
+  
+  // Baking stage context
+  bakingStage?: 'mixing' | 'bulk_fermentation' | 'shaping' | 'final_proof' | 'baking' | 'cooling' | 'finished';
+  
+  // Additional context
+  notes?: string; // Keep for backward compatibility
 }
 
 export async function analyzeBreadPhoto(imageBase64: string, context?: BreadContext): Promise<BreadAnalysis> {

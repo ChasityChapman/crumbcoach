@@ -4,7 +4,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { safeMap } from "@/lib/safeArray";
 import type { BakeNote } from "@shared/schema";
 import { safeBakeNoteQueries } from "@/lib/safeQueries";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { X, Camera } from "lucide-react";
@@ -72,6 +72,9 @@ export default function NotesModal({ isOpen, onClose, bakeId }: NotesModalProps)
       <DialogContent className="max-w-lg mx-auto max-h-[80vh] flex flex-col">
         <DialogHeader className="pb-4">
           <DialogTitle className="font-display text-sourdough-800">Bake Notes</DialogTitle>
+          <DialogDescription>
+            Record your observations and insights during baking to improve future bakes.
+          </DialogDescription>
         </DialogHeader>
 
         {/* Help Text */}

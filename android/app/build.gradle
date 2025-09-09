@@ -70,6 +70,9 @@ dependencies {
     implementation 'com.google.firebase:firebase-analytics'
     implementation 'com.google.firebase:firebase-messaging'
     
+    // Google Play Integrity API for app security and anti-tampering
+    implementation 'com.google.android.play:integrity:1.5.0'
+    
     // Add other Firebase products as needed
     // https://firebase.google.com/docs/android/setup#available-libraries
 }

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { calculateHydration, calculateGramsFromRatio } from "@shared/src/lib/starterTypes";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -83,6 +83,9 @@ export default function HydrationCalculatorModal({
             <Calculator className="w-5 h-5" />
             <span>Hydration Calculator</span>
           </DialogTitle>
+          <DialogDescription>
+            Calculate hydration percentages and adjust starter ratios for your sourdough recipes.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">

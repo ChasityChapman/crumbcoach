@@ -78,7 +78,7 @@ export default function AdaptiveStepGuide({
                 </div>
               </div>
               
-              <div className="bg-gradient-to-br from-orange-50 to-yellow-50 rounded-lg p-4 border border-orange-200">
+              <div className="bg-gradient-to-br from-orange-50 to-orange-50 rounded-lg p-4 border border-orange-200">
                 <div className="flex items-start space-x-3">
                   <div className="w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
                     {currentCueIndex + 1}

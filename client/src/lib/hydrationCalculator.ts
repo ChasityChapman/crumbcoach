@@ -160,8 +160,8 @@ export function getHydrationLevel(percentage: number): {
     return {
       level: "Low",
       description: "Dense, easier to handle",
-      color: "bg-yellow-100", 
-      textColor: "text-yellow-700"
+      color: "bg-orange-100", 
+      textColor: "text-orange-700"
     };
   } else if (percentage < 80) {
     return {

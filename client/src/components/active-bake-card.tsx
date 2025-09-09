@@ -61,19 +61,19 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
     };
 
     return timelineSteps
-      .sort((a, b) => (a.stepNumber || 0) - (b.stepNumber || 0))
+      .sort((a, b) => (a.stepIndex || 0) - (b.stepIndex || 0))
       .map(step => {
-        const stepStartTime = safeParseDate(step.scheduledTime || step.startTime, now);
+        const stepStartTime = safeParseDate(step.startTime, now);
         const stepEndTime = new Date(stepStartTime.getTime() + (step.estimatedDuration || 30) * 60 * 1000);
         
         return {
           id: step.id,
-          stepName: step.title || step.name || `Step ${step.stepNumber}`,
+          stepName: step.name || `Step ${step.stepIndex + 1}`,
           status: step.status as 'active' | 'pending' | 'completed',
           startAt: stepStartTime,
           endAt: stepEndTime,
           duration: step.estimatedDuration || 30,
-          instructions: step.description,
+          instructions: step.description || undefined,
           // Check for overnight steps (8+ hours)
           isOvernight: (step.estimatedDuration || 30) >= 480,
         // Check for adaptive steps (detect by keywords or special flags)
@@ -137,7 +137,7 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
       const step = safeFind(timelineSteps, s => s.id === stepId);
       if (!step) return;
 
-      const startTime = utilSafeParseDate(step.scheduledTime || step.startTime) || now;
+      const startTime = utilSafeParseDate(step.startTime) || now;
       const actualDuration = Math.floor((now.getTime() - startTime.getTime()) / (1000 * 60));
       const estimatedDuration = step.estimatedDuration || 30;
       const delta = actualDuration - estimatedDuration;
@@ -152,8 +152,8 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
       timelineAnalytics.trackStepComplete({
         bakeId: bake.id,
         stepId: step.id,
-        stepName: step.title || step.name || `Step ${step.stepNumber}`,
-        stepIndex: step.stepNumber || 0,
+        stepName: step.name || `Step ${step.stepIndex + 1}`,
+        stepIndex: step.stepIndex || 0,
         actualDuration,
         estimatedDuration,
         delta,
@@ -162,7 +162,7 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
       });
 
       // Activate next step
-      const nextStep = safeFind(timelineSteps, s => s.stepNumber === (step.stepNumber || 0) + 1);
+      const nextStep = safeFind(timelineSteps, s => s.stepIndex === (step.stepIndex || 0) + 1);
       if (nextStep) {
         await safeTimelineStepQueries.update(nextStep.id, {
           status: "active",
@@ -190,8 +190,8 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
       timelineAnalytics.trackStepSkip({
         bakeId: bake.id,
         stepId: step.id,
-        stepName: step.title || step.name || `Step ${step.stepNumber}`,
-        stepIndex: step.stepNumber || 0,
+        stepName: step.name || `Step ${step.stepIndex + 1}`,
+        stepIndex: step.stepIndex || 0,
         reason: 'manual',
         pullForward: false, // This would come from skip confirmation modal
         skippedAt: now,
@@ -199,7 +199,7 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
       });
 
       // Activate next step
-      const nextStep = safeFind(timelineSteps, s => s.stepNumber === (step.stepNumber || 0) + 1);
+      const nextStep = safeFind(timelineSteps, s => s.stepIndex === (step.stepIndex || 0) + 1);
       if (nextStep) {
         await safeTimelineStepQueries.update(nextStep.id, {
           status: "active",
@@ -221,7 +221,7 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
         timelineAnalytics.trackPause({
           bakeId: bake.id,
           currentStepId: currentStep.id,
-          currentStepIndex: currentStep.stepNumber || 0,
+          currentStepIndex: currentStep.stepIndex || 0,
           pausedAt: now,
           remainingSteps: timelineSteps?.filter(s => s.status === 'pending').length || 0
         });
@@ -246,7 +246,7 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
         bakeId: bake.id,
         recipeId: bake.recipeId,
         duration: actualDuration,
-        estimatedDuration: bake.estimatedDuration || 0,
+        estimatedDuration: (timelineSteps?.reduce((total, step) => total + (step.estimatedDuration || 0), 0) || 0),
         stepsCompleted: completedSteps,
         stepsSkipped: skippedSteps,
         timesRecalibrated: 0, // TODO: track this in bake state
@@ -294,7 +294,7 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
       timelineAnalytics.trackRecalibrateOpen({
         bakeId: bake.id,
         stepId: currentStep?.id,
-        currentStepIndex: currentStep?.stepNumber || 0,
+        currentStepIndex: currentStep?.stepIndex || 0,
         remainingSteps: timelineSteps?.filter(s => s.status === 'pending').length || 0,
         openedAt: now,
         trigger: 'manual'
@@ -310,9 +310,8 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
         mode = 'shift_all';
         
         for (const step of remainingSteps) {
-          const newStartTime = addMinutes(utilSafeParseDate(step.scheduledTime || step.startTime) || now, delta);
+          const newStartTime = addMinutes(utilSafeParseDate(step.startTime) || now, delta);
           await safeTimelineStepQueries.update(step.id, {
-            scheduledTime: newStartTime.toISOString(),
             startTime: step.status === 'active' ? step.startTime : newStartTime.toISOString(),
           });
         }
@@ -327,9 +326,9 @@ export default function ActiveBakeCard({ bake, now = new Date() }: ActiveBakeCar
         
         for (const step of pendingSteps) {
           accumulatedCompression += compressionPerStep;
-          const newStartTime = addMinutes(utilSafeParseDate(step.scheduledTime || step.startTime) || now, -accumulatedCompression);
+          const newStartTime = addMinutes(utilSafeParseDate(step.startTime) || now, -accumulatedCompression);
           await safeTimelineStepQueries.update(step.id, {
-            scheduledTime: newStartTime.toISOString(),
+            startTime: newStartTime.toISOString(),
           });
         }
       } else if (type === 'single' && stepId) {
