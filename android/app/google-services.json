@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "786485973326",
+    "project_id": "crumb-coach-mobile-app",
+    "storage_bucket": "crumb-coach-mobile-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:786485973326:android:dd3b3b5c775bcc91518e1f",
+        "android_client_info": {
+          "package_name": "com.crumbcoach.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyASMphVoVwJwOxY7aUqEcyIBd-mPZ_NAgA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
