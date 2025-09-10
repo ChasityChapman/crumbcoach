@@ -72,7 +72,14 @@
         <!-- Background Modes for notifications and data sync -->
         <key>UIBackgroundModes</key>
         <array>
-            <string>background-processing</string>
+            <string>processing</string>
+        </array>
+        
+        <!-- Background Task Scheduler Identifiers -->
+        <key>BGTaskSchedulerPermittedIdentifiers</key>
+        <array>
+            <string>com.crumbcoach.app.refresh</string>
+            <string>com.crumbcoach.app.processing</string>
         </array>
         
         <!-- Performance and Storage -->
