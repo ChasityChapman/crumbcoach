@@ -110,5 +110,7 @@
         <!-- Additional Privacy -->
         <key>NSLocationWhenInUseUsageDescription</key>
         <string>Crumb Coach may use location for temperature and humidity data to optimize your baking timeline.</string>
+        <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+        <string>Crumb Coach may use location for temperature and humidity data to optimize your baking timeline, even when running in the background to update your bake schedules.</string>
 </dict>
 </plist>
