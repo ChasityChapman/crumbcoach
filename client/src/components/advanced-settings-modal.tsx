@@ -255,7 +255,7 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
         </DialogHeader>
         
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="sensors">Sensors</TabsTrigger>
             <TabsTrigger value="timing">Timing</TabsTrigger>
@@ -274,7 +274,7 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div className="space-y-2">
                     <Label>First Name</Label>
                     <Input
@@ -333,7 +333,7 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div className="space-y-2">
                     <Label>Temperature Unit</Label>
                     <Select value={tempUnit} onValueChange={(value: 'celsius' | 'fahrenheit') => {
@@ -355,7 +355,7 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                   
                   <div className="space-y-2">
                     <Label>Update Frequency</Label>
-                    <p className="text-xs text-muted-foreground mb-2">How often Crumb Coach checks your temperature and humidity sensors. Faster updates use more battery</p>
+                    <p className="text-xs text-muted-foreground mb-2 leading-relaxed">How often Crumb Coach checks your temperature and humidity sensors. Faster updates use more battery</p>
                     <div className="space-y-2">
                       <Slider
                         value={[sensorPolling]}
@@ -378,12 +378,12 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                 <Separator />
                 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border rounded-lg gap-3">
                     <div className="flex-1">
                       <Label className="text-base font-medium">Auto-Calibration</Label>
                       <p className="text-sm text-muted-foreground">Automatically calibrate sensors based on environment</p>
                     </div>
-                    <div className="flex-shrink-0 ml-4">
+                    <div className="flex-shrink-0">
                       <Button 
                         variant={autoCalibrate ? "default" : "outline"}
                         size="sm"
@@ -394,12 +394,12 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                     </div>
                   </div>
                   
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border rounded-lg gap-3">
                     <div className="flex-1">
                       <Label className="text-base font-medium">Manual Sensor Override</Label>
                       <p className="text-sm text-muted-foreground">Allow manual input when sensors unavailable</p>
                     </div>
-                    <div className="flex-shrink-0 ml-4">
+                    <div className="flex-shrink-0">
                       <Button 
                         variant={sensorOverride ? "default" : "outline"}
                         size="sm"
@@ -424,10 +424,10 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div className="space-y-2">
                     <Label>Default Room Temperature</Label>
-                    <p className="text-xs text-muted-foreground">Your kitchen's typical temperature when not baking. Used to calculate initial timeline estimates.</p>
+                    <p className="text-xs text-muted-foreground mb-2 leading-relaxed">Your kitchen's typical temperature when not baking. Used to calculate initial timeline estimates.</p>
                     <div className="space-y-2">
                       <Slider
                         value={[defaultTemp]}
@@ -465,7 +465,7 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                 
                 <div className="space-y-2">
                   <Label>Global Time Adjustment</Label>
-                  <p className="text-xs text-muted-foreground mb-2">Speeds up or slows down all recipe timings. Use +% for cold kitchens, -% for warm kitchens</p>
+                  <p className="text-xs text-muted-foreground mb-2 leading-relaxed">Speeds up or slows down all recipe timings. Use +% for cold kitchens, -% for warm kitchens</p>
                   <div className="space-y-2">
                     <Slider
                       value={[timeAdjustment]}
@@ -482,12 +482,12 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                 
                 <Separator />
                 
-                <div className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border rounded-lg gap-3">
                   <div className="flex-1">
                     <Label className="text-base font-medium">Auto Notifications</Label>
                     <p className="text-sm text-muted-foreground">Send notifications for timeline milestones</p>
                   </div>
-                  <div className="flex-shrink-0 ml-4">
+                  <div className="flex-shrink-0">
                     <Button 
                       variant={autoNotifications ? "default" : "outline"}
                       size="sm"
@@ -511,7 +511,7 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div className="space-y-2">
                     <Label>Default Hydration</Label>
                     <div className="space-y-2">
@@ -559,12 +559,12 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                 
                 <Separator />
                 
-                <div className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border rounded-lg gap-3">
                   <div className="flex-1">
                     <Label className="text-base font-medium">Environmental Compensation</Label>
                     <p className="text-sm text-muted-foreground">Adjust timings based on temperature and humidity</p>
                   </div>
-                  <div className="flex-shrink-0 ml-4">
+                  <div className="flex-shrink-0">
                     <Button 
                       variant={envCompensation ? "default" : "outline"}
                       size="sm"
@@ -605,12 +605,12 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                 <Separator />
                 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border rounded-lg gap-3">
                     <div className="flex-1">
                       <Label className="text-base font-medium">High Contrast Mode</Label>
                       <p className="text-sm text-muted-foreground">Enhanced visibility for better readability</p>
                     </div>
-                    <div className="flex-shrink-0 ml-4">
+                    <div className="flex-shrink-0">
                       <Button 
                         variant={highContrast ? "default" : "outline"}
                         size="sm"
@@ -621,12 +621,12 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                     </div>
                   </div>
                   
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border rounded-lg gap-3">
                     <div className="flex-1">
                       <Label className="text-base font-medium">Voice Notifications</Label>
                       <p className="text-sm text-muted-foreground">Spoken alerts for timeline events</p>
                     </div>
-                    <div className="flex-shrink-0 ml-4">
+                    <div className="flex-shrink-0">
                       <Button 
                         variant={voiceNotifications ? "default" : "outline"}
                         size="sm"
@@ -637,12 +637,12 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                     </div>
                   </div>
                   
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border rounded-lg gap-3">
                     <div className="flex-1">
                       <Label className="text-base font-medium">Haptic Feedback</Label>
                       <p className="text-sm text-muted-foreground">Vibration feedback on mobile devices</p>
                     </div>
-                    <div className="flex-shrink-0 ml-4">
+                    <div className="flex-shrink-0">
                       <Button 
                         variant={hapticFeedback ? "default" : "outline"}
                         size="sm"
@@ -667,7 +667,7 @@ export default function AdvancedSettingsModal({ isOpen, onClose }: AdvancedSetti
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Button onClick={handleExportData} className="h-auto p-4">
                     <div className="flex flex-col items-center space-y-2">
                       <Download className="w-6 h-6" />
