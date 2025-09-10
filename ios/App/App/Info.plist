@@ -73,7 +73,6 @@
         <key>UIBackgroundModes</key>
         <array>
             <string>background-processing</string>
-            <string>background-fetch</string>
         </array>
         
         <!-- Performance and Storage -->
