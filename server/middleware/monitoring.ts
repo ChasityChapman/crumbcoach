@@ -1,6 +1,21 @@
 import type { Request, Response, NextFunction } from 'express';
 import { randomBytes } from 'crypto';
 
+// Placeholder monitoring service - replace with your actual service (DataDog, New Relic, etc.)
+const sendToMonitoringService = async (alertData: any) => {
+  try {
+    // Example: Send to external monitoring service
+    // In a real implementation, you would send to your monitoring platform:
+    // await fetch('https://api.datadoghq.com/api/v1/events', { ... });
+    // await newrelic.recordCustomEvent('SecurityAlert', alertData);
+    // await logstash.send(alertData);
+    
+    console.log('📊 MONITORING SERVICE:', JSON.stringify(alertData, null, 2));
+  } catch (error) {
+    console.error('Failed to send to monitoring service:', error);
+  }
+};
+
 // Enhanced request logging middleware with security monitoring
 export const requestLogger = (req: Request, res: Response, next: NextFunction) => {
   const start = Date.now();
@@ -137,7 +152,7 @@ export const securityAlert = (alert: {
   
   if (process.env.NODE_ENV === 'production') {
     // Example: Send to external monitoring service
-    // sendToMonitoringService(alertData);
+    sendToMonitoringService(alertData);
   }
 };
 

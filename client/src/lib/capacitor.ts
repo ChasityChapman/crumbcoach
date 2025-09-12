@@ -9,9 +9,9 @@ export async function initializeCapacitor() {
   }
 
   try {
-    // Initialize push notifications - disabled until Firebase is properly configured
-    console.log('Push notifications disabled - configure Firebase to enable');
-    // await initializePushNotifications();
+    // Initialize push notifications
+    console.log('Initializing push notifications...');
+    await initializePushNotifications();
     
   } catch (error) {
     console.error('Error initializing Capacitor features:', error);

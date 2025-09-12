@@ -50,8 +50,19 @@ function BakeDetailModal({ bake, isOpen, onClose }: BakeDetailModalProps) {
 
   const analyzeMutation = useMutation({
     mutationFn: async ({ photoId, imageData }: { photoId: string; imageData: string }) => {
-      // Photo analysis temporarily disabled during migration
-      return { analysis: 'Photo analysis coming soon!' };
+      const response = await fetch('/api/photos/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ photoId, imageData })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to analyze photo');
+      }
+      
+      return response.json();
     },
     onSuccess: (data) => {
       setAnalysis(data.analysis);

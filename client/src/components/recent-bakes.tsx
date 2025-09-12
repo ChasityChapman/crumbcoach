@@ -7,12 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Share2, RefreshCw, FileText, X, RotateCcw } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { safeParseDate } from "@/lib/utils";
-// import { useToast } from "@/hooks/use-toast"; // Disabled to prevent JavaScript errors
+import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { useLocation } from "wouter";
 
 export default function RecentBakes() {
-  // const { toast } = useToast(); // Disabled to prevent JavaScript errors
+  const { toast } = useToast();
   const { data: bakes } = useQuery<Bake[]>({
     queryKey: ["bakes"],
     queryFn: safeBakeQueries.getAll,

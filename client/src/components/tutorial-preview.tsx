@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Play, BookOpen } from "lucide-react";
 import { Card, EmptyState } from "@/components/ui/card";
-// import { useToast } from "@/hooks/use-toast"; // Disabled to prevent JavaScript errors
+import { useToast } from "@/hooks/use-toast";
 
 export default function TutorialPreview() {
-  // const { toast } = useToast(); // Disabled to prevent JavaScript errors
+  const { toast } = useToast();
   const { data: tutorials } = useQuery<Tutorial[]>({
     queryKey: ["/api/tutorials"],
   });
